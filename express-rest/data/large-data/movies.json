@@ -1,0 +1,152 @@
+[
+    {
+        "movieId": "1",
+        "title": "The Shawshank Redemption",
+        "numRatings": 3
+    },
+    {
+        "movieId": "2",
+        "title": "The Dark Knight",
+        "numRatings": 3
+    },
+    {
+        "movieId": "3",
+        "title": "American Beauty",
+        "numRatings": 6
+    },
+    {
+        "movieId": "4",
+        "title": "The Light Between Oceans",
+        "numRatings": 6
+    },
+    {
+        "movieId": "5",
+        "title": "Apocalypse Now",
+        "numRatings": 3
+    },
+    {
+        "movieId": "6",
+        "title": "Platoon",
+        "numRatings": 4
+    },
+    {
+        "movieId": "7",
+        "title": "A Beautiful Mind",
+        "numRatings": 4
+    },
+    {
+        "movieId": "8",
+        "title": "Snatch",
+        "numRatings": 4
+    },
+    {
+        "movieId": "9",
+        "title": "Braveheart",
+        "numRatings": 5
+    },
+    {
+        "movieId": "10",
+        "title": "Pulp Fiction",
+        "numRatings": 4
+    },
+    {
+        "movieId": "11",
+        "title": "Good Will Hunting",
+        "numRatings": 5
+    },
+    {
+        "movieId": "12",
+        "title": "Inglourious Basterds",
+        "numRatings": 3
+    },
+    {
+        "movieId": "13",
+        "title": "Matrix",
+        "numRatings": 4
+    },
+    {
+        "movieId": "14",
+        "title": "Beauty and the Beast",
+        "numRatings": 5
+    },
+    {
+        "movieId": "15",
+        "title": "Forrest Gump",
+        "numRatings": 5
+    },
+    {
+        "movieId": "16",
+        "title": "Spider-Man",
+        "numRatings": 3
+    },
+    {
+        "movieId": "17",
+        "title": "The Silence of the Lambs",
+        "numRatings": 3
+    },
+    {
+        "movieId": "18",
+        "title": "The Departed",
+        "numRatings": 4
+    },
+    {
+        "movieId": "19",
+        "title": "Shutter Island",
+        "numRatings": 3
+    },
+    {
+        "movieId": "20",
+        "title": "Terminator 2: Judgment Day",
+        "numRatings": 3
+    },
+    {
+        "movieId": "21",
+        "title": "The Avengers",
+        "numRatings": 3
+    },
+    {
+        "movieId": "22",
+        "title": "Lock, Stock and Two Smoking Barrels",
+        "numRatings": 4
+    },
+    {
+        "movieId": "23",
+        "title": "Blade Runner",
+        "numRatings": 3
+    },
+    {
+        "movieId": "24",
+        "title": "Dead Poets Society",
+        "numRatings": 4
+    },
+    {
+        "movieId": "25",
+        "title": "Batman Begins",
+        "numRatings": 3
+    },
+    {
+        "movieId": "26",
+        "title": "Blood in, Blood out",
+        "numRatings": 3
+    },
+    {
+        "movieId": "27",
+        "title": "The Notebook",
+        "numRatings": 7
+    },
+    {
+        "movieId": "28",
+        "title": "Me Before You",
+        "numRatings": 6
+    },
+    {
+        "movieId": "29",
+        "title": "The Usual Suspects",
+        "numRatings": 3
+    },
+    {
+        "movieId": "30",
+        "title": "Avatar",
+        "numRatings": 4
+    }
+]
