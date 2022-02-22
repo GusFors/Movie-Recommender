@@ -7,10 +7,6 @@
     "start": "nodemon --max_old_space_size=8100 --optimize_for_size --stack_size=8100 app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@gitlab.lnu.se:2dv515/student/gf222cy/a1---recommendation-system.git"
-  },
   "author": "GusFors",
   "license": "MIT",
   "dependencies": {
