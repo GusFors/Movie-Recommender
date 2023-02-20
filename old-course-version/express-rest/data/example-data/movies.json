@@ -1,0 +1,32 @@
+[
+    {
+        "movieId": "1",
+        "title": "Lady in the Water",
+        "year": "2006"
+    },
+    {
+        "movieId": "2",
+        "title": "Snakes on a Plane",
+        "year": "2006"
+    },
+    {
+        "movieId": "3",
+        "title": "Just My Luck",
+        "year": "2006"
+    },
+    {
+        "movieId": "4",
+        "title": "Superman Returns",
+        "year": "2006"
+    },
+    {
+        "movieId": "5",
+        "title": "You, Me and Dupree",
+        "year": "2006"
+    },
+    {
+        "movieId": "6",
+        "title": "The Night Listener",
+        "year": "2006"
+    }
+]
