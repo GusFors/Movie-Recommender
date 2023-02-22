@@ -38,7 +38,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
   let minNumRatings = req.query.minratings
-  let forks = parseInt(req.query.numforks) > 0 ? parseInt(req.query.numforks) : 1
+  let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
   let type = req.query.type
 
   let userSimScores
@@ -69,11 +69,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let rawRecommendations
 
   if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, forks)
+    rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, threads)
   }
 
   if (type === 'Worker') {
-    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, forks)
+    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, threads)
   }
 
   if (type === 'Slow') {
@@ -82,7 +82,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t8 = performance.now()
 
-  console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${forks}` : ''}`)
+  console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
   console.log()
 
   filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)

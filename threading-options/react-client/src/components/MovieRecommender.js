@@ -18,7 +18,7 @@ function MovieRecommender() {
   const [recommendationContent, setRecommendationContent] = useState('')
   const [loadingContent, setLoadingContent] = useState('')
   const [minNumRatings, setMinNumRatings] = useState(5)
-  const [numForks, setNumForks] = useState(4)
+  const [numThreads, setNumThreads] = useState(4)
   const [infoContent, setInfoContent] = useState('')
 
   const handleUserChange = (event) => {
@@ -41,8 +41,8 @@ function MovieRecommender() {
     setMinNumRatings(event.target.value)
   }
 
-  const handleNumForksChange = (event) => {
-    setNumForks(event.target.value)
+  const handleNumThreadsChange = (event) => {
+    setNumThreads(event.target.value)
   }
 
   const handleUsersButtonClick = async (event) => {
@@ -82,7 +82,7 @@ function MovieRecommender() {
 
     const t0 = performance.now()
     const result = await fetch(
-      `http://localhost:4000/recommendations/movies/${user}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numforks=${numForks}&type=${type}`,
+      `http://localhost:4000/recommendations/movies/${user}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}`,
       {}
     )
     const json = await result.json().then((json) => {
@@ -183,15 +183,15 @@ function MovieRecommender() {
             </FormControl>
             <FormControl variant='standard' sx={{ m: 1, minWidth: 120 }}>
               <TextField
-                id='standard-forks-results'
-                label='Forks'
+                id='standard-Threads-results'
+                label='Threads'
                 type='number'
                 style={{ minWidth: '20px', borderRadius: '4px', marginRight: '40px' }}
                 defaultValue='4'
                 InputLabelProps={{
                   shrink: true,
                 }}
-                onChange={handleNumForksChange}
+                onChange={handleNumThreadsChange}
                 variant='standard'
               />
             </FormControl>
