@@ -1,0 +1,152 @@
+[
+    {
+        "movieId": "1",
+        "title": "The Shawshank Redemption",
+        "year": "1994"
+    },
+    {
+        "movieId": "2",
+        "title": "The Dark Knight",
+        "year": "2008"
+    },
+    {
+        "movieId": "3",
+        "title": "American Beauty",
+        "year": "1999"
+    },
+    {
+        "movieId": "4",
+        "title": "The Light Between Oceans",
+        "year": "2016"
+    },
+    {
+        "movieId": "5",
+        "title": "Apocalypse Now",
+        "year": "1979"
+    },
+    {
+        "movieId": "6",
+        "title": "Platoon",
+        "year": "1986"
+    },
+    {
+        "movieId": "7",
+        "title": "A Beautiful Mind",
+        "year": "2001"
+    },
+    {
+        "movieId": "8",
+        "title": "Snatch",
+        "year": "2000"
+    },
+    {
+        "movieId": "9",
+        "title": "Braveheart",
+        "year": "1995"
+    },
+    {
+        "movieId": "10",
+        "title": "Pulp Fiction",
+        "year": "1994"
+    },
+    {
+        "movieId": "11",
+        "title": "Good Will Hunting",
+        "year": "1997"
+    },
+    {
+        "movieId": "12",
+        "title": "Inglourious Basterds",
+        "year": "2009"
+    },
+    {
+        "movieId": "13",
+        "title": "Matrix",
+        "year": "1999"
+    },
+    {
+        "movieId": "14",
+        "title": "Beauty and the Beast",
+        "year": "2017"
+    },
+    {
+        "movieId": "15",
+        "title": "Forrest Gump",
+        "year": "1994"
+    },
+    {
+        "movieId": "16",
+        "title": "Spider-Man",
+        "year": "2002"
+    },
+    {
+        "movieId": "17",
+        "title": "The Silence of the Lambs",
+        "year": "1991"
+    },
+    {
+        "movieId": "18",
+        "title": "The Departed",
+        "year": "2006"
+    },
+    {
+        "movieId": "19",
+        "title": "Shutter Island",
+        "year": "2010"
+    },
+    {
+        "movieId": "20",
+        "title": "Terminator 2: Judgment Day",
+        "year": "1991"
+    },
+    {
+        "movieId": "21",
+        "title": "The Avengers",
+        "year": "2012"
+    },
+    {
+        "movieId": "22",
+        "title": "Lock, Stock and Two Smoking Barrels",
+        "year": "1998"
+    },
+    {
+        "movieId": "23",
+        "title": "Blade Runner",
+        "year": "1982"
+    },
+    {
+        "movieId": "24",
+        "title": "Dead Poets Society",
+        "year": "1989"
+    },
+    {
+        "movieId": "25",
+        "title": "Batman Begins",
+        "year": "2005"
+    },
+    {
+        "movieId": "26",
+        "title": "Blood in, Blood out",
+        "year": "1993"
+    },
+    {
+        "movieId": "27",
+        "title": "The Notebook",
+        "year": "2004"
+    },
+    {
+        "movieId": "28",
+        "title": "Me Before You",
+        "year": "2016"
+    },
+    {
+        "movieId": "29",
+        "title": "The Usual Suspects",
+        "year": "1995"
+    },
+    {
+        "movieId": "30",
+        "title": "Avatar",
+        "year": "2009"
+    }
+]
