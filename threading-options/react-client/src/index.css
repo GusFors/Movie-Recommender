@@ -11,3 +11,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* #menu- {
+  font-size: 200;
+  transition: none !important;
+  transition-timing-function:unset !important
+}
+.MuiPopover-paper {
+  transition: none !important; 
+}
+.css-g3hgs1-MuiBackdrop-root-MuiModal-backdrop {
+  transition: none !important; 
+} */

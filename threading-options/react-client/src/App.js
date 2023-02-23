@@ -4,6 +4,7 @@ import MovieRecommender from './components/MovieRecommender'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { InputBase } from '@mui/material'
 
 function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
@@ -13,6 +14,23 @@ function App() {
         palette: {
           mode: prefersDarkMode ? 'dark' : 'light',
         },
+        components: {
+          MuiSelect: {
+            styleOverrides: {},
+          },
+          MuiTextField: {
+            styleOverrides: {},
+          },
+          MuiInputBase: {
+            styleOverrides: {},
+          },
+          MuiSlider: {
+            styleOverrides: {
+              valueLabel: {},
+            },
+          },
+        },
+        transitions: { duration: '0' },
       }),
     [prefersDarkMode]
   )
