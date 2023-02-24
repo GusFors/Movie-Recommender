@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import Button from '@mui/material/Button'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
-import Menu from '@mui/material/Menu'
 import FormControl from '@mui/material/FormControl'
 import Select from '@mui/material/Select'
 import DataTable from './DataTable'
@@ -23,6 +22,8 @@ function MovieRecommender() {
   const [numThreads, setNumThreads] = useState(4)
   const [infoContent, setInfoContent] = useState('')
   const [disabledButton, setdisabledButton] = useState(false)
+  const [rev, setRev] = useState(0)
+
   const defaultProps = {
     options: userAuto,
     getOptionLabel: (option) => `${option.id}: ${option.name}`,
@@ -67,7 +68,7 @@ function MovieRecommender() {
     }, 200)
 
     const result = await fetch(`http://localhost:4000/recommendations/users/${user.id}?sim=${similarity}&results=${numResults}`, {})
-    const json = await result.json().then((json) => {
+    await result.json().then((json) => {
       clearInterval(loadingUpdateInterval)
       setLoadingContent(null)
 
@@ -96,14 +97,14 @@ function MovieRecommender() {
 
     const t0 = performance.now()
     const result = await fetch(
-      `http://localhost:4000/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}`,
+      `http://localhost:4000/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}`,
       {}
     )
-    const json = await result.json().then((json) => {
+    await result.json().then((json) => {
       const t1 = performance.now()
       setInfoContent(
         <span style={{ fontSize: '14px' }}>
-          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
+          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in
           {t1 - t0} milliseconds.
         </span>
       )
@@ -121,19 +122,16 @@ function MovieRecommender() {
 
   useEffect(() => {
     ;(async () => {
-      console.log('effect')
-      {
-        const result = await fetch('http://localhost:4000/users', {})
-        const json = await result.json()
-        let userMenuArr = []
-        let autoArr = []
-        for (let i = 0; i < json.users.length; i++) {
-          autoArr.push({ id: json.users[i].userId, name: json.users[i].name })
-        }
+      const result = await fetch('http://localhost:4000/users', {})
+      const json = await result.json()
 
-        setUserAuto(autoArr)
-        setUser(autoArr[0])
+      let autoArr = []
+      for (let i = 0; i < json.users.length; i++) {
+        autoArr.push({ id: json.users[i].userId, name: json.users[i].name })
       }
+
+      setUserAuto(autoArr)
+      setUser(autoArr[0])
     })()
   }, [])
   // Stack justifyContent={'flex-start'} alignItems='' spacing={1} alignContent=''
@@ -155,7 +153,7 @@ function MovieRecommender() {
         margin={0}
         sx={{ height: '100vh', width: '90%', maxWidth: '1000px' }}
       >
-        <Stack container direction={'row'} alignItems={'center'} justifyContent={'baseline'} spacing={3} sx={{}}>
+        <Stack direction={'row'} alignItems={'center'} justifyContent={'baseline'} spacing={3} sx={{}}>
           <FormControl variant='standard' sx={{ m: 0, minWidth: 120 }}>
             <Autocomplete
               {...defaultProps}
@@ -241,6 +239,22 @@ function MovieRecommender() {
               <MenuItem value='Slow'>Slow</MenuItem>
             </Select>
           </FormControl>
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
+            <InputLabel id='select-rev-label'>Rev data</InputLabel>
+            <Select
+              label='Rev'
+              style={{}}
+              labelId='select-rev-label'
+              id='select-rev'
+              value={rev}
+              onChange={(event, newValue) => {
+                setRev(event.target.value)
+              }}
+            >
+              <MenuItem value='0'>False</MenuItem>
+              <MenuItem value='1'>True</MenuItem>
+            </Select>
+          </FormControl>
         </Stack>
 
         <Stack direction='row' sx={{}} spacing={3}>
@@ -258,7 +272,7 @@ function MovieRecommender() {
           </Button>
         </Stack>
 
-        <Stack container sx={{ m: 0 }}>
+        <Stack sx={{ m: 0 }}>
           <div style={{}}>
             {loadingContent}
             {infoContent}
