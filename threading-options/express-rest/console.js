@@ -19,7 +19,7 @@ async function recommend() {
   let forks = args[1] ? parseInt(args[1]) : 4
   let userId = '1'
 
-  console.log(args[1])
+  // console.log(await ratingsData)
 
   let userSimScores
   let t1 = performance.now()
@@ -61,6 +61,7 @@ async function recommend() {
   }
 
   let t8 = performance.now()
+  console.log(rawRecommendations.length)
 
   console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${forks}` : ''}`)
 

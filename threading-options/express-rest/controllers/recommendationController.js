@@ -91,6 +91,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     res.status(200).json({
       message: `Movie recommendations for user with id: ${req.params.id}`,
       userMovieRecommendations: filteredRecommendations,
+      totalRecommendations: rawRecommendations.length,
     })
   } else {
     res.status(200).json({

@@ -99,7 +99,13 @@ function MovieRecommender() {
     )
     const json = await result.json().then((json) => {
       const t1 = performance.now()
-      setInfoContent(<span style={{ fontSize: '14px' }}> Fetched recommendations in {t1 - t0} milliseconds.</span>)
+      setInfoContent(
+        <span style={{ fontSize: '14px' }}>
+          {' '}
+          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
+          {t1 - t0} milliseconds.
+        </span>
+      )
       clearInterval(loadingUpdateInterval)
       setLoadingContent(null)
 
@@ -130,129 +136,119 @@ function MovieRecommender() {
   }, [])
   // Stack justifyContent={'flex-start'} alignItems='' spacing={1} alignContent=''
   return (
-    <Container>
-      <Box sx={{ width: '100%' }}>
-        <Box sx={{ width: '100%' }}>
-          <Grid container direction={'column'} alignItems={'center'} justifyContent={'center'} spacing={3}>
-            <Grid container direction={'row'} alignItems={'flex-start'} justifyContent={'baseline'} spacing={3} item>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <Autocomplete
-                    {...defaultProps}
-                    id='auto-complete'
-                    autoComplete
-                    style={{}}
-                    value={user}
-                    onChange={(event, newValue) => {
-                      setUser(newValue)
-                      console.log(newValue)
-                    }}
-                    renderInput={(params) => <TextField {...params} label='User' variant='standard' />}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <InputLabel id='select-similarity-label'>Similarity</InputLabel>
-                  <Select
-                    label='Similarity'
-                    style={{}}
-                    labelId='select-similarity-label'
-                    id='select-similarity'
-                    value={similarity}
-                    onChange={handleSimilarityChange}
-                  >
-                    <MenuItem value='Euclidian'>Euclidian</MenuItem>
-                    <MenuItem value='Pearson'>Pearson</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <TextField
-                    id='standard-number'
-                    label='Number of results'
-                    type='number'
-                    style={{}}
-                    defaultValue='10'
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={handleNumResultsChange}
-                    variant='standard'
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <TextField
-                    id='standard-number-results'
-                    label='Min number of ratings'
-                    type='number'
-                    style={{}}
-                    defaultValue='1'
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={handleMinNumRatingsChange}
-                    variant='standard'
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <TextField
-                    id='standard-Threads-results'
-                    label='Threads'
-                    type='number'
-                    style={{}}
-                    defaultValue='4'
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={handleNumThreadsChange}
-                    variant='standard'
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <FormControl variant='standard' sx={{}}>
-                  <InputLabel id='select-type-label'>Type</InputLabel>
-                  <Select label='Type' style={{}} labelId='select-type-label' id='select-type' value={type} onChange={handleTypeChange}>
-                    <MenuItem value='Fork'>Fork</MenuItem>
-                    <MenuItem value='Worker'>Worker</MenuItem>
-                    <MenuItem value='Slow'>Slow</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
+    <Stack justifyContent='center' alignItems='center' direction={'column'} spacing={3} sx={{}}>
+      <Stack spacing={3}  alignItems='flex-start' direction={'column'} sx={{}}>
+        <Stack alignSelf={'flex-start'} container direction={'row'} alignItems={'center'} justifyContent={'baseline'} spacing={3} sx={{}}>
+          <FormControl variant='standard' sx={{ m: 0, minWidth: 120 }}>
+            <Autocomplete
+              {...defaultProps}
+              id='auto-complete'
+              autoComplete
+              disableClearable
+              autoHighlight
+              style={{}}
+              value={user}
+              onChange={(event, newValue) => {
+                setUser(newValue)
+                console.log(newValue)
+              }}
+              renderInput={(params) => <TextField sx={{ m: 0, minWidth: 120 }} {...params} label='User' variant='standard' />}
+            />
+          </FormControl>
 
-            <Grid container alignContent={'center'} justifyContent={'flex-start'} item>
-              <Grid item container direction='row' spacing={3}>
-                <Grid item>
-                  <Button onClick={handleMoviesButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
-                    Find recommended movies
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Button onClick={handleUsersButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
-                    Find recommended users
-                  </Button>
-                </Grid>
-              </Grid>
-            </Grid>
+          <FormControl variant='standard' sx={{ m: 0 }}>
+            <InputLabel id='select-similarity-label'>Similarity</InputLabel>
+            <Select
+              label='Similarity'
+              style={{}}
+              labelId='select-similarity-label'
+              id='select-similarity'
+              value={similarity}
+              onChange={handleSimilarityChange}
+            >
+              <MenuItem value='Euclidian'>Euclidian</MenuItem>
+              <MenuItem value='Pearson'>Pearson</MenuItem>
+            </Select>
+          </FormControl>
 
-            <Grid container alignContent={'center'} justifyContent={'flex-start'} item>
-              <div style={{}}>
-                {loadingContent}
-                <div style={{}}>{infoContent}</div>
-                {recommendationContent}
-              </div>
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
-    </Container>
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
+            <TextField
+              id='standard-number'
+              label='Number of results'
+              type='number'
+              style={{}}
+              defaultValue='10'
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={handleNumResultsChange}
+              variant='standard'
+            />
+          </FormControl>
+
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
+            <TextField
+              id='standard-number-results'
+              label='Min number of ratings'
+              type='number'
+              style={{}}
+              defaultValue='1'
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={handleMinNumRatingsChange}
+              variant='standard'
+            />
+          </FormControl>
+
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 100 }}>
+            <TextField
+              id='standard-Threads-results'
+              label='Threads'
+              type='number'
+              style={{}}
+              defaultValue='4'
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={handleNumThreadsChange}
+              variant='standard'
+            />
+          </FormControl>
+
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
+            <InputLabel id='select-type-label'>Type</InputLabel>
+            <Select label='Type' style={{}} labelId='select-type-label' id='select-type' value={type} onChange={handleTypeChange}>
+              <MenuItem value='Fork'>Fork</MenuItem>
+              <MenuItem value='Worker'>Worker</MenuItem>
+              <MenuItem value='Slow'>Slow</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+
+        <Stack item>
+          <Stack  direction='row' spacing={3}>
+            <Button onClick={handleMoviesButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
+              Find recommended movies
+            </Button>
+
+            <Button onClick={handleUsersButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
+              Find recommended users
+            </Button>
+          </Stack>
+        </Stack>
+
+        <Stack container alignItems={'center'} justifyContent={'flex-start'}>
+          <Stack container direction='row' spacing={3}>
+            <div style={{}}>
+              {loadingContent}
+              <div style={{}}>{infoContent}</div>
+              {recommendationContent}
+            </div>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Stack>
   )
 }
 

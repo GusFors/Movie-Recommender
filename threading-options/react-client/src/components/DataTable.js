@@ -10,7 +10,7 @@ import Paper from '@mui/material/Paper'
 function DataTable({ rows = [], cells = [] }) {
   return (
     <TableContainer component={Paper}>
-      <Table style={{}} sx={{ minWidth: 650 }} aria-label='simple table'>
+      <Table style={{}} sx={{ m: 0, padding: 0 }} aria-label='simple table'>
         <TableHead>
           <TableRow>
             <TableCell>{cells[0]}</TableCell>
