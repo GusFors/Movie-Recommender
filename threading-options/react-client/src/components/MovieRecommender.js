@@ -6,16 +6,13 @@ import Menu from '@mui/material/Menu'
 import FormControl from '@mui/material/FormControl'
 import Select from '@mui/material/Select'
 import DataTable from './DataTable'
-import Container from '@mui/material/Container'
-import Grid from '@mui/material/Grid'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Autocomplete from '@mui/material/Autocomplete'
-import { Box } from '@mui/system'
+import CircularProgress from '@mui/material/CircularProgress'
 
 function MovieRecommender() {
   const [user, setUser] = useState({})
-  const [userOptions, setUserOptions] = useState('')
   const [userAuto, setUserAuto] = useState([])
   const [similarity, setSimilarity] = useState('Euclidian')
   const [type, setType] = useState('Fork')
@@ -25,16 +22,10 @@ function MovieRecommender() {
   const [minNumRatings, setMinNumRatings] = useState(1)
   const [numThreads, setNumThreads] = useState(4)
   const [infoContent, setInfoContent] = useState('')
+  const [disabledButton, setdisabledButton] = useState(false)
   const defaultProps = {
     options: userAuto,
     getOptionLabel: (option) => `${option.id}: ${option.name}`,
-  }
-
-  const handleUserChange = (event) => {
-    console.log('userchange...')
-    setUser(event.target.value)
-    console.log(event.target)
-    console.log(user)
   }
 
   const handleSimilarityChange = (event) => {
@@ -67,7 +58,12 @@ function MovieRecommender() {
       if (loadingString.length > 12) {
         loadingString = 'Loading.'
       }
-      setLoadingContent(<p style={{ fontSize: '22px' }}>{loadingString}</p>)
+      setLoadingContent(
+        <div>
+          <p style={{ fontSize: '22px' }}>{loadingString}</p>
+          <CircularProgress />
+        </div>
+      )
     }, 200)
 
     const result = await fetch(`http://localhost:4000/recommendations/users/${user.id}?sim=${similarity}&results=${numResults}`, {})
@@ -82,6 +78,7 @@ function MovieRecommender() {
   const handleMoviesButtonClick = async (event) => {
     setRecommendationContent(null)
     setInfoContent(null)
+    setdisabledButton(true)
 
     let loadingString = 'Loading'
     let loadingUpdateInterval = setInterval(() => {
@@ -89,7 +86,12 @@ function MovieRecommender() {
       if (loadingString.length > 12) {
         loadingString = 'Loading.'
       }
-      setLoadingContent(<p style={{ fontSize: '22px' }}>{loadingString}</p>)
+      setLoadingContent(
+        <div>
+          <p style={{ fontSize: '22px' }}>{loadingString}</p>
+          <CircularProgress />
+        </div>
+      )
     }, 200)
 
     const t0 = performance.now()
@@ -101,13 +103,13 @@ function MovieRecommender() {
       const t1 = performance.now()
       setInfoContent(
         <span style={{ fontSize: '14px' }}>
-          {' '}
           Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
           {t1 - t0} milliseconds.
         </span>
       )
       clearInterval(loadingUpdateInterval)
       setLoadingContent(null)
+      setdisabledButton(false)
 
       if (json.userMovieRecommendations.length > 0) {
         setRecommendationContent(<DataTable cells={['Movie', 'ID', 'Ratings', 'Score']} rows={json.userMovieRecommendations}></DataTable>)
@@ -136,9 +138,24 @@ function MovieRecommender() {
   }, [])
   // Stack justifyContent={'flex-start'} alignItems='' spacing={1} alignContent=''
   return (
-    <Stack justifyContent='center' alignItems='center' direction={'column'} spacing={3} sx={{}}>
-      <Stack spacing={3}  alignItems='flex-start' direction={'column'} sx={{}}>
-        <Stack alignSelf={'flex-start'} container direction={'row'} alignItems={'center'} justifyContent={'baseline'} spacing={3} sx={{}}>
+    <Stack
+      padding={0}
+      sx={{
+        paddingTop: 2,
+        height: '100vh',
+        width: '100vw',
+        margin: 0,
+      }}
+    >
+      <Stack
+        display={'flex'}
+        spacing={3}
+        alignSelf={'center'}
+        direction={'column'}
+        margin={0}
+        sx={{ height: '100vh', width: '90%', maxWidth: '1000px' }}
+      >
+        <Stack container direction={'row'} alignItems={'center'} justifyContent={'baseline'} spacing={3} sx={{}}>
           <FormControl variant='standard' sx={{ m: 0, minWidth: 120 }}>
             <Autocomplete
               {...defaultProps}
@@ -226,26 +243,27 @@ function MovieRecommender() {
           </FormControl>
         </Stack>
 
-        <Stack item>
-          <Stack  direction='row' spacing={3}>
-            <Button onClick={handleMoviesButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
-              Find recommended movies
-            </Button>
+        <Stack direction='row' sx={{}} spacing={3}>
+          <Button
+            disabled={disabledButton}
+            onClick={handleMoviesButtonClick}
+            style={{ backgroundColor: '#42a5f5', color: 'white' }}
+            variant='contained'
+          >
+            Find recommended movies
+          </Button>
 
-            <Button onClick={handleUsersButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
-              Find recommended users
-            </Button>
-          </Stack>
+          <Button onClick={handleUsersButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
+            Find recommended users
+          </Button>
         </Stack>
 
-        <Stack container alignItems={'center'} justifyContent={'flex-start'}>
-          <Stack container direction='row' spacing={3}>
-            <div style={{}}>
-              {loadingContent}
-              <div style={{}}>{infoContent}</div>
-              {recommendationContent}
-            </div>
-          </Stack>
+        <Stack container sx={{ m: 0 }}>
+          <div style={{}}>
+            {loadingContent}
+            {infoContent}
+            {recommendationContent}
+          </div>
         </Stack>
       </Stack>
     </Stack>

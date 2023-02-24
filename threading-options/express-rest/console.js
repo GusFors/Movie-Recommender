@@ -1,5 +1,5 @@
 const dataFilterer = require('./data-utils/dataFilterer')
-const dataReader = require('./data-utils/dataReader')
+const dataReader = require('./data-utils/dataReaderRev')
 const recommender = require('./data-utils/recommender')
 const recommenderC = require('./data-utils/recommenderConsole')
 const stRecommender = require('./data-utils/recommenderNoFork')
@@ -17,7 +17,7 @@ async function recommend() {
   let minNumRatings = 1
   let type = args[0] ? args[0] : 'fork'
   let forks = args[1] ? parseInt(args[1]) : 4
-  let userId = '1'
+  let userId = 1
 
   // console.log(await ratingsData)
 
@@ -49,7 +49,7 @@ async function recommend() {
   let rawRecommendations
 
   if (type === 'fork') {
-    rawRecommendations = await recommenderC.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, forks)
+    rawRecommendations = await recommenderC.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, forks)
   }
 
   if (type === 'worker') {
