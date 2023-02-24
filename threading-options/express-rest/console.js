@@ -6,7 +6,7 @@ const stRecommender = require('./data-utils/recommenderNoFork')
 
 async function recommend() {
   const args = process.argv.slice(2)
-  // --enable-one-shot-optimization
+  // --optimize-for-size --enable-one-shot-optimization --allow-natives-syntax -trace_opt -trace_deopt // --optimize-for-size seems to make many forks faster
   const userData = await dataReader.getAllUsers()
   const ratingsData = await dataReader.getRatings()
   const movieData = await dataReader.getMovies()

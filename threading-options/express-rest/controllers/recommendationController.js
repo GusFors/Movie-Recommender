@@ -42,7 +42,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let userId = req.params.id
   if (isRev) {
     console.log('rev...')
-    userId = parseInt(userId)
+    userId = parseInt(userId) // forks seems to be more affected than workers when true
   }
 
   const userData = isRev ? await dataReaderRev.getAllUsers() : await dataReader.getAllUsers()
@@ -92,7 +92,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   }
 
   if (type === 'Slow') {
-    rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings)
+    rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, 'json')
   }
 
   let t8 = performance.now()

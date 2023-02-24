@@ -29,7 +29,7 @@ recommender.getMovieRecommendationScores = (weightedScores, moviesData, minNumOf
       let simScoreSum = 0
 
       for (let j = 0; j < weightedScores.length; j++) {
-        if (moviesData[i].movieId == weightedScores[j].movieId) {
+        if (moviesData[i].movieId === weightedScores[j].movieId) {
           weightedScoreSum += weightedScores[j].weightedRating
           simScoreSum += weightedScores[j].simScore
         }

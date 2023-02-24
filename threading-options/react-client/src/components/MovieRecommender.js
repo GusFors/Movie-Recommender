@@ -104,7 +104,7 @@ function MovieRecommender() {
       const t1 = performance.now()
       setInfoContent(
         <span style={{ fontSize: '14px' }}>
-          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in
+          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
           {t1 - t0} milliseconds.
         </span>
       )
@@ -271,13 +271,12 @@ function MovieRecommender() {
             Find recommended users
           </Button>
         </Stack>
-
-        <Stack sx={{ m: 0 }}>
-          <div style={{}}>
-            {loadingContent}
-            {infoContent}
-            {recommendationContent}
-          </div>
+        <Stack>
+          {loadingContent}
+          {infoContent}
+        </Stack>
+        <Stack direction='row' spacing={3} sx={{ m: 0, width: '100%', maxWidth: '800px' }}>
+          {recommendationContent}
         </Stack>
       </Stack>
     </Stack>

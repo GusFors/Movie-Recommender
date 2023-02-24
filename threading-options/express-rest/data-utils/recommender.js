@@ -11,8 +11,14 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
 
   for (let i = 0; i < userAratings.length; i++) {
     for (let j = 0; j < userBratings.length; j++) {
+      // if (i > 5) {
+      //   if(!%HaveSameMap(userAratings, userBratings)) {
+      //     console.log('not same map----')
+      //   }
+
+      // }
       if (userAratings[i].movieId === userBratings[j].movieId) {
-        sim += (parseFloat(userAratings[i].rating) - parseFloat(userBratings[j].rating)) ** 2
+        sim += (userAratings[i].rating - userBratings[j].rating) ** 2
         n += 1
       }
     }
@@ -27,6 +33,8 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
   return inv
 }
 
+// %OptimizeFunctionOnNextCall(recommender.calcEuclideanScore);
+// %GetOptimizationCount(recommender.calcEuclideanScore)
 // calculates the Pearson correlation score
 recommender.calcPearsonScore = (userAratings, userBratings) => {
   let sum1 = 0,
@@ -67,12 +75,15 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 // Gets euclidian similarity scores for all the other users for the given userId
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   // the given userIds ratings
+  // let tf1 = performance.now()
   let userAratings = ratingsData.filter((rating) => rating.userId === userId)
+
   let simScores = []
 
   // Loop through and get similarity scores from all users except the userId
   for (let i = 0; i < usersData.length; i++) {
     if (usersData[i].userId !== userId) {
+      //console.log(typeof usersData[i].userId, typeof userId)
       // current user to compare against
       let simScore
       let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i].userId)
@@ -85,8 +96,13 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     }
   }
 
+  // let tf2 = performance.now()
+  // console.log('filter a', tf2 - tf1)
+
   return simScores
 }
+
+// %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUser);
 
 // Gets Pearson similarity scores for all the other users for the given userId
 recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
@@ -223,7 +239,8 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
     let movieRecommendations = []
 
     let t1 = performance.now()
-    let calcScore = fork('./data-utils/scoreCalc.js')
+    let calcScore = fork('./data-utils/scoreCalc.js', [], { execArgv: ['--optimize-for-size', '--allow-natives-syntax'] })
+
     calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
     let t2 = performance.now()
     console.log(`started fork and sent data to id:${id} in `, t2 - t1)
