@@ -45,9 +45,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     userId = parseInt(userId) // forks seems to be more affected than workers when true
   }
 
+  
   const userData = isRev ? await dataReaderRev.getAllUsers() : await dataReader.getAllUsers()
   const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
   const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
+ 
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
