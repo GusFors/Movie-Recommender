@@ -32,12 +32,12 @@ process.on('message', (data) => {
           recommendationScore: weightedScoreSum / simScoreSum,
         })
       }
-     // last = data.moviesData[i]
+      // last = data.moviesData[i]
     }
   }
 
   let t2 = performance.now()
-  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc (${process.execArgv})`)
+  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`) // (${process.execArgv})
 
   process.send({ message: 'done', data: calcData, id: data.id })
 })
