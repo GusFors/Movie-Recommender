@@ -1,11 +1,13 @@
 const { fork } = require('child_process')
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads')
 const chunk = require('array-chunk-split')
+const { serialize, deserialize } = require('v8')
 
 const recommender = {}
 
 // calculates the euclidian similarity measurement
 recommender.calcEuclideanScore = (userAratings, userBratings) => {
+  // console.log(%GetOptimizationStatus(recommender.calcEuclideanScore))
   let sim = 0
   let n = 0
 
@@ -35,7 +37,7 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
 
 // %OptimizeFunctionOnNextCall(recommender.calcEuclideanScore);
 // %GetOptimizationCount(recommender.calcEuclideanScore)
-// calculates the Pearson correlation score
+
 recommender.calcPearsonScore = (userAratings, userBratings) => {
   let sum1 = 0,
     sum2 = 0,
@@ -72,15 +74,18 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
   return num / den
 }
 
-// Gets euclidian similarity scores for all the other users for the given userId
+// %NeverOptimizeFunction(recommender.calcEuclideanScore);
+
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
-  // the given userIds ratings
+  // console.log(%GetOptimizationStatus(recommender.calcEuclideanScore))
+  // console.log(%GetOptimizationStatus(recommender.getEuclidianSimScoresForUser))
+  // console.log()
+
   // let tf1 = performance.now()
   let userAratings = ratingsData.filter((rating) => rating.userId === userId)
 
   let simScores = []
 
-  // Loop through and get similarity scores from all users except the userId
   for (let i = 0; i < usersData.length; i++) {
     if (usersData[i].userId !== userId) {
       //console.log(typeof usersData[i].userId, typeof userId)
@@ -89,17 +94,22 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
       let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i].userId)
       simScore = recommender.calcEuclideanScore(userAratings, userBratings)
 
-      // only include users with similarity > 0 in rest of calculations
       if (simScore > 0) {
         simScores.push({ ...usersData[i], similarity: simScore })
       }
     }
   }
 
-  // let tf2 = performance.now()
-  // console.log('filter a', tf2 - tf1)
-
   return simScores
+}
+
+recommender.warmupOpt = (userId, usersData, ratingsData) => {
+  // prettier-ignore
+  %PrepareFunctionForOptimization(recommender.getEuclidianSimScoresForUser);
+  // prettier-ignore
+  recommender.getEuclidianSimScoresForUser(userId, usersData, ratingsData);
+  // prettier-ignore
+  %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUser);
 }
 
 // %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUser);

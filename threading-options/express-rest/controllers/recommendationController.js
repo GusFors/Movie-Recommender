@@ -37,6 +37,18 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   })
 }
 
+let isOptimized = false
+
+;(async () => {
+  if (!isOptimized) {
+    const userData = await dataReaderRev.getAllUsers()
+    const ratingsData = await dataReaderRev.getRatings()
+    const movieData = await dataReaderRev.getMovies()
+    recommender.warmupOpt(1, await userData, await ratingsData)
+    isOptimized = true
+  }
+})()
+
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
   let isRev = Boolean(parseInt(req.query.rev))
   let userId = req.params.id
@@ -45,11 +57,13 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     userId = parseInt(userId) // forks seems to be more affected than workers when true
   }
 
-  
   const userData = isRev ? await dataReaderRev.getAllUsers() : await dataReader.getAllUsers()
   const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
   const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
- 
+
+  if (!isOptimized) {
+    recommender.warmupOpt(userId, await userData, await ratingsData)
+  }
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
