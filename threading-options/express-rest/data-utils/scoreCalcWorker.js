@@ -1,9 +1,12 @@
 const { parentPort, threadId } = require('worker_threads')
+const { serialize, deserialize } = require('v8')
 //let data = JSON.parse(JSON.stringify(workerData)) // { ...workerData } // structuredClone(workerData)
 
 parentPort.on('message', (data) => {
   // seems to speed up the loops compared to just sending the plain array or using structuredClone
-  let workerData = data //JSON.parse(JSON.stringify(data))
+  // console.log(data)
+  //let workerData = deserialize(data) //JSON.parse(JSON.stringify(data))
+  let workerData = data
   console.log('threadWorker spawned with id', threadId)
 
   const minNumOfRatings = workerData.minNumRatings
@@ -36,11 +39,12 @@ parentPort.on('message', (data) => {
           recommendationScore: weightedScoreSum / simScoreSum,
         })
       }
-     //  last = workerData.moviesData[i]
+      //  last = workerData.moviesData[i]
     }
   }
 
   let t2 = performance.now()
   console.log(`worker with id: ${threadId} took ${t2 - t1}ms to calc`)
   parentPort.postMessage({ message: 'done', data: calcData, id: threadId })
+  // process.exit()
 })

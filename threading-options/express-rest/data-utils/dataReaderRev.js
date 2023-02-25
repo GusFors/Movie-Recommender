@@ -4,6 +4,7 @@ const DATAPATH = 'standard-data'
 const dataReader = {}
 const dataHolder = {
   userData: [],
+  userIdData: [],
   ratingsData: [],
   movieData: [],
 }
@@ -21,13 +22,56 @@ dataReader.getAllUsers = async () => {
             return parseInt(value)
           }
 
+          // if (key === 'name') {
+          //   return
+          // }
+
           return value
         })
         resolve(dataHolder.userData)
       })
     } else {
       console.log('load users from obj...')
+      // console.log(dataHolder.userData)
       resolve(dataHolder.userData)
+    }
+  })
+}
+
+dataReader.getAllUsersId = async () => {
+  return new Promise((resolve, reject) => {
+    if (!dataHolder.userIdData.length > 0) {
+      fs.readFile(`./data/${DATAPATH}/users.json`, 'utf8', (err, data) => {
+        if (err) {
+          reject(err)
+        }
+        console.log('read users from file...')
+        JSON.parse(data, (key, value) => {
+          // console.log(key, value)
+          if (key === 'userId') {
+            dataHolder.userIdData.push({ userId: parseInt(value) })
+            //  return parseInt(value)
+          }
+
+          // if (key === 'name') {
+          //   return
+          // }
+          // //console.log(key, value)
+          // return value
+
+          // console.log(key, value)
+          // console.log(key)
+          // return value
+        })
+        // console.log('readuser', dataHolder.userIdData)
+        //resolve(JSON.parse(JSON.stringify(dataHolder.userIdData)))
+        resolve(dataHolder.userIdData)
+      })
+    } else {
+      console.log('load users from obj...')
+      // console.log(dataHolder.userIdData)
+      resolve(dataHolder.userIdData)
+      //resolve(JSON.parse(JSON.stringify(dataHolder.userIdData)))
     }
   })
 }
@@ -52,11 +96,13 @@ dataReader.getRatings = async () => {
           }
           return value
         })
-        resolve(dataHolder.ratingsData)
+        //resolve(dataHolder.ratingsData)
+        resolve(JSON.parse(JSON.stringify(dataHolder.ratingsData)))
       })
     } else {
       console.log('load ratings from obj...')
       resolve(dataHolder.ratingsData)
+      //resolve(JSON.parse(JSON.stringify(dataHolder.ratingsData)))
     }
   })
 }
@@ -76,11 +122,13 @@ dataReader.getMovies = async () => {
           return value
         })
 
-        resolve(dataHolder.movieData)
+        //resolve(dataHolder.movieData)
+        resolve(JSON.parse(JSON.stringify(dataHolder.movieData)))
       })
     } else {
       console.log('load movies frm obj...')
       resolve(dataHolder.movieData)
+      //resolve(JSON.parse(JSON.stringify(dataHolder.movieData)))
     }
   })
 }

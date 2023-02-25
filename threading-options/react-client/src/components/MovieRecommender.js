@@ -22,7 +22,7 @@ function MovieRecommender() {
   const [numThreads, setNumThreads] = useState(4)
   const [infoContent, setInfoContent] = useState('')
   const [disabledButton, setdisabledButton] = useState(false)
-  const [rev, setRev] = useState(0)
+  const [rev, setRev] = useState(1)
 
   const defaultProps = {
     options: userAuto,

@@ -38,10 +38,12 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 }
 
 let isOptimized = false
-
+let lastMap
 ;(async () => {
   if (!isOptimized) {
-    const userData = await dataReaderRev.getAllUsers()
+    const userData = await dataReaderRev.getAllUsersId()
+    console.log(await userData[0], await userData.length)
+    lastMap = await userData
     const ratingsData = await dataReaderRev.getRatings()
     const movieData = await dataReaderRev.getMovies()
     recommender.warmupOpt(1, await userData, await ratingsData)
@@ -57,13 +59,12 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     userId = parseInt(userId) // forks seems to be more affected than workers when true
   }
 
-  const userData = isRev ? await dataReaderRev.getAllUsers() : await dataReader.getAllUsers()
+  const userData = isRev ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
+  console.log(%HaveSameMap(await userData[0], await lastMap[0]))
   const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
   const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
 
-  if (!isOptimized) {
-    recommender.warmupOpt(userId, await userData, await ratingsData)
-  }
+  console.log('userdata', await userData[0])
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
@@ -81,17 +82,21 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   if (chosenSim === 'Pearson') {
     userSimScores = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
   }
-
+  console.log(userSimScores[0])
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, ratingsData)
+  console.log(ratingsMoviesNotSeen[0], ratingsMoviesNotSeen.length)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
+
+  userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
+  console.log(weightedScores[0], weightedScores.length)
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
 

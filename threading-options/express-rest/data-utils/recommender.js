@@ -31,7 +31,7 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
   }
 
   let inv = 1 / (1 + sim)
-
+  // console.log(inv)
   return inv
 }
 
@@ -75,12 +75,12 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 }
 
 // %NeverOptimizeFunction(recommender.calcEuclideanScore);
-
+let lastMap1
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   // console.log(%GetOptimizationStatus(recommender.calcEuclideanScore))
   // console.log(%GetOptimizationStatus(recommender.getEuclidianSimScoresForUser))
   // console.log()
-
+  console.log('id', userId)
   // let tf1 = performance.now()
   let userAratings = ratingsData.filter((rating) => rating.userId === userId)
 
@@ -154,19 +154,25 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
 
 // Gets the weighted scores/ratings by using the users similarity scores
 recommender.getWeightedScores = (similarityScores, ratingsData) => {
+  // console.log(%GetOptimizationStatus(recommender.getWeightedScores))
   let weightedScores = []
-
+  // console.log(ratingsData)
+  // let total = 0
   for (let s = 0; s < similarityScores.length; s++) {
     for (let i = 0; i < ratingsData.length; i++) {
       if (similarityScores[s].userId === ratingsData[i].userId) {
+        // let t1 = performance.now()
         weightedScores.push({
-          ...ratingsData[i],
+          movieId: ratingsData[i].movieId,
           weightedRating: similarityScores[s].similarity * ratingsData[i].rating,
           simScore: similarityScores[s].similarity,
         })
+        // let t2 = performance.now()
+        // total += t2 - t1
       }
     }
   }
+  //console.log(total)
   return weightedScores
 }
 
@@ -177,8 +183,9 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
 
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
     let promises = []
-    console.log(forkProcesses, moviesChunks.length)
-
+    // console.log(forkProcesses, moviesChunks.length)
+    // let wb = serialize(weightedScores)
+    // let mb = serialize(moviesData)
     console.log('spawning workers....')
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnWorker(moviesChunks[i], weightedScores, minNumRatings, i))
@@ -204,6 +211,8 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
       //   workerData: { weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id },
       //  resourceLimits: { stackSizeMb: 1000, codeRangeSizeMb: 1000, maxOldGenerationSizeMb: 1000, maxYoungGenerationSizeMb: 1000 },
     })
+    // let shared = serialize({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
+    // worker.postMessage(shared, [shared.buffer])
     worker.postMessage({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
 
     let t2 = performance.now()
@@ -213,7 +222,7 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
       if (data.message === 'done') {
         console.log('worker id' + data.id + ' done')
         // movieRecommendations = data.data
-        worker.terminate()
+        // worker.terminate()
         return resolve(data.data)
       }
     })
