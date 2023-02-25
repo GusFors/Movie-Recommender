@@ -70,32 +70,58 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 }
 
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
-  let userAratings = ratingsData.filter((rating) => rating.userId === userId)
+  // let userAratings = ratingsData.filter((rating) => rating.userId === userId)
   console.log('sfsfsdfs')
   let simScores = []
   // let avg = 0
+  let userIdRatings = []
+  let otherUserRatings = []
+  for (let r = 0, l = ratingsData.length; r < l; r++) {
+    if (ratingsData[r].userId === userId) {
+      userIdRatings.push(ratingsData[r])
+    } else {
+      otherUserRatings.push(ratingsData[r])
+    }
+  }
 
   for (let i = 0, u = usersData.length; i < u; i++) {
-    // let t1 = performance.now()
-    if (usersData[i] !== userId) {
-      let simScore
-      // let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i])
-      let userB = []
-      for (let r = 0; r < ratingsData.length; r++) {
-        if (ratingsData[r].userId === usersData[i]) {
-          userB.push(ratingsData[r])
-        }
-      }
-
-      simScore = recommender.calcEuclideanScore(userAratings, userB)
-
-      if (simScore > 0) {
-        simScores.push({ userId: usersData[i], similarity: simScore })
+    let userB = []
+    for (let r = 0, l = otherUserRatings.length; r < l; r++) {
+      if (otherUserRatings[r].userId === usersData[i]) {
+        userB.push(otherUserRatings[r])
       }
     }
-    // let t2 = performance.now()
-    // avg += t2 - t1
+    
+    let simScore = recommender.calcEuclideanScore(userIdRatings, userB)
+    if (simScore > 0) {
+      // console.log(usersData[i])
+      simScores.push({ userId: usersData[i], similarity: simScore })
+    }
   }
+
+
+  // for (let i = 0, u = usersData.length; i < u; i++) {
+  //   // let t1 = performance.now()
+  //   if (usersData[i] !== userId) {
+  //     let simScore
+  //     // let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i])
+  //     let userB = []
+  //     for (let r = 0, l = ratingsData.length; r < l; r++) {
+  //       if (ratingsData[r].userId === usersData[i]) {
+  //         userB.push(ratingsData[r])
+  //       }
+  //     }
+
+  //     simScore = recommender.calcEuclideanScore(userAratings, userB)
+
+  //     if (simScore > 0) {
+  //       // console.log(usersData[i])
+  //       simScores.push({ userId: usersData[i], similarity: simScore })
+  //     }
+  //   }
+  //   // let t2 = performance.now()
+  //   // avg += t2 - t1
+  // }
 
   // console.log(avg / usersData.length)
 
