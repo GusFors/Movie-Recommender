@@ -239,7 +239,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
     let movieRecommendations = []
 
     let t1 = performance.now()
-    let calcScore = fork('./data-utils/scoreCalc.js', [], { execArgv: ['--optimize-for-size', '--allow-natives-syntax'] })
+    let calcScore = fork('./data-utils/scoreCalc.js', [], { execArgv: ['--optimize-for-size', '--allow-natives-syntax'], serialization: 'advanced' })
 
     calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
     let t2 = performance.now()
