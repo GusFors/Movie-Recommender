@@ -43,10 +43,10 @@ dataReader.getAllUsersId = async () => {
         JSON.parse(data, (key, value) => {
           // console.log(key, value)
           if (key === 'userId') {
-            dataHolder.userIdData.push({ userId: parseInt(value) })
+            dataHolder.userIdData.push(parseInt(value))
           }
         })
-
+        // console.log(dataHolder.userIdData)
         resolve(dataHolder.userIdData)
       })
     } else {

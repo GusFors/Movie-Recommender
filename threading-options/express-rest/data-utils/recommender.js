@@ -5,6 +5,14 @@ const chunk = require('array-chunk-split')
 
 const recommender = {}
 
+// for (let i = 0, a = userAratings.length; i < a; i++) {
+//   for (let j = 0, b = userBratings.length; j < b; j++) {
+//     if (userAratings[i].movieId === userBratings[j].movieId) {
+//       sim += (userAratings[i].rating - userBratings[j].rating) ** 2
+//       n += 1
+//     }
+//   }
+// }
 recommender.calcEuclideanScore = (userAratings, userBratings) => {
   let sim = 0
   let n = 0
@@ -63,20 +71,33 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let userAratings = ratingsData.filter((rating) => rating.userId === userId)
-
+  console.log('sfsfsdfs')
   let simScores = []
+  // let avg = 0
 
-  for (let i = 0; i < usersData.length; i++) {
-    if (usersData[i].userId !== userId) {
+  for (let i = 0, u = usersData.length; i < u; i++) {
+    // let t1 = performance.now()
+    if (usersData[i] !== userId) {
       let simScore
-      let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i].userId)
-      simScore = recommender.calcEuclideanScore(userAratings, userBratings)
+      // let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i])
+      let userB = []
+      for (let r = 0; r < ratingsData.length; r++) {
+        if (ratingsData[r].userId === usersData[i]) {
+          userB.push(ratingsData[r])
+        }
+      }
+
+      simScore = recommender.calcEuclideanScore(userAratings, userB)
 
       if (simScore > 0) {
-        simScores.push({ ...usersData[i], similarity: simScore })
+        simScores.push({ userId: usersData[i], similarity: simScore })
       }
     }
+    // let t2 = performance.now()
+    // avg += t2 - t1
   }
+
+  // console.log(avg / usersData.length)
 
   return simScores
 }

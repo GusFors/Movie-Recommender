@@ -116,6 +116,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
   console.log(`Total time:`, t8 - t1)
+  console.log()
 
   filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
 
