@@ -142,13 +142,13 @@ recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
   let simScores = []
 
   for (let i = 0; i < usersData.length; i++) {
-    if (usersData[i].userId !== userId) {
+    if (usersData[i] !== userId) {
       let simScore
-      let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i].userId)
+      let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i])
       simScore = recommender.calcPearsonScore(userAratings, userBratings)
 
       if (simScore > 0) {
-        simScores.push({ ...usersData[i], similarity: simScore })
+        simScores.push({ userId: usersData[i], similarity: simScore })
       }
     }
   }

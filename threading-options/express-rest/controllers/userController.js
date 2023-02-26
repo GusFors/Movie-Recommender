@@ -1,5 +1,5 @@
 const userController = {}
-const dataReader = require('../data-utils/dataReader')
+const dataReader = require('../data-utils/dataReaderRev')
 
 userController.getUsers = async (req, res, next) => {
   res.status(200).json({

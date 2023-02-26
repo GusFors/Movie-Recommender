@@ -1,5 +1,5 @@
 const fs = require('fs')
-const DATAPATH = 'standard-data'
+const DATAPATH = 'example-data'
 
 const dataReader = {}
 const dataHolder = {
