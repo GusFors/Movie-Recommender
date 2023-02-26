@@ -6,6 +6,8 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
   // let userIdSorted = userNamesAndIds.sort((a, b) => b.id - a.id)
   // console.log(userNamesAndIds)
   // console.log(rawUserRecommendationData)
+
+  // workaround
   let combined = []
   if (userNamesAndIds) {
     numOfResultsData.forEach((user) => {
@@ -26,13 +28,6 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
 
     return numOfResultsData
   }
-
-  // numOfResultsData.forEach((user) => {
-
-  //   user.similarity = parseFloat(user.similarity.toFixed(4))
-  // })
-  // return combined
-  //return numOfResultsData
 }
 
 dataFilterer.getFilteredRecommendedMovieData = (rawMovieRecommendationData, numberOfResults) => {

@@ -6,7 +6,7 @@ const stRecommender = require('./data-utils/recommenderNoFork')
 
 async function recommend() {
   const args = process.argv.slice(2)
-  // --optimize-for-size --enable-one-shot-optimization --allow-natives-syntax -trace_opt -trace_deopt // --optimize-for-size seems to make many forks faster
+
   const userData = await dataReader.getAllUsers()
   const ratingsData = await dataReader.getRatings()
   const movieData = await dataReader.getMovies()
@@ -18,8 +18,6 @@ async function recommend() {
   let type = args[0] ? args[0] : 'fork'
   let forks = args[1] ? parseInt(args[1]) : 4
   let userId = 1
-
-  // console.log(await ratingsData)
 
   let userSimScores
   let t1 = performance.now()
@@ -72,3 +70,7 @@ async function recommend() {
 }
 
 recommend()
+
+// --optimize-for-size --enable-one-shot-optimization --allow-natives-syntax -trace_opt -trace_deopt // --optimize-for-size seems to make many forks faster
+// --lite-mode --mcpu=... '--predictable-gc-schedule', '--huge-max-old-generation-size', '--always-sparkplug', '--max-opt=4', '--use-largepages=on', '--max-old-space-size=3072', '--max-semi-space-size=2048'
+// --predictable-gc-schedule --huge-max-old-generation-size --use-largepages=on --random-gc-interval=10 --gc-experiment-less-compaction --experimental-json-modules

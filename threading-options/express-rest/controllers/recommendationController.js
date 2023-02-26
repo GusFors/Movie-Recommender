@@ -10,18 +10,10 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let isRev = false // Boolean(parseInt(req.query.rev))
   let userId = req.params.id
   userId = parseInt(userId)
-  // if (isRev) {
-  //   console.log('rev...')
-  //   userId = parseInt(userId)
-  // }
-  // userId = parseInt(userId)
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
-
-  // const userData = chosenSim === 'Euclidian' ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-  // const ratingsData = chosenSim === 'Euclidian' ? await dataReaderRev.getRatings() : await dataReader.getRatings()
 
   const userData = await dataReaderRev.getAllUsersId()
   const ratingsData = await dataReaderRev.getRatings()
@@ -57,21 +49,11 @@ let lastMap
 })()
 
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
-  // let isRev = Boolean(parseInt(req.query.rev))
   let userId = req.params.id
   userId = parseInt(userId)
-  // if (isRev) {
-  //   console.log('rev...')
-  //   // userId = parseInt(userId)
-  // }
-
-  // const userData = isRev ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-  // // console.log(%HaveSameMap(await userData[0], await lastMap[0]))
-  // const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
-  // const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
 
   const userData = await dataReaderRev.getAllUsersId()
-  // console.log(%HaveSameMap(await userData[0], await lastMap[0]))
+
   const ratingsData = await dataReaderRev.getRatings()
   const movieData = await dataReaderRev.getMovies()
 
@@ -91,20 +73,18 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   if (chosenSim === 'Pearson') {
     userSimScores = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
   }
-  // console.log(userSimScores[0])
+
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
-  // console.log(ratingsMoviesNotSeen[0], ratingsMoviesNotSeen.length)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
-  // console.log(weightedScores[0], weightedScores.length)
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
 
@@ -146,3 +126,18 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 }
 
 module.exports = recommendationController
+
+// const userData = chosenSim === 'Euclidian' ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
+// const ratingsData = chosenSim === 'Euclidian' ? await dataReaderRev.getRatings() : await dataReader.getRatings()
+
+// console.log(%HaveSameMap(await userData[0], await lastMap[0]))
+// let isRev = Boolean(parseInt(req.query.rev))
+// if (isRev) {
+//   console.log('rev...')
+//   // userId = parseInt(userId)
+// }
+
+// const userData = isRev ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
+// // console.log(%HaveSameMap(await userData[0], await lastMap[0]))
+// const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
+// const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
