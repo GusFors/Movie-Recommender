@@ -91,14 +91,13 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
         userB.push(otherUserRatings[r])
       }
     }
-    
+
     let simScore = recommender.calcEuclideanScore(userIdRatings, userB)
     if (simScore > 0) {
       // console.log(usersData[i])
       simScores.push({ userId: usersData[i], similarity: simScore })
     }
   }
-
 
   // for (let i = 0, u = usersData.length; i < u; i++) {
   //   // let t1 = performance.now()
@@ -172,8 +171,8 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
 recommender.getWeightedScores = (similarityScores, ratingsData) => {
   let weightedScores = []
 
-  for (let s = 0; s < similarityScores.length; s++) {
-    for (let i = 0; i < ratingsData.length; i++) {
+  for (let s = 0, l = similarityScores.length; s < l; s++) {
+    for (let i = 0, r = ratingsData.length; i < r; i++) {
       if (similarityScores[s].userId === ratingsData[i].userId) {
         weightedScores.push({
           movieId: ratingsData[i].movieId,
