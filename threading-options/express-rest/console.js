@@ -71,6 +71,11 @@ async function recommend() {
 
 recommend()
 
-// --optimize-for-size --enable-one-shot-optimization --allow-natives-syntax -trace_opt -trace_deopt // --optimize-for-size seems to make many forks faster
-// --lite-mode --mcpu=... '--predictable-gc-schedule', '--huge-max-old-generation-size', '--always-sparkplug', '--max-opt=4', '--use-largepages=on', '--max-old-space-size=3072', '--max-semi-space-size=2048'
-// --predictable-gc-schedule --huge-max-old-generation-size --use-largepages=on --random-gc-interval=10 --gc-experiment-less-compaction --experimental-json-modules
+// --optimize-for-size  --initial-shared-heap-size= --trace_gc --enable-one-shot-optimization --allow-natives-syntax -trace_opt -trace_deopt // --optimize-for-size seems to make many forks faster, flag implications?
+// # Cycle in flag implications:
+// --optimize-for-size -> --max-semi-space-size = 1
+// --predictable-gc-schedule -> --max-semi-space-size = 4
+// #
+
+// --lite-mode --mcpu=... '--predictable-gc-schedule', '--huge-max-old-generation-size', '--always-sparkplug', '--max-opt=4', '--use-largepages=on', '--max-old-space-size=3072', '--max-semi-space-size=2048' --inline-new --fast-forward-schedule --turbo-fast-api-calls
+// --predictable-gc-schedule --huge-max-old-generation-size --use-largepages=on --random-gc-interval=10 --gc-experiment-less-compaction --experimental-json-modules --max-old-space-size=128 --max-semi-space-size=2 // less sometimes faster? 

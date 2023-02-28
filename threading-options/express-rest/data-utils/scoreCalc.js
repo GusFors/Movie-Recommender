@@ -1,11 +1,12 @@
 process.on('message', (data) => {
   //let data = JSON.parse(JSON.stringify(mdata)) // doesn't seem to make as much difference when forking compared to workers
+
   const minNumOfRatings = data.minNumRatings
   let calcData = []
-
+  console.log(data.id, 'alive')
   let noTitleMov = []
   let p1 = performance.now()
-  for (let y = 0; y < data.moviesData.length; y++) {
+  for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
       noTitleMov.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings })
     }

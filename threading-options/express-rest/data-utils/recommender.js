@@ -181,7 +181,10 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
     let movieRecommendations = []
 
     let t1 = performance.now()
-    let worker = new Worker('./data-utils/scoreCalcWorker.js', { execArgv: [''] })
+    let worker = new Worker('./data-utils/scoreCalcWorker.js', {
+      execArgv: [''],
+      //  resourceLimits: { maxYoungGenerationSizeMb: 1024, stackSizeMb: 8 },
+    })
 
     worker.postMessage({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
 
@@ -192,7 +195,7 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
       if (data.message === 'done') {
         console.log('worker id' + data.id + ' done')
 
-        // worker.terminate()
+        worker.terminate()
         return resolve(data.data)
       }
     })
@@ -236,7 +239,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
 
     let t1 = performance.now()
     let calcScore = fork('./data-utils/scoreCalc.js', [], {
-      execArgv: ['--predictable-gc-schedule', '--allow-natives-syntax'],
+      execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster
 
@@ -254,6 +257,11 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
 }
 
 module.exports = recommender
+
+// let t3 = performance.now()
+// let str = JSON.stringify({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
+// let t4 = performance.now()
+// console.log('took stringify', t4 - t3)
 
 // for (let i = 0, u = usersData.length; i < u; i++) {
 //   // let t1 = performance.now()

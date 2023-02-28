@@ -9,26 +9,45 @@ parentPort.on('message', (data) => {
 
   const minNumOfRatings = workerData.minNumRatings
   let calcData = []
+  let noTitleMov = []
+  // let fixed = new Array(data.moviesData.length)
+  // fixed[0] = {}
+  // console.log(fixed)
+
+  for (let y = 0, l = data.moviesData.length; y < l; y++) {
+    if (data.moviesData[y].numRatings >= minNumOfRatings) {
+      noTitleMov.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings })
+      // fixed[y] = { movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings }
+    }
+    // else {
+    //   y--
+    // }
+    //else {
+    //   console.log(data.moviesData[y])
+    // }
+  }
+
   let t1 = performance.now()
 
-  for (let i = 0, l = workerData.moviesData.length; i < l; i++) {
-    if (workerData.moviesData[i].numRatings >= minNumOfRatings) {
-      let weightedScoreSum = 0
-      let simScoreSum = 0
+  for (let i = 0, l = noTitleMov.length; i < l; i++) {
+    let weightedScoreSum = 0
+    let simScoreSum = 0
+    let cMovId = noTitleMov[i].movieId
 
-      for (let j = 0, w = workerData.weightedScores.length; j < w; j++) {
-        if (workerData.moviesData[i].movieId === workerData.weightedScores[j].movieId) {
-          weightedScoreSum = weightedScoreSum + workerData.weightedScores[j].weightedRating
-          simScoreSum = simScoreSum + workerData.weightedScores[j].simScore
-        }
+    for (let j = 0, w = data.weightedScores.length; j < w; j++) {
+      if (cMovId === data.weightedScores[j].movieId) {
+        weightedScoreSum = weightedScoreSum + data.weightedScores[j].weightedRating
+        simScoreSum = simScoreSum + data.weightedScores[j].simScore
       }
+    }
 
-      if (weightedScoreSum > 0) {
-        calcData.push({
-          ...workerData.moviesData[i],
-          recommendationScore: weightedScoreSum / simScoreSum,
-        })
-      }
+    if (weightedScoreSum > 0) {
+      calcData.push({
+        movieId: noTitleMov[i].movieId,
+        title: data.moviesData[i].title, // can be wrong index?
+        numRatings: noTitleMov[i].numRatings,
+        recommendationScore: weightedScoreSum / simScoreSum,
+      })
     }
   }
 
@@ -37,6 +56,13 @@ parentPort.on('message', (data) => {
   parentPort.postMessage({ message: 'done', data: calcData, id: threadId })
   // process.exit()
 })
+
+// function wScoreSum(mv, wr) {
+//   if (mv.movieId === wr.movieId) {
+//     return weightedScoreSum + data.weightedScores[j].weightedRating
+//   }
+
+// }
 
 //  last = workerData.moviesData[i]
 // if (i > 5) {
