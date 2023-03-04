@@ -76,9 +76,6 @@ dataReader.getMoviesTitleLineI = async () => {
       rl.on('close', () => {
         let t2 = performance.now()
         console.log('done?', t2 - t1)
-        // console.log(total)
-        // console.log(dataEntries)
-        // console.log(movieIds)
         dataHolder.movieTitles = movieTitles
         resolve(dataHolder.movieTitles)
       })
@@ -114,18 +111,29 @@ dataReader.getMoviesCompleteLineI = async () => {
         total++
       })
       rl.on('close', () => {
-        let t2 = performance.now()
-        console.log('m done?', t2 - t1)
+        let alreadyCheckedRatingsIndexes = 0
+        let rMovIds = []
 
+        for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
+          rMovIds.push(dataHolder.ratingsData[i][1])
+        }
+        // console.log(rMovIds)
+
+        let sortedByMovieId = rMovIds.sort((a, b) => a - b)
+        // console.log(sortedByMovieId)
         for (let j = 0; j < movies.length; j++) {
           let numRatings = 0
-          for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-            if (dataHolder.ratingsData[i][1] === movies[j].movieId) {
+          for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
+            if (sortedByMovieId[i] === movies[j].movieId) {
               numRatings++
+              alreadyCheckedRatingsIndexes++
             }
           }
           movies[j].numRatings = numRatings
         }
+
+        let t2 = performance.now()
+        console.log('m done?', t2 - t1)
 
         dataHolder.movieData = movies
         resolve(dataHolder.movieData)
@@ -148,8 +156,7 @@ dataReader.getUserIdLineI = async () => {
       })
       let total = -1
       let cats
-      let userIds = []
-      let userIdSet = new Set()
+      let userIdSet = new Set() // set only stores unique values
       rl.on('line', function (line) {
         if (total === -1) {
           cats = line.split(',')
@@ -157,7 +164,6 @@ dataReader.getUserIdLineI = async () => {
           return
         }
 
-        // userIds[total] = parseInt(line[0]) // push faster?
         userIdSet.add(parseInt(line.split(',')[0])) // after
         total++
       })
@@ -217,48 +223,5 @@ dataReader.getRatingsLineI = async () => {
     }
   })
 }
-
-dataReader.getMoviesLineI = async () => {
-  return new Promise((resolve, reject) => {
-    let t1 = performance.now()
-
-    const rl = readline.createInterface({
-      input: fs.createReadStream(`./data/csv-data/small/movies.csv`),
-      crlfDelay: Infinity,
-    })
-    let total = 0
-    let cats
-    let dataEntries = []
-    rl.on('line', function (line) {
-      if (total === 0) {
-        cats = line.split(',')
-        console.log(cats)
-      }
-
-      let dataSplit = line.split(',')
-      dataEntries[total - 1] = dataSplit
-      total++
-    })
-    rl.on('close', () => {
-      let t2 = performance.now()
-    })
-  })
-}
-
-// dataReader.getMovies = async () => {
-//   return new Promise((resolve, reject) => {
-//     let t1 = performance.now()
-//     let m = fs.readFile(`./data/csv-data/small/movies.csv`, 'utf8', (err, data) => {
-//       if (err) {
-//         reject(err)
-//       }
-//       let t2 = performance.now()
-
-//       console.log('data', t2 - t1)
-//       // console.log(data)
-//       //resolve(dataHolder.movieData)
-//     })
-//   })
-// }
 
 module.exports = dataReader
