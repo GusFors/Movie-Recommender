@@ -100,20 +100,28 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   //   otherMovRatIds.push(ratingsData[r][1])
   //   otherScores.push(ratingsData[r][2])
   // }
-
+  let uniqueOtherIds = [...new Set(othersRatingUserIds)]
+  // console.log(uniqueOtherIds)
   let first2 = performance.now()
   console.log('first', first2 - first1)
 
   let outer1 = performance.now()
 
-  for (let i = 0, u = usersData.length; i < u; i++) {
+  // since in this case ratings are stored in userId order it
+  // should be possible to ignore those when doing the next userId check?
+  let alreadyCheckedRatingsIndexes = 0
+  for (let i = 0, u = uniqueOtherIds.length; i < u; i++) {
     let i1 = performance.now()
     let userBMovIds = []
     let userBScores = []
-    for (let r = 0, l = otherMovRatIds.length; r < l; r++) {
-      if (othersRatingUserIds[r] === usersData[i]) {
+
+    for (let r = alreadyCheckedRatingsIndexes, l = othersRatingUserIds.length; r < l; r++) {
+      if (othersRatingUserIds[r] === uniqueOtherIds[i]) {
         userBMovIds.push(otherMovRatIds[r])
         userBScores.push(otherScores[r])
+        alreadyCheckedRatingsIndexes++
+      } else {
+        break
       }
     }
     let i2 = performance.now()
@@ -121,7 +129,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
 
     let simScore = recommender.calcEuclideanScoreA(userAMovIds, userAScores, userBMovIds, userBScores)
     if (simScore > 0) {
-      simScores.push({ userId: usersData[i], similarity: simScore })
+      simScores.push({ userId: uniqueOtherIds[i], similarity: simScore })
     }
   }
 
