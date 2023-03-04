@@ -13,8 +13,9 @@ process.on('message', (data) => {
   }
 
   let p2 = performance.now()
-  console.log('made new calcMov in ', p2 - p1)
-
+  console.log('made new calcMovdfssfsd in ', p2 - p1)
+  // console.log(data.weightedScores.length, noTitleMov.length)
+  // console.log(data.weightedScores[0])
   let t1 = performance.now()
 
   for (let i = 0, l = noTitleMov.length; i < l; i++) {
@@ -39,7 +40,7 @@ process.on('message', (data) => {
   }
 
   let t2 = performance.now()
-  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`) // (${process.execArgv})
+  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`, calcData.length) // (${process.execArgv})
 
   process.send({ message: 'done', data: calcData, id: data.id })
 })
