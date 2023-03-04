@@ -1,18 +1,21 @@
 const { fork } = require('child_process')
 const { Worker } = require('worker_threads')
 const chunk = require('array-chunk-split')
-// const { serialize, deserialize } = require('v8')
 
 const recommender = {}
+let r = []
+let avg = []
+let iavg = []
 
 recommender.calcEuclideanScore = (userAratings, userBratings) => {
   let sim = 0
   let n = 0
 
-  for (let i = 0; i < userAratings.length; i++) {
-    for (let j = 0; j < userBratings.length; j++) {
-      if (userAratings[i].movieId === userBratings[j].movieId) {
-        sim += (userAratings[i].rating - userBratings[j].rating) ** 2
+  let t1 = performance.now()
+  for (let i = 0, a = userAratings.length; i < a; i++) {
+    for (let j = 0, b = userBratings.length; j < b; j++) {
+      if (userAratings[i][1] === userBratings[j][1]) {
+        sim += (userAratings[i][2] - userBratings[j][2]) ** 2
         n += 1
       }
     }
@@ -23,6 +26,32 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
   }
 
   let inv = 1 / (1 + sim)
+  let t2 = performance.now()
+  avg.push(t2 - t1)
+  return inv
+}
+
+recommender.calcEuclideanScoreA = (userAMovIds, userAScores, userBMovIds, userBScores) => {
+  let sim = 0
+  let n = 0
+
+  let t1 = performance.now()
+  for (let i = 0, a = userAMovIds.length; i < a; i++) {
+    for (let j = 0, b = userBMovIds.length; j < b; j++) {
+      if (userAMovIds[i] === userBMovIds[j]) {
+        sim += (userAScores[i] - userBScores[j]) ** 2
+        n += 1
+      }
+    }
+  }
+
+  if (n === 0) {
+    return 0
+  }
+
+  let inv = 1 / (1 + sim)
+  let t2 = performance.now()
+  avg.push(t2 - t1)
   return inv
 }
 
@@ -62,36 +91,67 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 }
 
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
-  // let userAratings = ratingsData.filter((rating) => rating.userId === userId)
   let simScores = []
 
-  let userIdRatings = []
-  let otherUserRatings = []
+  let first1 = performance.now()
+
+  let userAMovIds = []
+  let userAScores = []
+
+  let otherIds = []
+  let otherMovRatIds = []
+  let otherScores = []
   for (let r = 0, l = ratingsData.length; r < l; r++) {
-    if (ratingsData[r].userId === userId) {
-      userIdRatings.push(ratingsData[r])
+    if (ratingsData[r][0] === userId) {
+      // userIdRatings.push(ratingsData[r])
+      userAMovIds.push(ratingsData[r][1])
+      userAScores.push(ratingsData[r][2])
     } else {
-      otherUserRatings.push(ratingsData[r])
+      // otherUserRatings.push(ratingsData[r])
+      otherIds.push(ratingsData[r][0])
+      otherMovRatIds.push(ratingsData[r][1])
+      otherScores.push(ratingsData[r][2])
     }
   }
 
+  let first2 = performance.now()
+  console.log('first', first2 - first1)
+
+  let outer1 = performance.now()
+
   for (let i = 0, u = usersData.length; i < u; i++) {
-    let userB = []
-    for (let r = 0, l = otherUserRatings.length; r < l; r++) {
-      if (otherUserRatings[r].userId === usersData[i]) {
-        userB.push(otherUserRatings[r])
+    let i1 = performance.now()
+    let userBMovIds = []
+    let userBScores = []
+    for (let r = 0, l = otherMovRatIds.length; r < l; r++) {
+      if (otherIds[r] === usersData[i]) {
+        userBMovIds.push(otherMovRatIds[r])
+        userBScores.push(otherScores[r])
       }
     }
+    let i2 = performance.now()
+    iavg.push(i2 - i1)
 
-    let simScore = recommender.calcEuclideanScore(userIdRatings, userB)
+    let simScore = recommender.calcEuclideanScoreA(userAMovIds, userAScores, userBMovIds, userBScores)
     if (simScore > 0) {
-      // console.log(usersData[i])
       simScores.push({ userId: usersData[i], similarity: simScore })
     }
   }
-  // for (let u = 0; u < 100; u++) {
-  //   console.log(simScores[u])
-  // }
+
+  let outer2 = performance.now()
+  console.log('outer', outer2 - outer1)
+
+  console.log(
+    'avg icalcEu',
+    iavg.reduce((partialSum, a) => partialSum + a, 0)
+  )
+  iavg = []
+  console.log(
+    'avg calcEu',
+    avg.reduce((partialSum, a) => partialSum + a, 0)
+  )
+  avg = []
+
   return simScores
 }
 
@@ -123,10 +183,10 @@ recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
 }
 
 recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
-  let moviesSeenByUser = ratingsData.filter((rating) => rating.userId === userId)
+  let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
   let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
     for (let i = 0; i < moviesSeenByUser.length; i++) {
-      if (moviesSeenByUser[i].movieId === rating.movieId) {
+      if (moviesSeenByUser[i][1] === rating[1]) {
         return false
       }
     }
@@ -141,10 +201,10 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
 
   for (let s = 0, l = similarityScores.length; s < l; s++) {
     for (let i = 0, r = ratingsData.length; i < r; i++) {
-      if (similarityScores[s].userId === ratingsData[i].userId) {
+      if (similarityScores[s].userId === ratingsData[i][0]) {
         weightedScores.push({
-          movieId: ratingsData[i].movieId,
-          weightedRating: similarityScores[s].similarity * ratingsData[i].rating,
+          movieId: ratingsData[i][1],
+          weightedRating: similarityScores[s].similarity * ratingsData[i][2],
           simScore: similarityScores[s].similarity,
         })
       }
@@ -240,7 +300,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
     let movieRecommendations = []
 
     let t1 = performance.now()
-    let calcScore = fork('./data-utils/scoreCalc.js', [], {
+    let calcScore = fork('./data-utils/scoreCalcArr.js', [], {
       execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster
@@ -259,54 +319,3 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
 }
 
 module.exports = recommender
-
-// let t3 = performance.now()
-// let str = JSON.stringify({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
-// let t4 = performance.now()
-// console.log('took stringify', t4 - t3)
-
-// for (let i = 0, u = usersData.length; i < u; i++) {
-//   // let t1 = performance.now()
-//   if (usersData[i] !== userId) {
-//     let simScore
-//     // let userBratings = ratingsData.filter((rating) => rating.userId === usersData[i])
-//     let userB = []
-//     for (let r = 0, l = ratingsData.length; r < l; r++) {
-//       if (ratingsData[r].userId === usersData[i]) {
-//         userB.push(ratingsData[r])
-//       }
-//     }
-
-//     simScore = recommender.calcEuclideanScore(userAratings, userB)
-
-//     if (simScore > 0) {
-//       // console.log(usersData[i])
-//       simScores.push({ userId: usersData[i], similarity: simScore })
-//     }
-//   }
-//   // let t2 = performance.now()
-//   // avg += t2 - t1
-// }
-
-// for (let i = 0, a = userAratings.length; i < a; i++) {
-//   for (let j = 0, b = userBratings.length; j < b; j++) {
-//     if (userAratings[i].movieId === userBratings[j].movieId) {
-//       sim += (userAratings[i].rating - userBratings[j].rating) ** 2
-//       n += 1
-//     }
-//   }
-// }
-
-// console.log(avg / usersData.length)
-
-// %OptimizeFunctionOnNextCall(recommender.calcEuclideanScore);
-// %GetOptimizationCount(recommender.calcEuclideanScore)
-// let shared = serialize({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
-// worker.postMessage(shared, [shared.buffer])
-//   workerData: { weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id },
-//  resourceLimits: { stackSizeMb: 1000, codeRangeSizeMb: 1000, maxOldGenerationSizeMb: 1000, maxYoungGenerationSizeMb: 1000 },
-// console.log(%GetOptimizationStatus(recommender.getWeightedScores))
-// %NeverOptimizeFunction(recommender.calcEuclideanScore);
-// console.log(%GetOptimizationStatus(recommender.calcEuclideanScore))
-// console.log(%GetOptimizationStatus(recommender.getEuclidianSimScoresForUser))
-// console.log()

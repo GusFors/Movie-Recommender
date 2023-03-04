@@ -1,8 +1,7 @@
 const dataFilterer = require('../data-utils/dataFilterer')
-const dataReader = require('../data-utils/dataReader')
 const dataReaderRev = require('../data-utils/dataReaderRev')
+const dataReaderCsv = require('../data-utils/dataReaderCsv')
 const recommender = require('../data-utils/recommender')
-const stRecommender = require('../data-utils/recommenderNoFork')
 
 const recommendationController = {}
 
@@ -35,14 +34,13 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 }
 
 let isOptimized = false
-let lastMap
 ;(async () => {
   if (!isOptimized) {
-    const userData = await dataReaderRev.getAllUsersId()
-    // console.log(await userData[0], await userData.length)
-    lastMap = await userData
-    const ratingsData = await dataReaderRev.getRatings()
-    const movieData = await dataReaderRev.getMovies()
+    let userData = await dataReaderCsv.getUserIdLineI()
+    let ratingsData = await dataReaderCsv.getRatingsLineI()
+    // userData = JSON.parse(JSON.stringify(await userData))
+    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    // const movieData = await dataReaderRev.getMovies()
     recommender.warmupOpt(1, await userData, await ratingsData)
     isOptimized = true
   }
@@ -52,10 +50,8 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let userId = req.params.id
   userId = parseInt(userId)
 
-  const userData = await dataReaderRev.getAllUsersId()
-
-  const ratingsData = await dataReaderRev.getRatings()
-  const movieData = await dataReaderRev.getMovies()
+  let userData = await dataReaderCsv.getUserIdLineI()
+  let ratingsData = await dataReaderCsv.getRatingsLineI()
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
@@ -65,38 +61,37 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let type = req.query.type
 
   let userSimScores
+  // userData = JSON.parse(JSON.stringify(await userData))
+  // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+  // userData = structuredClone(userData)
+  // ratingsData = structuredClone(ratingsData)
+
   let t1 = performance.now()
   if (chosenSim === 'Euclidian') {
     userSimScores = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
   }
 
-  if (chosenSim === 'Pearson') {
-    userSimScores = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
-  }
-  // console.log('usersimlength:', userSimScores.length)
+  // if (chosenSim === 'Pearson') {
+  //   userSimScores = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
+  // }
+
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
   let t4 = performance.now()
-  // console.log('moviesnotseenlength:', ratingsMoviesNotSeen.length)
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
-  // for (let i = 0; i < 10; i++) {
-  //   console.log(ratingsMoviesNotSeen[i])
-    
-  // }
+  ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))
+
 
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
   let t6 = performance.now()
-  // console.log('weightedscoreslength:', weightedScores.length) // less than moviesnotseen?
-  // for (let i = 0; i < 10; i++) {
-  //   console.log(weightedScores[i])
-  // }
   console.log('getWeightedScores', t6 - t5, 'ms')
 
+  const movieData = await dataReaderRev.getMovies()
   let t7 = performance.now()
   let rawRecommendations
 
@@ -104,16 +99,16 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, threads)
   }
 
-  if (type === 'Worker') {
-    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, threads)
-  }
+  // if (type === 'Worker') {
+  //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, threads)
+  // }
 
-  if (type === 'Slow') {
-    rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, 'json')
-  }
+  // if (type === 'Slow') {
+  //   rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, 'json')
+  // }
 
   let t8 = performance.now()
-  // console.log('rawlength:', rawRecommendations.length)
+
   console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
   console.log(`Total time:`, t8 - t1)
   console.log()
@@ -135,18 +130,3 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 }
 
 module.exports = recommendationController
-
-// const userData = chosenSim === 'Euclidian' ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-// const ratingsData = chosenSim === 'Euclidian' ? await dataReaderRev.getRatings() : await dataReader.getRatings()
-
-// console.log(%HaveSameMap(await userData[0], await lastMap[0]))
-// let isRev = Boolean(parseInt(req.query.rev))
-// if (isRev) {
-//   console.log('rev...')
-//   // userId = parseInt(userId)
-// }
-
-// const userData = isRev ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-// // console.log(%HaveSameMap(await userData[0], await lastMap[0]))
-// const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
-// const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()
