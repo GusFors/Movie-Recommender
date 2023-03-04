@@ -7,13 +7,13 @@ let r = []
 let avg = []
 let iavg = []
 
-recommender.calcEuclideanScoreA = (userAMovIds, userAScores, userBMovIds, userBScores) => {
+recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
   let n = 0
 
   // let t1 = performance.now()
-  for (let i = 0, a = userAMovIds.length; i < a; i++) {
-    for (let j = 0, b = userBMovIds.length; j < b; j++) {
+  for (let i = 0, a = userAScores.length; i < a; i++) {
+    for (let j = 0, b = userBScores.length; j < b; j++) {
       sim += (userAScores[i] - userBScores[j]) ** 2
       n += 1
     }
@@ -127,7 +127,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     let i2 = performance.now()
     iavg.push(i2 - i1)
 
-    let simScore = recommender.calcEuclideanScoreA(userAMovIds, userAScores, userBMovIds, userBScores)
+    let simScore = recommender.calcEuclideanScoreA(userAScores, userBScores)
     if (simScore > 0) {
       simScores.push({ userId: uniqueOtherIds[i], similarity: simScore })
     }
