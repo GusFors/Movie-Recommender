@@ -7,41 +7,15 @@ let r = []
 let avg = []
 let iavg = []
 
-recommender.calcEuclideanScore = (userAratings, userBratings) => {
-  let sim = 0
-  let n = 0
-
-  let t1 = performance.now()
-  for (let i = 0, a = userAratings.length; i < a; i++) {
-    for (let j = 0, b = userBratings.length; j < b; j++) {
-      if (userAratings[i][1] === userBratings[j][1]) {
-        sim += (userAratings[i][2] - userBratings[j][2]) ** 2
-        n += 1
-      }
-    }
-  }
-
-  if (n === 0) {
-    return 0
-  }
-
-  let inv = 1 / (1 + sim)
-  let t2 = performance.now()
-  avg.push(t2 - t1)
-  return inv
-}
-
 recommender.calcEuclideanScoreA = (userAMovIds, userAScores, userBMovIds, userBScores) => {
   let sim = 0
   let n = 0
 
-  let t1 = performance.now()
+  // let t1 = performance.now()
   for (let i = 0, a = userAMovIds.length; i < a; i++) {
     for (let j = 0, b = userBMovIds.length; j < b; j++) {
-      if (userAMovIds[i] === userBMovIds[j]) {
-        sim += (userAScores[i] - userBScores[j]) ** 2
-        n += 1
-      }
+      sim += (userAScores[i] - userBScores[j]) ** 2
+      n += 1
     }
   }
 
@@ -50,8 +24,8 @@ recommender.calcEuclideanScoreA = (userAMovIds, userAScores, userBMovIds, userBS
   }
 
   let inv = 1 / (1 + sim)
-  let t2 = performance.now()
-  avg.push(t2 - t1)
+  // let t2 = performance.now()
+  // avg.push(t2 - t1)
   return inv
 }
 
@@ -98,21 +72,34 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let userAMovIds = []
   let userAScores = []
 
-  let otherIds = []
+  let othersRatingUserIds = []
   let otherMovRatIds = []
   let otherScores = []
+  let relevantScores = []
   for (let r = 0, l = ratingsData.length; r < l; r++) {
     if (ratingsData[r][0] === userId) {
       // userIdRatings.push(ratingsData[r])
       userAMovIds.push(ratingsData[r][1])
       userAScores.push(ratingsData[r][2])
     } else {
-      // otherUserRatings.push(ratingsData[r])
-      otherIds.push(ratingsData[r][0])
-      otherMovRatIds.push(ratingsData[r][1])
-      otherScores.push(ratingsData[r][2])
+      relevantScores.push(ratingsData[r])
     }
   }
+
+  for (let r = 0, l = relevantScores.length; r < l; r++) {
+    if (userAMovIds.includes(relevantScores[r][1])) {
+      othersRatingUserIds.push(relevantScores[r][0])
+      otherMovRatIds.push(relevantScores[r][1])
+      otherScores.push(relevantScores[r][2])
+    }
+  }
+
+  // for (let r = 0, l = ratingsData.length; r < l; r++) {
+  //   // otherUserRatings.push(ratingsData[r])
+  //   othersRatingUserIds.push(ratingsData[r][0])
+  //   otherMovRatIds.push(ratingsData[r][1])
+  //   otherScores.push(ratingsData[r][2])
+  // }
 
   let first2 = performance.now()
   console.log('first', first2 - first1)
@@ -124,7 +111,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     let userBMovIds = []
     let userBScores = []
     for (let r = 0, l = otherMovRatIds.length; r < l; r++) {
-      if (otherIds[r] === usersData[i]) {
+      if (othersRatingUserIds[r] === usersData[i]) {
         userBMovIds.push(otherMovRatIds[r])
         userBScores.push(otherScores[r])
       }
