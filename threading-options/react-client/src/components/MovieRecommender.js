@@ -23,6 +23,7 @@ function MovieRecommender() {
   const [infoContent, setInfoContent] = useState('')
   const [disabledButton, setdisabledButton] = useState(false)
   const [rev, setRev] = useState(1)
+  const [port, setPort] = useState(4000)
 
   const defaultProps = {
     options: userAuto,
@@ -97,7 +98,7 @@ function MovieRecommender() {
 
     const t0 = performance.now()
     const result = await fetch(
-      `http://localhost:4000/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}`,
+      `http://localhost:${port}/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}`,
       {}
     )
     await result.json().then((json) => {
@@ -239,6 +240,7 @@ function MovieRecommender() {
               <MenuItem value='Slow'>Slow</MenuItem>
             </Select>
           </FormControl>
+
           <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
             <InputLabel id='select-rev-label'>Rev data</InputLabel>
             <Select
@@ -253,6 +255,23 @@ function MovieRecommender() {
             >
               <MenuItem value='0'>False</MenuItem>
               <MenuItem value='1'>True</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl variant='standard' sx={{ m: 0, maxWidth: 120 }}>
+            <InputLabel id='select-type-label'>Port</InputLabel>
+            <Select
+              label='Port'
+              style={{}}
+              labelId='select-type-label'
+              id='select-type'
+              value={port}
+              onChange={(event, newValue) => {
+                setPort(event.target.value)
+              }}
+            >
+              <MenuItem value='4000'>4000</MenuItem>
+              <MenuItem value='5000'>5000</MenuItem>
             </Select>
           </FormControl>
         </Stack>
