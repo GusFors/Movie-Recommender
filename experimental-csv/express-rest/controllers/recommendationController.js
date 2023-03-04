@@ -40,7 +40,7 @@ let isOptimized = false
     let ratingsData = await dataReaderCsv.getRatingsLineI()
     // userData = JSON.parse(JSON.stringify(await userData))
     // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-    // const movieData = await dataReaderRev.getMovies()
+    const movieData = await dataReaderCsv.getMoviesCompleteLineI()
     recommender.warmupOpt(1, await userData, await ratingsData)
     isOptimized = true
   }
@@ -52,6 +52,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
+  const movieData = await dataReaderCsv.getMoviesCompleteLineI()
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
@@ -84,14 +85,14 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
   ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))
 
-
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
 
-  const movieData = await dataReaderRev.getMovies()
+  // const movieData = await dataReaderRev.getMovies()
+
   let t7 = performance.now()
   let rawRecommendations
 

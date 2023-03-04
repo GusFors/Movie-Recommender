@@ -107,6 +107,7 @@ dataReader.getMovies = async () => {
       })
     } else {
       // console.log('load movies frm obj...')
+      console.log(dataHolder.movieData[0])
       resolve(dataHolder.movieData)
       //resolve(JSON.parse(JSON.stringify(dataHolder.movieData)))
     }

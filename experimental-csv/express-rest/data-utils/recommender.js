@@ -11,7 +11,27 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
   let n = 0
 
-  // let t1 = performance.now()
+  // console.log(userAScores.length, userBScores.length)
+  // console.log(userAScores.length * userBScores.length)
+  // n *= userAScores.length * userBScores.length ** 2
+  // sim *= userAScores.length * userBScores.length ** 2
+  // let commonRatings = []
+
+  // for (let b = 0; b < userAScores.length; b++) {
+  //   if (userBScores.includes(userAScores[b])) {
+  //     commonRatings.push(userAScores[b])
+  //   }
+  // }
+
+  // console.log(commonRatings.length)
+
+  // // let t1 = performance.now()
+
+  // for (let i = 0, a = commonRatings.length; i < a; i++) {
+  //   sim += (userAScores[i] - userBScores[i]) ** 2
+  //   n += 1
+  // }
+
   for (let i = 0, a = userAScores.length; i < a; i++) {
     for (let j = 0, b = userBScores.length; j < b; j++) {
       sim += (userAScores[i] - userBScores[j]) ** 2
@@ -24,6 +44,7 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   }
 
   let inv = 1 / (1 + sim)
+  // console.log(inv)
   // let t2 = performance.now()
   // avg.push(t2 - t1)
   return inv
