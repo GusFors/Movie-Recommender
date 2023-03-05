@@ -4,12 +4,12 @@ const chunk = require('array-chunk-split')
 // const { serialize, deserialize } = require('v8')
 
 const recommender = {}
-let avg = []
-let iavg = []
+// let avg = []
+// let iavg = []
 recommender.calcEuclideanScore = (userAratings, userBratings) => {
   let sim = 0
   let n = 0
-  let t1 = performance.now()
+  // let t1 = performance.now()
   for (let i = 0; i < userAratings.length; i++) {
     for (let j = 0; j < userBratings.length; j++) {
       if (userAratings[i].movieId === userBratings[j].movieId) {
@@ -24,8 +24,8 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
   }
 
   let inv = 1 / (1 + sim)
-  let t2 = performance.now()
-  avg.push(t2 - t1)
+  // let t2 = performance.now()
+  // avg.push(t2 - t1)
   return inv
 }
 
@@ -71,7 +71,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   // console.log(%GetOptimizationStatus(recommender.getEuclidianSimScoresForUser))
   let simScores = []
 
-  let first1 = performance.now()
+  // let first1 = performance.now()
   let userIdRatings = []
   let otherUserRatings = []
   for (let r = 0, l = ratingsData.length; r < l; r++) {
@@ -82,10 +82,10 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     }
   }
 
-  let first2 = performance.now()
-  console.log('first', first2 - first1)
+  // let first2 = performance.now()
+  // console.log('first', first2 - first1)
 
-  let outer1 = performance.now()
+  // let outer1 = performance.now()
   for (let i = 0, u = usersData.length; i < u; i++) {
     let userB = []
     for (let r = 0, l = otherUserRatings.length; r < l; r++) {
@@ -93,30 +93,30 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
         userB.push(otherUserRatings[r])
       }
     }
-    let i1 = performance.now()
+    // let i1 = performance.now()
     let simScore = recommender.calcEuclideanScore(userIdRatings, userB)
     if (simScore > 0) {
       // console.log(usersData[i])
       simScores.push({ userId: usersData[i], similarity: simScore })
     }
-    let i2 = performance.now()
-    iavg.push(i2 - i1)
+    // let i2 = performance.now()
+    // iavg.push(i2 - i1)
   }
 
-  let outer2 = performance.now()
-  console.log('outer', outer2 - outer1)
+  // let outer2 = performance.now()
+  // console.log('outer', outer2 - outer1)
 
-  console.log(
-    'avg icalcEu',
-    iavg.reduce((partialSum, a) => partialSum + a, 0)
-  )
-  iavg = []
-  // console.log('avglen', avg.length)
-  console.log(
-    'avg calcEu',
-    avg.reduce((partialSum, a) => partialSum + a, 0)
-  )
-  avg = []
+  // console.log(
+  //   'avg icalcEu',
+  //   iavg.reduce((partialSum, a) => partialSum + a, 0)
+  // )
+  // iavg = []
+  // // console.log('avglen', avg.length)
+  // console.log(
+  //   'avg calcEu',
+  //   avg.reduce((partialSum, a) => partialSum + a, 0)
+  // )
+  // avg = []
 
   return simScores
 }

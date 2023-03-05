@@ -39,21 +39,20 @@ let isOptimized = false
 let lastMap
 ;(async () => {
   if (!isOptimized) {
-    const userData = await dataReaderRev.getAllUsersId()
-    // console.log(await userData[0], await userData.length)
-    lastMap = await userData
-    const ratingsData = await dataReaderRev.getRatings()
-    const movieData = await dataReaderRev.getMovies()
-    recommender.warmupOpt(1, await userData, await ratingsData)
-    isOptimized = true
-
-    // let userData = await dataReaderCsv.getUserIdLineI()
-    // let ratingsData = await dataReaderCsv.getRatingsLineI()
-    // userData = JSON.parse(JSON.stringify(await userData))
-    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-    // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
+    // const userData = await dataReaderRev.getAllUsersId()
+    // // console.log(await userData[0], await userData.length)
+    // lastMap = await userData
+    // const ratingsData = await dataReaderRev.getRatings()
+    // const movieData = await dataReaderRev.getMovies()
     // recommender.warmupOpt(1, await userData, await ratingsData)
     // isOptimized = true
+    let userData = await dataReaderCsv.getUserIdLineI()
+    let ratingsData = await dataReaderCsv.getRatingsLineObj()
+    userData = JSON.parse(JSON.stringify(await userData))
+    ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
+    recommender.warmupOpt(1, userData, ratingsData)
+    isOptimized = true
   }
 })()
 
@@ -61,15 +60,19 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let userId = req.params.id
   userId = parseInt(userId)
 
-  const userData = await dataReaderRev.getAllUsersId()
+  // const userData = await dataReaderRev.getAllUsersId()
 
-  const ratingsData = await dataReaderRev.getRatings()
-  const movieData = await dataReaderRev.getMovies()
+  // const ratingsData = await dataReaderRev.getRatings()
+  //  const movieData1 = await dataReaderRev.getMovies()
 
-  // let userData = await dataReaderCsv.getUserIdLineI()
-  // let ratingsData = await dataReaderCsv.getRatingsLineI()
+  let userData = await dataReaderCsv.getUserIdLineI()
+  let ratingsData = await dataReaderCsv.getRatingsLineObj()
+  userData = JSON.parse(JSON.stringify(await userData))
+  ratingsData = JSON.parse(JSON.stringify(await ratingsData))
   // let compRatings = await dataReaderRev.getRatings()
-  // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
+  const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
+  // console.log(movieData[0])
+  // console.log(movieData1[0])
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'

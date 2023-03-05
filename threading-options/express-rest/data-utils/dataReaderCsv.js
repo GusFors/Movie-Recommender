@@ -1,8 +1,8 @@
 const fs = require('fs')
 const { open } = require('node:fs/promises')
-const DATAPATH = 'dat'
-const split = '::'
-const startCount = 0
+const DATAPATH = 'small'
+const split = ','
+const startCount = -1
 const readline = require('node:readline')
 const dataReader = {}
 
@@ -86,7 +86,7 @@ dataReader.getMoviesTitleLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async () => {
+dataReader.getMoviesCompleteLineObj = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
     if (!dataHolder.movieData.length > 0) {
@@ -117,10 +117,11 @@ dataReader.getMoviesCompleteLineI = async () => {
         let rMovIds = []
 
         for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-          rMovIds.push(dataHolder.ratingsData[i][1])
+          rMovIds.push(dataHolder.ratingsData[i].movieId)
         }
 
         let sortedByMovieId = rMovIds.sort((a, b) => a - b)
+        // console.log(sortedByMovieId)
         let alreadyCheckedRatingsIndexes = 0
 
         for (let j = 0; j < movies.length; j++) {
@@ -149,7 +150,7 @@ dataReader.getMoviesCompleteLineI = async () => {
   })
 }
 
-dataReader.getMovieNumRatings =  () => {
+dataReader.getMovieNumRatings = () => {
   return dataHolder.numRatings
 }
 
@@ -213,6 +214,50 @@ dataReader.getRatingsLineI = async () => {
         rating[0] = parseInt(ratingValues[0])
         rating[1] = parseInt(ratingValues[1])
         rating[2] = parseFloat(ratingValues[2])
+        ratings.push(rating)
+        total++
+      })
+      rl.on('close', () => {
+        // let t2 = performance.now()
+        // console.log('done?', t2 - t1)
+        dataHolder.ratingsData = ratings
+        resolve(ratings)
+      })
+    } else {
+      // let t2 = performance.now()
+      // console.log('done?', t2 - t1)
+      resolve(dataHolder.ratingsData)
+    }
+  })
+}
+
+dataReader.getRatingsLineObj = async () => {
+  return new Promise((resolve, reject) => {
+    let t1 = performance.now()
+
+    if (!dataHolder.ratingsData.length > 0) {
+      const rl = readline.createInterface({
+        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+        crlfDelay: Infinity,
+      })
+      let total = startCount
+      let cats
+      let ratings = []
+      rl.on('line', function (line) {
+        if (total === startCount) {
+          cats = line.split(split)
+          total++
+          return
+        }
+
+        let rating = {}
+        let ratingValues = line.split(split)
+        rating.userId = parseInt(ratingValues[0])
+        rating.movieId = parseInt(ratingValues[1])
+        rating.rating = parseFloat(ratingValues[2])
+        // rating[0] = parseInt(ratingValues[0])
+        // rating[1] = parseInt(ratingValues[1])
+        // rating[2] = parseFloat(ratingValues[2])
         ratings.push(rating)
         total++
       })
