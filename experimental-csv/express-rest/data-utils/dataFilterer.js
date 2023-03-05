@@ -5,7 +5,7 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
   let numOfResultsData = sortedData.slice(0, numberOfResults)
   // let userIdSorted = userNamesAndIds.sort((a, b) => b.id - a.id)
   // console.log(userNamesAndIds)
-  // console.log(rawUserRecommendationData)
+  //  console.log(rawUserRecommendationData)
 
   // workaround
   let combined = []
@@ -13,7 +13,7 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
     numOfResultsData.forEach((user) => {
       let userObj = {
         similarity: parseFloat(user.similarity.toFixed(4)),
-        name: userNamesAndIds[parseInt(user.userId) - 1].name,
+        name: userNamesAndIds[parseInt(user.userId) - 1].name ? userNamesAndIds[parseInt(user.userId) - 1].name : 'Only Id',
         userId: user.userId,
       }
       combined.push(userObj)

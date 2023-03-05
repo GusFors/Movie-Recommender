@@ -1,5 +1,5 @@
 const fs = require('fs')
-const DATAPATH = 'standard-data'
+const DATAPATH = 'standard-data' // 'csv-data/large-data'
 
 const dataReader = {}
 const dataHolder = {

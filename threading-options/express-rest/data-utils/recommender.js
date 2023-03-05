@@ -10,15 +10,18 @@ recommender.calcEuclideanScore = (userAratings, userBratings) => {
   let sim = 0
   let n = 0
   // let t1 = performance.now()
+  // let br = []
   for (let i = 0; i < userAratings.length; i++) {
     for (let j = 0; j < userBratings.length; j++) {
       if (userAratings[i].movieId === userBratings[j].movieId) {
         sim += (userAratings[i].rating - userBratings[j].rating) ** 2
         n += 1
+        // br.push(userBratings[j].rating)
       }
     }
   }
-
+  // console.log(userAratings.length, userBratings.length, n, sim)
+  // console.log(br)
   if (n === 0) {
     return 0
   }

@@ -68,7 +68,7 @@ function MovieRecommender() {
       )
     }, 200)
 
-    const result = await fetch(`http://localhost:4000/recommendations/users/${user.id}?sim=${similarity}&results=${numResults}`, {})
+    const result = await fetch(`http://localhost:${port}/recommendations/users/${user.id}?sim=${similarity}&results=${numResults}`, {})
     await result.json().then((json) => {
       clearInterval(loadingUpdateInterval)
       setLoadingContent(null)
@@ -100,30 +100,43 @@ function MovieRecommender() {
     const result = await fetch(
       `http://localhost:${port}/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}`,
       {}
-    )
-    await result.json().then((json) => {
-      const t1 = performance.now()
-      setInfoContent(
-        <span style={{ fontSize: '14px' }}>
-          Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
-          {t1 - t0} milliseconds.
-        </span>
-      )
+    ).catch(() => {
       clearInterval(loadingUpdateInterval)
       setLoadingContent(null)
       setdisabledButton(false)
-
-      if (json.userMovieRecommendations.length > 0) {
-        setRecommendationContent(<DataTable cells={['Movie', 'ID', 'Ratings', 'Score']} rows={json.userMovieRecommendations}></DataTable>)
-      } else {
-        setRecommendationContent(<p>No movies could currently be recommended, sorry. Try again later!</p>)
-      }
+      setInfoContent(<span style={{ fontSize: '14px' }}>Error when fetching resource</span>)
+      return null
     })
+
+    if (result) {
+      await result.json().then((json) => {
+        const t1 = performance.now()
+        setInfoContent(
+          <span style={{ fontSize: '14px' }}>
+            Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
+            {t1 - t0} milliseconds.
+          </span>
+        )
+        clearInterval(loadingUpdateInterval)
+        setLoadingContent(null)
+        setdisabledButton(false)
+
+        if (json.userMovieRecommendations.length > 0) {
+          setRecommendationContent(<DataTable cells={['Movie', 'ID', 'Ratings', 'Score']} rows={json.userMovieRecommendations}></DataTable>)
+        } else {
+          setRecommendationContent(<p>No movies could currently be recommended, sorry. Try again later!</p>)
+        }
+      })
+    }
   }
 
   useEffect(() => {
     ;(async () => {
-      const result = await fetch('http://localhost:4000/users', {})
+      let result = await fetch('http://localhost:4000/users', {}).catch(async (r) => {
+        // console.log(result)
+        return await fetch('http://localhost:5000/users')
+      })
+
       const json = await result.json()
 
       let autoArr = []

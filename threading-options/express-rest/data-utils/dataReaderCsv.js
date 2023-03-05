@@ -89,6 +89,7 @@ dataReader.getMoviesTitleLineI = async () => {
 dataReader.getMoviesCompleteLineObj = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
+    console.log('hello')
     if (!dataHolder.movieData.length > 0) {
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
@@ -117,11 +118,11 @@ dataReader.getMoviesCompleteLineObj = async () => {
         let rMovIds = []
 
         for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-          rMovIds.push(dataHolder.ratingsData[i].movieId)
+          rMovIds.push(dataHolder.ratingsData[i][1])
         }
-
+        // console.log(rMovIds)
         let sortedByMovieId = rMovIds.sort((a, b) => a - b)
-        // console.log(sortedByMovieId)
+        //  console.log(sortedByMovieId)
         let alreadyCheckedRatingsIndexes = 0
 
         for (let j = 0; j < movies.length; j++) {
@@ -189,6 +190,40 @@ dataReader.getUserIdLineI = async () => {
   })
 }
 
+dataReader.getUserIdLineObj = async () => {
+  return new Promise((resolve, reject) => {
+    let t1 = performance.now()
+
+    const rl = readline.createInterface({
+      input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+      crlfDelay: Infinity,
+    })
+    let total = startCount
+    let cats
+    let userIdSet = new Set() // set only stores unique values
+    rl.on('line', function (line) {
+      if (total === startCount) {
+        cats = line.split(split)
+        total++
+        return
+      }
+
+      userIdSet.add(parseInt(line.split(split)[0])) // after
+      total++
+    })
+    rl.on('close', () => {
+      // let t2 = performance.now()
+      // console.log('done?', t2 - t1)
+      let ids = [...userIdSet]
+      let idObjs = []
+      for (let i = 0; i < ids.length; i++) {
+        idObjs.push({ userId: ids[i] })
+      }
+      resolve(idObjs)
+    })
+  })
+}
+
 dataReader.getRatingsLineI = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
@@ -235,43 +270,43 @@ dataReader.getRatingsLineObj = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
 
-    if (!dataHolder.ratingsData.length > 0) {
-      const rl = readline.createInterface({
-        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
-        crlfDelay: Infinity,
-      })
-      let total = startCount
-      let cats
-      let ratings = []
-      rl.on('line', function (line) {
-        if (total === startCount) {
-          cats = line.split(split)
-          total++
-          return
-        }
-
-        let rating = {}
-        let ratingValues = line.split(split)
-        rating.userId = parseInt(ratingValues[0])
-        rating.movieId = parseInt(ratingValues[1])
-        rating.rating = parseFloat(ratingValues[2])
-        // rating[0] = parseInt(ratingValues[0])
-        // rating[1] = parseInt(ratingValues[1])
-        // rating[2] = parseFloat(ratingValues[2])
-        ratings.push(rating)
+    // if (!dataHolder.ratingsData.length > 0) {
+    const rl = readline.createInterface({
+      input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+      crlfDelay: Infinity,
+    })
+    let total = startCount
+    let cats
+    let ratings = []
+    rl.on('line', function (line) {
+      if (total === startCount) {
+        cats = line.split(split)
         total++
-      })
-      rl.on('close', () => {
-        // let t2 = performance.now()
-        // console.log('done?', t2 - t1)
-        dataHolder.ratingsData = ratings
-        resolve(ratings)
-      })
-    } else {
+        return
+      }
+
+      let rating = {}
+      let ratingValues = line.split(split)
+      rating.userId = parseInt(ratingValues[0])
+      rating.movieId = parseInt(ratingValues[1])
+      rating.rating = parseFloat(ratingValues[2])
+      // rating[0] = parseInt(ratingValues[0])
+      // rating[1] = parseInt(ratingValues[1])
+      // rating[2] = parseFloat(ratingValues[2])
+      ratings.push(rating)
+      total++
+    })
+    rl.on('close', () => {
       // let t2 = performance.now()
       // console.log('done?', t2 - t1)
-      resolve(dataHolder.ratingsData)
-    }
+      // dataHolder.ratingsData = ratings
+      resolve(ratings)
+    })
+    // } else {
+    //   // let t2 = performance.now()
+    //   // console.log('done?', t2 - t1)
+    //   resolve(dataHolder.ratingsData)
+    // }
   })
 }
 

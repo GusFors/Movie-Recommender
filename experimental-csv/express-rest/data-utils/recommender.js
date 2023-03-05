@@ -10,16 +10,18 @@ let iavg = []
 recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
   let n = 0
-
+  // console.log(userAScores)
+  // console.log(userBScores)
   // // let t1 = performance.now()
 
-  for (let i = 0, a = userAScores.length; i < a; i++) {
-    for (let j = 0, b = userBScores.length; j < b; j++) {
-      sim += (userAScores[i] - userBScores[j]) ** 2
-      n += 1
-    }
+  for (let i = 0, a = userBScores.length; i < a; i++) {
+    // for (let j = 0, b = userBScores.length; j < b; j++) {
+    sim += (userAScores[i] - userBScores[i]) ** 2
+    n += 1
+    // }
   }
-
+  // console.log(userAScores.length, userBScores.length, n, sim)
+  // console.log(userBScores)
   if (n === 0) {
     return 0
   }
@@ -78,25 +80,37 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let otherMovRatIds = []
   let otherScores = []
   let relevantScores = []
+  let aIndexes = []
 
   for (let r = 0, l = ratingsData.length; r < l; r++) {
     if (ratingsData[r][0] === userId) {
       // userIdRatings.push(ratingsData[r])
       userAMovIds.push(ratingsData[r][1])
       userAScores.push(ratingsData[r][2])
+      aIndexes.push(r)
     } else {
       relevantScores.push(ratingsData[r])
     }
   }
 
+  let matchesIndexes = []
   for (let r = 0, l = relevantScores.length; r < l; r++) {
-    if (userAMovIds.includes(relevantScores[r][1])) {
-      othersRatingUserIds.push(relevantScores[r][0])
-      otherMovRatIds.push(relevantScores[r][1])
-      otherScores.push(relevantScores[r][2])
+    for (let i = 0, a = userAMovIds.length; i < a; i++) {
+      if (userAMovIds[i] === relevantScores[r][1]) {
+        matchesIndexes.push(i)
+        othersRatingUserIds.push(relevantScores[r][0])
+        otherMovRatIds.push(relevantScores[r][1])
+        otherScores.push(relevantScores[r][2])
+      }
     }
-  }
 
+    // if (userAMovIds.includes(relevantScores[r][1])) {
+    //   othersRatingUserIds.push(relevantScores[r][0])
+    //   otherMovRatIds.push(relevantScores[r][1])
+    //   otherScores.push(relevantScores[r][2])
+    // }
+  }
+  // console.log(matchesIndexes)
   // for (let r = 0, l = ratingsData.length; r < l; r++) {
   //   // otherUserRatings.push(ratingsData[r])
   //   othersRatingUserIds.push(ratingsData[r][0])
@@ -117,20 +131,26 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     let i1 = performance.now()
     let userBMovIds = []
     let userBScores = []
+    let userAScoresFromMatchingIndexes = []
 
     for (let r = alreadyCheckedRatingsIndexes, l = othersRatingUserIds.length; r < l; r++) {
       if (othersRatingUserIds[r] === uniqueOtherIds[i]) {
         userBMovIds.push(otherMovRatIds[r])
         userBScores.push(otherScores[r])
+        userAScoresFromMatchingIndexes.push(userAScores[matchesIndexes[r]])
+        // userAMatchingIndexes.push(user)
         alreadyCheckedRatingsIndexes++
       } else {
         break
       }
     }
+
+    // console.log(userBMovIds)
+    // console.log(userBScores)
     // let i2 = performance.now()
     // iavg.push(i2 - i1)
 
-    let simScore = recommender.calcEuclideanScoreA(userAScores, userBScores)
+    let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
     if (simScore > 0) {
       simScores.push({ userId: uniqueOtherIds[i], similarity: simScore })
       //  simScores.push(uniqueOtherIds[i])

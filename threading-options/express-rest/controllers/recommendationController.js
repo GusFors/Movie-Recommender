@@ -16,11 +16,14 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
 
-  const userData = await dataReaderRev.getAllUsersId()
-  const ratingsData = await dataReaderRev.getRatings()
+  // const userData = await dataReaderRev.getAllUsersId()
+  let userData = await dataReaderCsv.getUserIdLineI()
+  let ratingsData = await dataReaderCsv.getRatingsLineObj()
+  //const ratingsData = await dataReaderRev.getRatings()
 
   if (chosenSim === 'Euclidian') {
     let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
+    // console.log(rawUserRecommendations)
     filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
   }
 
@@ -48,6 +51,7 @@ let lastMap
     // isOptimized = true
     let userData = await dataReaderCsv.getUserIdLineI()
     let ratingsData = await dataReaderCsv.getRatingsLineObj()
+    await dataReaderCsv.getRatingsLineI()
     userData = JSON.parse(JSON.stringify(await userData))
     ratingsData = JSON.parse(JSON.stringify(await ratingsData))
     const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
@@ -61,7 +65,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   userId = parseInt(userId)
 
   // const userData = await dataReaderRev.getAllUsersId()
-
   // const ratingsData = await dataReaderRev.getRatings()
   //  const movieData1 = await dataReaderRev.getMovies()
 
@@ -71,8 +74,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   ratingsData = JSON.parse(JSON.stringify(await ratingsData))
   // let compRatings = await dataReaderRev.getRatings()
   const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
-  // console.log(movieData[0])
-  // console.log(movieData1[0])
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
@@ -96,7 +97,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t3 = performance.now()
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
-  // console.log(ratingsMoviesNotSeen)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
