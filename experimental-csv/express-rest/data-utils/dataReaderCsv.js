@@ -89,63 +89,63 @@ dataReader.getMoviesTitleLineI = async () => {
 dataReader.getMoviesCompleteLineI = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
-
-    const rl = readline.createInterface({
-      input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
-      crlfDelay: Infinity,
-    })
-    let total = startCount
-    let cats
-    let movies = []
-    rl.on('line', function (line) {
-      if (total === startCount) {
-        cats = line.split(split)
-        total++
-        return
-      }
-
-      let values = line.split(split) // ignores part of titles with , check length and add if more than 2?
-      let title = values[1]
-      if (values.length > 3) {
-        title = RegExp(/"([^|]+)"/).exec(line)[1]
-        // console.log(title)
-      }
-      movies.push({ movieId: parseInt(values[0]), title: title })
-      total++
-    })
-    rl.on('close', () => {
-      let rMovIds = []
-
-      for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-        rMovIds.push(dataHolder.ratingsData[i][1])
-      }
-
-      let sortedByMovieId = rMovIds.sort((a, b) => a - b)
-      let alreadyCheckedRatingsIndexes = 0
-
-      for (let j = 0; j < movies.length; j++) {
-        let numRatings = 0
-        for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
-          if (sortedByMovieId[i] === movies[j].movieId) {
-            numRatings++
-            alreadyCheckedRatingsIndexes++
-          }
+    if (!dataHolder.movieData.length > 0) {
+      const rl = readline.createInterface({
+        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
+        crlfDelay: Infinity,
+      })
+      let total = startCount
+      let cats
+      let movies = []
+      rl.on('line', function (line) {
+        if (total === startCount) {
+          cats = line.split(split)
+          total++
+          return
         }
-        movies[j].numRatings = numRatings
-        dataHolder.numRatings.push(numRatings)
-      }
 
+        let values = line.split(split) // ignores part of titles with , check length and add if more than 2?
+        let title = values[1]
+        if (values.length > 3) {
+          title = RegExp(/"([^|]+)"/).exec(line)[1]
+          // console.log(title)
+        }
+        movies.push({ movieId: parseInt(values[0]), title: title })
+        total++
+      })
+      rl.on('close', () => {
+        let rMovIds = []
+
+        for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
+          rMovIds.push(dataHolder.ratingsData[i][1])
+        }
+
+        let sortedByMovieId = rMovIds.sort((a, b) => a - b)
+        let alreadyCheckedRatingsIndexes = 0
+
+        for (let j = 0; j < movies.length; j++) {
+          let numRatings = 0
+          for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
+            if (sortedByMovieId[i] === movies[j].movieId) {
+              numRatings++
+              alreadyCheckedRatingsIndexes++
+            }
+          }
+          movies[j].numRatings = numRatings
+          dataHolder.numRatings.push(numRatings)
+        }
+
+        // let t2 = performance.now()
+        // console.log('m done?', t2 - t1)
+
+        dataHolder.movieData = movies
+        resolve(dataHolder.movieData)
+      })
+    } else {
       // let t2 = performance.now()
-      // console.log('m done?', t2 - t1)
-
-      // dataHolder.movieData = movies
-      resolve(movies)
-    })
-    // } else {
-    //   // let t2 = performance.now()
-    //   // console.log('done?', t2 - t1)
-    //   resolve(dataHolder.movieData)
-    // }
+      // console.log('done?', t2 - t1)
+      resolve(dataHolder.movieData)
+    }
   })
 }
 

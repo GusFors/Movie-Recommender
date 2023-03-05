@@ -7,7 +7,6 @@ const recommenderOld = require('../data-utils/recommenderNoFork')
 const recommendationController = {}
 
 recommendationController.getSimilarUsersById = async (req, res, next) => {
-  let isRev = false // Boolean(parseInt(req.query.rev))
   let userId = req.params.id
   userId = parseInt(userId)
 
@@ -15,19 +14,10 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
 
-  // const userData = await dataReaderRev.getAllUsersId()
-  // const ratingsData = await dataReaderRev.getRatings()
-
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
 
-  //  let userData = await dataReaderCsv.getUserIdLineObj()
-  //  let ratingsData = await dataReaderCsv.getRatingsLineObj()
-  //  console.log(userData)
-  //  console.log(ratingsData)
-
   if (chosenSim === 'Euclidian') {
-    // let rawUserRecommendations = recommenderOld.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
     let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
     // console.log(rawUserRecommendations)
     filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
@@ -47,13 +37,13 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    // let userData = await dataReaderCsv.getUserIdLineI()
-    // let ratingsData = await dataReaderCsv.getRatingsLineI()
-    // userData = JSON.parse(JSON.stringify(await userData))
-    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-    // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
-    // recommender.warmupOpt(1, await userData, await ratingsData)
-    // isOptimized = true
+    let userData = await dataReaderCsv.getUserIdLineI()
+    let ratingsData = await dataReaderCsv.getRatingsLineI()
+    userData = JSON.parse(JSON.stringify(await userData))
+    ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    const movieData = await dataReaderCsv.getMoviesCompleteLineI()
+    recommender.warmupOpt(1, await userData, await ratingsData)
+    isOptimized = true
   }
 })()
 
