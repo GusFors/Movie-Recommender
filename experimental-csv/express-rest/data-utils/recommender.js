@@ -11,26 +11,7 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
   let n = 0
 
-  // console.log(userAScores.length, userBScores.length)
-  // console.log(userAScores.length * userBScores.length)
-  // n *= userAScores.length * userBScores.length ** 2
-  // sim *= userAScores.length * userBScores.length ** 2
-  // let commonRatings = []
-
-  // for (let b = 0; b < userAScores.length; b++) {
-  //   if (userBScores.includes(userAScores[b])) {
-  //     commonRatings.push(userAScores[b])
-  //   }
-  // }
-
-  // console.log(commonRatings.length)
-
   // // let t1 = performance.now()
-
-  // for (let i = 0, a = commonRatings.length; i < a; i++) {
-  //   sim += (userAScores[i] - userBScores[i]) ** 2
-  //   n += 1
-  // }
 
   for (let i = 0, a = userAScores.length; i < a; i++) {
     for (let j = 0, b = userBScores.length; j < b; j++) {
@@ -123,10 +104,10 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   // }
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
   // console.log(uniqueOtherIds)
-  let first2 = performance.now()
-  console.log('first', first2 - first1)
+  // let first2 = performance.now()
+  // console.log('first', first2 - first1)
 
-  let outer1 = performance.now()
+  // let outer1 = performance.now()
 
   // since in this case ratings are stored in userId order it
   // should be possible to ignore those when doing the next userId check?
@@ -145,8 +126,8 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
         break
       }
     }
-    let i2 = performance.now()
-    iavg.push(i2 - i1)
+    // let i2 = performance.now()
+    // iavg.push(i2 - i1)
 
     let simScore = recommender.calcEuclideanScoreA(userAScores, userBScores)
     if (simScore > 0) {
@@ -154,19 +135,19 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     }
   }
 
-  let outer2 = performance.now()
-  console.log('outer', outer2 - outer1)
+  // let outer2 = performance.now()
+  // console.log('outer', outer2 - outer1)
 
-  console.log(
-    'avg icalcEu',
-    iavg.reduce((partialSum, a) => partialSum + a, 0)
-  )
-  iavg = []
-  console.log(
-    'avg calcEu',
-    avg.reduce((partialSum, a) => partialSum + a, 0)
-  )
-  avg = []
+  // console.log(
+  //   'avg icalcEu',
+  //   iavg.reduce((partialSum, a) => partialSum + a, 0)
+  // )
+  // iavg = []
+  // console.log(
+  //   'avg calcEu',
+  //   avg.reduce((partialSum, a) => partialSum + a, 0)
+  // )
+  // avg = []
 
   return simScores
 }
@@ -335,3 +316,24 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
 }
 
 module.exports = recommender
+
+// console.log(userAScores.length, userBScores.length)
+// console.log(userAScores.length * userBScores.length)
+// n *= userAScores.length * userBScores.length ** 2
+// sim *= userAScores.length * userBScores.length ** 2
+// let commonRatings = []
+
+// for (let b = 0; b < userAScores.length; b++) {
+//   if (userBScores.includes(userAScores[b])) {
+//     commonRatings.push(userAScores[b])
+//   }
+// }
+
+// console.log(commonRatings.length)
+
+// // let t1 = performance.now()
+
+// for (let i = 0, a = commonRatings.length; i < a; i++) {
+//   sim += (userAScores[i] - userBScores[i]) ** 2
+//   n += 1
+// }
