@@ -106,21 +106,25 @@ dataReader.getMoviesCompleteLineI = async () => {
         }
 
         let values = line.split(',') // ignores part of titles with , check length and add if more than 2?
-        movies.push({ movieId: parseInt(values[0]), title: values[1] })
+        let title = values[1]
+        if (values.length > 3) {
+          title = RegExp(/"([^|]+)"/).exec(line)[1]
+          // console.log(title)
+        }
+        movies.push({ movieId: parseInt(values[0]), title: title })
 
         total++
       })
       rl.on('close', () => {
-        let alreadyCheckedRatingsIndexes = 0
         let rMovIds = []
 
         for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
           rMovIds.push(dataHolder.ratingsData[i][1])
         }
-        // console.log(rMovIds)
 
         let sortedByMovieId = rMovIds.sort((a, b) => a - b)
-        // console.log(sortedByMovieId)
+        let alreadyCheckedRatingsIndexes = 0
+
         for (let j = 0; j < movies.length; j++) {
           let numRatings = 0
           for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
