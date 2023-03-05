@@ -78,6 +78,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let otherMovRatIds = []
   let otherScores = []
   let relevantScores = []
+
   for (let r = 0, l = ratingsData.length; r < l; r++) {
     if (ratingsData[r][0] === userId) {
       // userIdRatings.push(ratingsData[r])
@@ -103,7 +104,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   //   otherScores.push(ratingsData[r][2])
   // }
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
-  // console.log(uniqueOtherIds)
+
   // let first2 = performance.now()
   // console.log('first', first2 - first1)
 
@@ -132,6 +133,8 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     let simScore = recommender.calcEuclideanScoreA(userAScores, userBScores)
     if (simScore > 0) {
       simScores.push({ userId: uniqueOtherIds[i], similarity: simScore })
+      //  simScores.push(uniqueOtherIds[i])
+      //  simScores.push(simScore)
     }
   }
 
@@ -180,7 +183,21 @@ recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
 }
 
 recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
-  let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
+  // does kinda the same as in geteuclidian, move to function?
+
+  let moviesSeenByUser = []
+  for (let i = 0; i < ratingsData.length; i++) {
+    if (ratingsData[i][0] === userId) {
+      moviesSeenByUser.push(ratingsData[i])
+    }
+  }
+
+  // for (let i = 0; i < ratingsData.length; i++) {
+  //   if (ratingsData[i][0] === userId) {
+  //     moviesSeenByUser.push(ratingsData[i])
+  //   }
+  // }
+  //let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
   let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
     for (let i = 0; i < moviesSeenByUser.length; i++) {
       if (moviesSeenByUser[i][1] === rating[1]) {
@@ -189,7 +206,7 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
     }
     return true
   })
-
+  // console.log(ratingsForMoviesNotSeenByUser.length)
   return ratingsForMoviesNotSeenByUser
 }
 
@@ -207,6 +224,13 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
       }
     }
   }
+  // if (similarityScores[s] === ratingsData[i][0]) {
+  //   weightedScores.push({
+  //     movieId: ratingsData[i][1],
+  //     weightedRating: similarityScores[s][s+1] * ratingsData[i][2],
+  //     simScore: similarityScores[s][s+1],
+  //   })
+  // }
 
   return weightedScores
 }
@@ -261,7 +285,7 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
   })
 }
 
-recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, minNumRatings, numForks) => {
+recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
@@ -272,7 +296,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     console.log('spawning forks....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
-      promises.push(spawnFork(moviesChunks[i], weightedScores, minNumRatings, i))
+      promises.push(spawnFork(moviesChunks[i], weightedScores, minNumRatings, numRatings, i))
       // console.log('t', i)
     }
     let t2 = performance.now()
@@ -292,7 +316,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
   })
 }
 
-async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
+async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, id) {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
@@ -302,7 +326,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, id) {
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster
 
-    calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, id: id })
+    calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
     let t2 = performance.now()
     console.log(`started fork and sent data to id:${id} in `, t2 - t1)
 

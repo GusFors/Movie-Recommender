@@ -36,13 +36,13 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    let userData = await dataReaderCsv.getUserIdLineI()
+   // let userData = await dataReaderCsv.getUserIdLineI()
     let ratingsData = await dataReaderCsv.getRatingsLineI()
     // userData = JSON.parse(JSON.stringify(await userData))
     // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-    const movieData = await dataReaderCsv.getMoviesCompleteLineI()
-    recommender.warmupOpt(1, await userData, await ratingsData)
-    isOptimized = true
+    // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
+    // recommender.warmupOpt(1, await userData, await ratingsData)
+    // isOptimized = true
   }
 })()
 
@@ -52,6 +52,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
+  // const movieData = await dataReaderCsv.getMoviesIdLineI()
   const movieData = await dataReaderCsv.getMoviesCompleteLineI()
 
   let filteredRecommendations
@@ -83,6 +84,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
+  console.log(ratingsMoviesNotSeen[0])
   ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))
 
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
@@ -96,8 +98,9 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let t7 = performance.now()
   let rawRecommendations
 
+  let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, threads)
+    rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, numRatings, threads)
   }
 
   // if (type === 'Worker') {

@@ -87,23 +87,20 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
 
   let outer1 = performance.now()
   for (let i = 0, u = usersData.length; i < u; i++) {
-    let i1 = performance.now()
     let userB = []
     for (let r = 0, l = otherUserRatings.length; r < l; r++) {
       if (otherUserRatings[r].userId === usersData[i]) {
         userB.push(otherUserRatings[r])
       }
     }
-
-    let i2 = performance.now()
-    iavg.push(i2 - i1)
-   
+    let i1 = performance.now()
     let simScore = recommender.calcEuclideanScore(userIdRatings, userB)
     if (simScore > 0) {
       // console.log(usersData[i])
       simScores.push({ userId: usersData[i], similarity: simScore })
     }
-    
+    let i2 = performance.now()
+    iavg.push(i2 - i1)
   }
 
   let outer2 = performance.now()

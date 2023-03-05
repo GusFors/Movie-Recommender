@@ -1,6 +1,7 @@
 const dataFilterer = require('../data-utils/dataFilterer')
 const dataReader = require('../data-utils/dataReader')
 const dataReaderRev = require('../data-utils/dataReaderRev')
+const dataReaderCsv = require('../data-utils/dataReaderCsv')
 const recommender = require('../data-utils/recommender')
 const stRecommender = require('../data-utils/recommenderNoFork')
 
@@ -45,6 +46,14 @@ let lastMap
     const movieData = await dataReaderRev.getMovies()
     recommender.warmupOpt(1, await userData, await ratingsData)
     isOptimized = true
+
+    // let userData = await dataReaderCsv.getUserIdLineI()
+    // let ratingsData = await dataReaderCsv.getRatingsLineI()
+    // userData = JSON.parse(JSON.stringify(await userData))
+    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
+    // recommender.warmupOpt(1, await userData, await ratingsData)
+    // isOptimized = true
   }
 })()
 
@@ -56,6 +65,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   const ratingsData = await dataReaderRev.getRatings()
   const movieData = await dataReaderRev.getMovies()
+
+  // let userData = await dataReaderCsv.getUserIdLineI()
+  // let ratingsData = await dataReaderCsv.getRatingsLineI()
+  // let compRatings = await dataReaderRev.getRatings()
+  // const movieData = await dataReaderCsv.getMoviesCompleteLineI()
 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
@@ -79,6 +93,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t3 = performance.now()
   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
+  // console.log(ratingsMoviesNotSeen)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
