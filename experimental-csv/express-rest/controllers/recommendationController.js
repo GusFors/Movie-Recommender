@@ -84,7 +84,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
-  let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userId, await ratingsData)
+  let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUserS(userId, await ratingsData)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
   ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))

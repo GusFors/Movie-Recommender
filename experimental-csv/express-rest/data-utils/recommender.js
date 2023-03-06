@@ -183,14 +183,42 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
 recommender.getRatingsMoviesNotSeenByUserS = (userId, ratingsData) => {
   // why does this make fork calcs slower?
   // does kinda the same as in geteuclidian, move to function?
+  // let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
+  // let ratingsForMoviesNotSeenByUser2 = ratingsData.filter((rating) => {
+  //   for (let i = 0; i < moviesSeenByUser.length; i++) {
+  //     if (moviesSeenByUser[i][1] === rating[1]) {
+  //       return false
+  //     }
+  //   }
+  //   return true
+  // })
 
-  let ratingsForMoviesNotSeenByUser = []
+  let moviesSeenByUser = []
   for (let i = 0; i < ratingsData.length; i++) {
-    if (ratingsData[i][0] !== userId) {
-      ratingsForMoviesNotSeenByUser.push(ratingsData[i])
+    if (ratingsData[i][0] === userId) {
+      moviesSeenByUser.push(ratingsData[i][1])
     }
   }
-
+  // console.log(moviesSeenByUser)
+  let ratingsForMoviesNotSeenByUser = []
+  let cnt = 0
+  for (let i = 0; i < ratingsData.length; i++) {
+    // if (ratingsData[i][0] !== userId) {
+    let seen = false
+    for (let y = 0; y < moviesSeenByUser.length; y++) {
+      if (ratingsData[i][1] === moviesSeenByUser[y]) {
+        seen = true
+      }
+    }
+    if (!seen) {
+      cnt++
+      ratingsForMoviesNotSeenByUser.push(ratingsData[i])
+    }
+    // }
+  }
+  // console.log(cnt)
+  // console.log(ratingsForMoviesNotSeenByUser2)
+  // console.log(ratingsForMoviesNotSeenByUser)
   return ratingsForMoviesNotSeenByUser
 }
 
