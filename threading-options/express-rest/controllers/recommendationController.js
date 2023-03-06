@@ -51,9 +51,9 @@ let lastMap
     // isOptimized = true
     let userData = await dataReaderCsv.getUserIdLineI()
     let ratingsData = await dataReaderCsv.getRatingsLineObj()
-    await dataReaderCsv.getRatingsLineI()
-    userData = JSON.parse(JSON.stringify(await userData))
-    ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    // await dataReaderCsv.getRatingsLineI()
+    // userData = JSON.parse(JSON.stringify(await userData))
+    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
     const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
     recommender.warmupOpt(1, userData, ratingsData)
     isOptimized = true
@@ -70,8 +70,9 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineObj()
-  userData = JSON.parse(JSON.stringify(await userData))
-  ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+  // await dataReaderCsv.getRatingsLineI()
+  // userData = JSON.parse(JSON.stringify(await userData))
+  // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
   // let compRatings = await dataReaderRev.getRatings()
   const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
 
@@ -103,12 +104,13 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
+  // console.log(weightedScores)
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
 
   let t7 = performance.now()
   let rawRecommendations
-
+  // console.log(movieData)
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, threads)
   }

@@ -38,14 +38,14 @@ dataReader.getMoviesIdLineI = async () => {
         total++
       })
       rl.on('close', () => {
-        // let t2 = performance.now()
-        // console.log('done?', t2 - t1)
+        let t2 = performance.now()
+        console.log('done?', t2 - t1)
         dataHolder.movieIdData = movieIds
         resolve(dataHolder.movieIdData)
       })
     } else {
-      // let t2 = performance.now()
-      // console.log('done?', t2 - t1)
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
       resolve(dataHolder.movieIdData)
     }
   })
@@ -54,6 +54,11 @@ dataReader.getMoviesIdLineI = async () => {
 dataReader.getMoviesTitleLineI = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
+    if (!dataHolder.ratingsData.length > 0) {
+      console.log('run me')
+      dataReader.getRatingsLineI()
+    }
+
     if (!dataHolder.movieIdData.size > 0) {
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
@@ -73,24 +78,26 @@ dataReader.getMoviesTitleLineI = async () => {
         total++
       })
       rl.on('close', () => {
-        // let t2 = performance.now()
-        // console.log('done?', t2 - t1)
+        let t2 = performance.now()
+        console.log('done?', t2 - t1)
         dataHolder.movieTitles = movieTitles
         resolve(dataHolder.movieTitles)
       })
     } else {
-      // let t2 = performance.now()
-      // console.log('done?', t2 - t1)
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
       resolve(dataHolder.movieTitles)
     }
   })
 }
 
 dataReader.getMoviesCompleteLineObj = async () => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     let t1 = performance.now()
-    console.log('hello')
+
     if (!dataHolder.movieData.length > 0) {
+      let ratings = await dataReader.getRatingsLineI()
+
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
         crlfDelay: Infinity,
@@ -117,8 +124,8 @@ dataReader.getMoviesCompleteLineObj = async () => {
       rl.on('close', () => {
         let rMovIds = []
 
-        for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-          rMovIds.push(dataHolder.ratingsData[i][1])
+        for (let i = 0, l = ratings.length; i < l; i++) {
+          rMovIds.push(ratings[i][1])
         }
         // console.log(rMovIds)
         let sortedByMovieId = rMovIds.sort((a, b) => a - b)
@@ -137,15 +144,15 @@ dataReader.getMoviesCompleteLineObj = async () => {
           dataHolder.numRatings.push(numRatings)
         }
 
-        // let t2 = performance.now()
-        // console.log('m done?', t2 - t1)
+        let t2 = performance.now()
+        console.log('m done?', t2 - t1)
 
         dataHolder.movieData = movies
         resolve(dataHolder.movieData)
       })
     } else {
-      // let t2 = performance.now()
-      // console.log('done?', t2 - t1)
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
       resolve(dataHolder.movieData)
     }
   })
@@ -177,14 +184,14 @@ dataReader.getUserIdLineI = async () => {
         total++
       })
       rl.on('close', () => {
-        // let t2 = performance.now()
-        // console.log('done?', t2 - t1)
+        let t2 = performance.now()
+        console.log('done?', t2 - t1)
         dataHolder.userIdData = userIdSet
         resolve([...dataHolder.userIdData])
       })
     } else {
-      // let t2 = performance.now()
-      // console.log('done?', t2 - t1)
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
       resolve([...dataHolder.userIdData])
     }
   })
@@ -228,41 +235,41 @@ dataReader.getRatingsLineI = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
 
-    if (!dataHolder.ratingsData.length > 0) {
-      const rl = readline.createInterface({
-        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
-        crlfDelay: Infinity,
-      })
-      let total = startCount
-      let cats
-      let ratings = []
-      rl.on('line', function (line) {
-        if (total === startCount) {
-          cats = line.split(split)
-          total++
-          return
-        }
-
-        let rating = []
-        let ratingValues = line.split(split)
-
-        rating[0] = parseInt(ratingValues[0])
-        rating[1] = parseInt(ratingValues[1])
-        rating[2] = parseFloat(ratingValues[2])
-        ratings.push(rating)
+    // if (!dataHolder.ratingsData.length > 0) {
+    const rl = readline.createInterface({
+      input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+      crlfDelay: Infinity,
+    })
+    let total = startCount
+    let cats
+    let ratings = []
+    rl.on('line', function (line) {
+      if (total === startCount) {
+        cats = line.split(split)
         total++
-      })
-      rl.on('close', () => {
-        // let t2 = performance.now()
-        // console.log('done?', t2 - t1)
-        dataHolder.ratingsData = ratings
-        resolve(ratings)
-      })
-    } else {
+        return
+      }
+
+      let rating = []
+      let ratingValues = line.split(split)
+
+      rating[0] = parseInt(ratingValues[0])
+      rating[1] = parseInt(ratingValues[1])
+      rating[2] = parseFloat(ratingValues[2])
+      ratings.push(rating)
+      total++
+    })
+    rl.on('close', () => {
       // let t2 = performance.now()
       // console.log('done?', t2 - t1)
-      resolve(dataHolder.ratingsData)
-    }
+      // dataHolder.ratingsData = ratings
+      resolve(ratings)
+    })
+    // } else {
+    //   // let t2 = performance.now()
+    //   // console.log('done?', t2 - t1)
+    //   resolve(dataHolder.ratingsData)
+    // }
   })
 }
 
@@ -270,7 +277,7 @@ dataReader.getRatingsLineObj = async () => {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
 
-    // if (!dataHolder.ratingsData.length > 0) {
+    if (!dataHolder.ratingsData.length > 0) {
     const rl = readline.createInterface({
       input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
       crlfDelay: Infinity,
@@ -297,16 +304,16 @@ dataReader.getRatingsLineObj = async () => {
       total++
     })
     rl.on('close', () => {
-      // let t2 = performance.now()
-      // console.log('done?', t2 - t1)
-      // dataHolder.ratingsData = ratings
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
+      dataHolder.ratingsData = ratings
       resolve(ratings)
     })
-    // } else {
-    //   // let t2 = performance.now()
-    //   // console.log('done?', t2 - t1)
-    //   resolve(dataHolder.ratingsData)
-    // }
+    } else {
+      let t2 = performance.now()
+      console.log('done?', t2 - t1)
+      resolve(dataHolder.ratingsData)
+    }
   })
 }
 
