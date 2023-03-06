@@ -10,9 +10,6 @@ let iavg = []
 recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
   let n = 0
-  // console.log(userAScores)
-  // console.log(userBScores)
-  // // let t1 = performance.now()
 
   for (let i = 0, a = userBScores.length; i < a; i++) {
     // for (let j = 0, b = userBScores.length; j < b; j++) {
@@ -20,16 +17,13 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
     n += 1
     // }
   }
-  // console.log(userAScores.length, userBScores.length, n, sim)
-  // console.log(userBScores)
+
   if (n === 0) {
     return 0
   }
 
   let inv = 1 / (1 + sim)
-  // console.log(inv)
-  // let t2 = performance.now()
-  // avg.push(t2 - t1)
+
   return inv
 }
 
@@ -110,21 +104,9 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     //   otherScores.push(relevantScores[r][2])
     // }
   }
-  // console.log(matchesIndexes)
-  // for (let r = 0, l = ratingsData.length; r < l; r++) {
-  //   // otherUserRatings.push(ratingsData[r])
-  //   othersRatingUserIds.push(ratingsData[r][0])
-  //   otherMovRatIds.push(ratingsData[r][1])
-  //   otherScores.push(ratingsData[r][2])
-  // }
+
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
 
-  // let first2 = performance.now()
-  // console.log('first', first2 - first1)
-
-  // let outer1 = performance.now()
-
-  // since in this case ratings are stored in userId order it
   // should be possible to ignore those when doing the next userId check?
   let alreadyCheckedRatingsIndexes = 0
   for (let i = 0, u = uniqueOtherIds.length; i < u; i++) {
@@ -145,32 +127,13 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
       }
     }
 
-    // console.log(userBMovIds)
-    // console.log(userBScores)
-    // let i2 = performance.now()
-    // iavg.push(i2 - i1)
-
     let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
     if (simScore > 0) {
-      simScores.push({ userId: uniqueOtherIds[i], similarity: simScore })
+      simScores.push([uniqueOtherIds[i], simScore])
       //  simScores.push(uniqueOtherIds[i])
       //  simScores.push(simScore)
     }
   }
-
-  // let outer2 = performance.now()
-  // console.log('outer', outer2 - outer1)
-
-  // console.log(
-  //   'avg icalcEu',
-  //   iavg.reduce((partialSum, a) => partialSum + a, 0)
-  // )
-  // iavg = []
-  // console.log(
-  //   'avg calcEu',
-  //   avg.reduce((partialSum, a) => partialSum + a, 0)
-  // )
-  // avg = []
 
   return simScores
 }
@@ -204,20 +167,7 @@ recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
 
 recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
   // does kinda the same as in geteuclidian, move to function?
-
-  let moviesSeenByUser = []
-  for (let i = 0; i < ratingsData.length; i++) {
-    if (ratingsData[i][0] === userId) {
-      moviesSeenByUser.push(ratingsData[i])
-    }
-  }
-
-  // for (let i = 0; i < ratingsData.length; i++) {
-  //   if (ratingsData[i][0] === userId) {
-  //     moviesSeenByUser.push(ratingsData[i])
-  //   }
-  // }
-  //let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
+  let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
   let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
     for (let i = 0; i < moviesSeenByUser.length; i++) {
       if (moviesSeenByUser[i][1] === rating[1]) {
@@ -230,17 +180,49 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
   return ratingsForMoviesNotSeenByUser
 }
 
+recommender.getRatingsMoviesNotSeenByUserS = (userId, ratingsData) => {
+  // why does this make fork calcs slower?
+  // does kinda the same as in geteuclidian, move to function?
+
+  let ratingsForMoviesNotSeenByUser = []
+  for (let i = 0; i < ratingsData.length; i++) {
+    if (ratingsData[i][0] !== userId) {
+      ratingsForMoviesNotSeenByUser.push(ratingsData[i])
+    }
+  }
+
+  return ratingsForMoviesNotSeenByUser
+}
+
 recommender.getWeightedScores = (similarityScores, ratingsData) => {
   let weightedScores = []
+  let alreadyCheckedRatingsIndexes = 0
+
+  let userIds = [] // do this in datareader instead?
+  let simScores = []
+  for (let y = 0, l = similarityScores.length; y < l; y++) {
+    userIds.push(similarityScores[y][0])
+    simScores.push(similarityScores[y][1])
+  }
+
+  let ratingUserIds = []
+  let movieIds = []
+  let ratingScores = []
+  for (let y = 0, l = ratingsData.length; y < l; y++) {
+    ratingUserIds.push(ratingsData[y][0])
+    movieIds.push(ratingsData[y][1])
+    ratingScores.push(ratingsData[y][2])
+  }
 
   for (let s = 0, l = similarityScores.length; s < l; s++) {
-    for (let i = 0, r = ratingsData.length; i < r; i++) {
-      if (similarityScores[s].userId === ratingsData[i][0]) {
+    for (let i = alreadyCheckedRatingsIndexes, r = ratingsData.length; i < r; i++) {
+      if (userIds[s] === ratingUserIds[i]) {
         weightedScores.push({
-          movieId: ratingsData[i][1],
-          weightedRating: similarityScores[s].similarity * ratingsData[i][2],
-          simScore: similarityScores[s].similarity,
+          movieId: movieIds[i],
+          weightedRating: simScores[s] * ratingScores[i],
+          simScore: simScores[s],
         })
+        alreadyCheckedRatingsIndexes++
       }
     }
   }
