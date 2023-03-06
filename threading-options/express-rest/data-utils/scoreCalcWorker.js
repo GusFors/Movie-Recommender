@@ -9,14 +9,14 @@ parentPort.on('message', (data) => {
 
   const minNumOfRatings = workerData.minNumRatings
   let calcData = []
-  let noTitleMov = []
+  let moviesAboveMinNumRatings = []
   // let fixed = new Array(data.moviesData.length)
   // fixed[0] = {}
   // console.log(fixed)
 
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
-      noTitleMov.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings })
+      moviesAboveMinNumRatings.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings, title: data.moviesData[y].title })
       // fixed[y] = { movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings }
     }
     // else {
@@ -29,10 +29,10 @@ parentPort.on('message', (data) => {
 
   let t1 = performance.now()
 
-  for (let i = 0, l = noTitleMov.length; i < l; i++) {
+  for (let i = 0, l = moviesAboveMinNumRatings.length; i < l; i++) {
     let weightedScoreSum = 0
     let simScoreSum = 0
-    let cMovId = noTitleMov[i].movieId
+    let cMovId = moviesAboveMinNumRatings[i].movieId
 
     for (let j = 0, w = data.weightedScores.length; j < w; j++) {
       if (cMovId === data.weightedScores[j].movieId) {
@@ -43,9 +43,9 @@ parentPort.on('message', (data) => {
 
     if (weightedScoreSum > 0) {
       calcData.push({
-        movieId: noTitleMov[i].movieId,
-        title: data.moviesData[i].title, // can be wrong index?
-        numRatings: noTitleMov[i].numRatings,
+        movieId: moviesAboveMinNumRatings[i].movieId,
+        title: moviesAboveMinNumRatings[i].title, // can be wrong index?
+        numRatings: moviesAboveMinNumRatings[i].numRatings,
         recommendationScore: weightedScoreSum / simScoreSum,
       })
     }

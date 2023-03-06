@@ -4,11 +4,11 @@ process.on('message', (data) => {
   const minNumOfRatings = data.minNumRatings
   let calcData = []
   // console.log(data.id, 'alive')
-  let noTitleMov = []
+  let moviesAboveMinNumRatings = []
   let p1 = performance.now()
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
-      noTitleMov.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings })
+      moviesAboveMinNumRatings.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings, title: data.moviesData[y].title })
     }
   }
 
@@ -17,12 +17,12 @@ process.on('message', (data) => {
 
   let t1 = performance.now()
 
-  for (let i = 0, l = noTitleMov.length; i < l; i++) {
+  for (let i = 0, l = moviesAboveMinNumRatings.length; i < l; i++) {
     let weightedScoreSum = 0
     let simScoreSum = 0
 
     for (let j = 0, w = data.weightedScores.length; j < w; j++) {
-      if (noTitleMov[i].movieId === data.weightedScores[j].movieId) {
+      if (moviesAboveMinNumRatings[i].movieId === data.weightedScores[j].movieId) {
         weightedScoreSum = weightedScoreSum + data.weightedScores[j].weightedRating
         simScoreSum = simScoreSum + data.weightedScores[j].simScore
       }
@@ -30,9 +30,9 @@ process.on('message', (data) => {
 
     if (weightedScoreSum > 0) {
       calcData.push({
-        movieId: noTitleMov[i].movieId,
-        title: data.moviesData[i].title, // can be wrong index?
-        numRatings: noTitleMov[i].numRatings,
+        movieId: moviesAboveMinNumRatings[i].movieId,
+        title: moviesAboveMinNumRatings[i].title, // can be wrong index?
+        numRatings: moviesAboveMinNumRatings[i].numRatings,
         recommendationScore: weightedScoreSum / simScoreSum,
       })
     }
@@ -61,7 +61,7 @@ process.on('message', (data) => {
 // if (i > 0 && i < 5) {
 //   console.log()
 // }
-// if (noTitleMov[i].numRatings >= minNumOfRatings) {
+// if (moviesAboveMinNumRatings[i].numRatings >= minNumOfRatings) {
 // last = data.moviesData[i]
 // }
 // console.log(data.moviesData[0])

@@ -351,11 +351,12 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
     let movieRecommendations = []
 
     let t1 = performance.now()
-    let calcScore = fork('./data-utils/scoreCalcArr.js', [], {
+    let calcScore = fork('./data-utils/scoreCalcSort.js', [], {
       execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster
 
+    // timeout send to spawn other forks first?
     calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
     let t2 = performance.now()
     console.log(`started fork and sent data to id:${id} in `, t2 - t1)
