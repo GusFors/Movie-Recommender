@@ -5,17 +5,23 @@ process.on('message', (data) => {
   let calcData = []
   // console.log(data.id, 'alive')
   let noTitleMov = []
+  let movieIds = []
   let p1 = performance.now()
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
       noTitleMov.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings })
+      movieIds.push(data.moviesData[y].movieId)
     }
   }
 
+  let wScoreIds = []
+
+  for (let y = 0, l = data.weightedScores.length; y < l; y++) {
+    wScoreIds.push(data.weightedScores[y].movieId)
+  }
+
   let p2 = performance.now()
-  // console.log('made new calc in ', p2 - p1)
-  // console.log(data.weightedScores.length, noTitleMov.length)
-  // console.log(data.weightedScores[0])
+
   let t1 = performance.now()
 
   for (let i = 0, l = noTitleMov.length; i < l; i++) {
@@ -23,7 +29,7 @@ process.on('message', (data) => {
     let simScoreSum = 0
 
     for (let j = 0, w = data.weightedScores.length; j < w; j++) {
-      if (noTitleMov[i].movieId === data.weightedScores[j].movieId) {
+      if (movieIds[i] === wScoreIds[j]) {
         weightedScoreSum = weightedScoreSum + data.weightedScores[j].weightedRating
         simScoreSum = simScoreSum + data.weightedScores[j].simScore
       }
