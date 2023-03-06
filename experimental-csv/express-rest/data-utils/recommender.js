@@ -65,8 +65,6 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let simScores = []
 
-  let first1 = performance.now()
-
   let userAMovIds = []
   let userAScores = []
 
@@ -108,6 +106,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
 
   // should be possible to ignore those when doing the next userId check?
+  // let ref = recommender.calcEuclideanScoreA
   let alreadyCheckedRatingsIndexes = 0
   for (let i = 0, u = uniqueOtherIds.length; i < u; i++) {
     let i1 = performance.now()
@@ -127,6 +126,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
       }
     }
 
+    // let simScore = ref(userAScoresFromMatchingIndexes, userBScores)
     let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
     if (simScore > 0) {
       simScores.push([uniqueOtherIds[i], simScore])

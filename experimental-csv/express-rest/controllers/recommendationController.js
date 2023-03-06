@@ -44,6 +44,7 @@ let isOptimized = false
       // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
       const movieData = await dataReaderCsv.getMoviesCompleteLineI()
       recommender.warmupOpt(1, await userData, await ratingsData)
+      console.log('opt done')
     }
     isOptimized = true
   }
