@@ -8,7 +8,6 @@ const stRecommender = require('../data-utils/recommenderNoFork')
 const recommendationController = {}
 
 recommendationController.getSimilarUsersById = async (req, res, next) => {
-  let isRev = false // Boolean(parseInt(req.query.rev))
   let userId = req.params.id
   userId = parseInt(userId)
 
@@ -16,14 +15,11 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
 
-  // const userData = await dataReaderRev.getAllUsersId()
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineObj()
-  //const ratingsData = await dataReaderRev.getRatings()
 
   if (chosenSim === 'Euclidian') {
     let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
-    // console.log(rawUserRecommendations)
     filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
   }
 
@@ -42,13 +38,6 @@ let isOptimized = false
 let lastMap
 ;(async () => {
   if (!isOptimized) {
-    // const userData = await dataReaderRev.getAllUsersId()
-    // // console.log(await userData[0], await userData.length)
-    // lastMap = await userData
-    // const ratingsData = await dataReaderRev.getRatings()
-    // const movieData = await dataReaderRev.getMovies()
-    // recommender.warmupOpt(1, await userData, await ratingsData)
-    // isOptimized = true
     let userData = await dataReaderCsv.getUserIdLineI()
     let ratingsData = await dataReaderCsv.getRatingsLineObj()
     // await dataReaderCsv.getRatingsLineI()
@@ -64,16 +53,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let userId = req.params.id
   userId = parseInt(userId)
 
-  // const userData = await dataReaderRev.getAllUsersId()
-  // const ratingsData = await dataReaderRev.getRatings()
-  //  const movieData1 = await dataReaderRev.getMovies()
-
   let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineObj()
-  // await dataReaderCsv.getRatingsLineI()
   // userData = JSON.parse(JSON.stringify(await userData))
   // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-  // let compRatings = await dataReaderRev.getRatings()
+
   const movieData = await dataReaderCsv.getMoviesCompleteLineObj()
 
   let filteredRecommendations
@@ -104,13 +88,13 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   userSimScores = JSON.parse(JSON.stringify(userSimScores))
   let t5 = performance.now()
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
-  // console.log(weightedScores)
+
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
 
   let t7 = performance.now()
   let rawRecommendations
-  // console.log(movieData)
+
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, threads)
   }
@@ -146,18 +130,3 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 }
 
 module.exports = recommendationController
-
-// const userData = chosenSim === 'Euclidian' ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-// const ratingsData = chosenSim === 'Euclidian' ? await dataReaderRev.getRatings() : await dataReader.getRatings()
-
-// console.log(%HaveSameMap(await userData[0], await lastMap[0]))
-// let isRev = Boolean(parseInt(req.query.rev))
-// if (isRev) {
-//   console.log('rev...')
-//   // userId = parseInt(userId)
-// }
-
-// const userData = isRev ? await dataReaderRev.getAllUsersId() : await dataReader.getAllUsers()
-// // console.log(%HaveSameMap(await userData[0], await lastMap[0]))
-// const ratingsData = isRev ? await dataReaderRev.getRatings() : await dataReader.getRatings()
-// const movieData = isRev ? await dataReaderRev.getMovies() : await dataReader.getMovies()

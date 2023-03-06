@@ -19,7 +19,6 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 
   if (chosenSim === 'Euclidian') {
     let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
-    // console.log(rawUserRecommendations)
     filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
   }
 
@@ -39,8 +38,8 @@ let isOptimized = false
   if (!isOptimized) {
     let userData = await dataReaderCsv.getUserIdLineI()
     let ratingsData = await dataReaderCsv.getRatingsLineI()
-    userData = JSON.parse(JSON.stringify(await userData))
-    ratingsData = JSON.parse(JSON.stringify(await ratingsData))
+    // userData = JSON.parse(JSON.stringify(await userData))
+    // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
     const movieData = await dataReaderCsv.getMoviesCompleteLineI()
     recommender.warmupOpt(1, await userData, await ratingsData)
     isOptimized = true
@@ -52,7 +51,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   userId = parseInt(userId)
 
   let userData = await dataReaderCsv.getUserIdLineI()
-  // console.log(userData)
   let ratingsData = await dataReaderCsv.getRatingsLineI()
   // const movieData = await dataReaderCsv.getMoviesIdLineI()
   const movieData = await dataReaderCsv.getMoviesCompleteLineI()
@@ -94,8 +92,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let weightedScores = recommender.getWeightedScores(userSimScores, ratingsMoviesNotSeen)
   let t6 = performance.now()
   console.log('getWeightedScores', t6 - t5, 'ms')
-
-  // const movieData = await dataReaderRev.getMovies()
 
   let t7 = performance.now()
   let rawRecommendations
