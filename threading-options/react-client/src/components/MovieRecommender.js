@@ -285,6 +285,7 @@ function MovieRecommender() {
             >
               <MenuItem value='4000'>4000</MenuItem>
               <MenuItem value='5000'>5000</MenuItem>
+              <MenuItem value='6060'>6060</MenuItem>
             </Select>
           </FormControl>
         </Stack>

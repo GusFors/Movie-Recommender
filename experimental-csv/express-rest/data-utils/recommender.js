@@ -3,9 +3,6 @@ const { Worker } = require('worker_threads')
 const chunk = require('array-chunk-split')
 
 const recommender = {}
-let r = []
-let avg = []
-let iavg = []
 
 recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   let sim = 0
@@ -108,6 +105,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   // should be possible to ignore those when doing the next userId check?
   // let ref = recommender.calcEuclideanScoreA
   let alreadyCheckedRatingsIndexes = 0
+  // let ref = calcEuclideanScoreA
   for (let i = 0, u = uniqueOtherIds.length; i < u; i++) {
     let i1 = performance.now()
     let userBMovIds = []
@@ -142,9 +140,15 @@ recommender.warmupOpt = (userId, usersData, ratingsData) => {
   // prettier-ignore
   %PrepareFunctionForOptimization(recommender.getEuclidianSimScoresForUser);
   // prettier-ignore
-  recommender.getEuclidianSimScoresForUser(userId, usersData, ratingsData);
+  %PrepareFunctionForOptimization(recommender.calcEuclideanScoreA);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUser);
+  // prettier-ignore
+  %OptimizeFunctionOnNextCall(recommender.calcEuclideanScoreA)
+  // prettier-ignore
+  let simScores = recommender.getEuclidianSimScoresForUser(userId, usersData, ratingsData);
+  recommender.getRatingsMoviesNotSeenByUserR(userId, ratingsData)
+  recommender.getWeightedScores(simScores, ratingsData)
 }
 
 recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
@@ -165,60 +169,22 @@ recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
   return simScores
 }
 
-recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
-  // does kinda the same as in geteuclidian, move to function?
-  let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
-  let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
-    for (let i = 0; i < moviesSeenByUser.length; i++) {
-      if (moviesSeenByUser[i][1] === rating[1]) {
-        return false
-      }
-    }
-    return true
-  })
-  // console.log(ratingsForMoviesNotSeenByUser.length)
-  return ratingsForMoviesNotSeenByUser
-}
-
-recommender.getRatingsMoviesNotSeenByUserS = (userId, ratingsData) => {
-  // why does this make fork calcs slower?
-  // does kinda the same as in geteuclidian, move to function?
-  // let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
-  // let ratingsForMoviesNotSeenByUser2 = ratingsData.filter((rating) => {
-  //   for (let i = 0; i < moviesSeenByUser.length; i++) {
-  //     if (moviesSeenByUser[i][1] === rating[1]) {
-  //       return false
-  //     }
-  //   }
-  //   return true
-  // })
-
-  let moviesSeenByUser = []
+recommender.getRatingsMoviesNotSeenByUserR = (userId, ratingsData) => {
+  let moviesSeenByUser = new Set()
   for (let i = 0; i < ratingsData.length; i++) {
     if (ratingsData[i][0] === userId) {
-      moviesSeenByUser.push(ratingsData[i][1])
+      moviesSeenByUser.add(ratingsData[i][1])
     }
   }
-  // console.log(moviesSeenByUser)
+
   let ratingsForMoviesNotSeenByUser = []
-  let cnt = 0
-  for (let i = 0; i < ratingsData.length; i++) {
-    // if (ratingsData[i][0] !== userId) {
-    let seen = false
-    for (let y = 0; y < moviesSeenByUser.length; y++) {
-      if (ratingsData[i][1] === moviesSeenByUser[y]) {
-        seen = true
-      }
+
+  for (let y = 0; y < ratingsData.length; y++) {
+    if (!moviesSeenByUser.has(ratingsData[y][1])) {
+      ratingsForMoviesNotSeenByUser.push(ratingsData[y])
     }
-    if (!seen) {
-      cnt++
-      ratingsForMoviesNotSeenByUser.push(ratingsData[i])
-    }
-    // }
   }
-  // console.log(cnt)
-  // console.log(ratingsForMoviesNotSeenByUser2)
-  // console.log(ratingsForMoviesNotSeenByUser)
+
   return ratingsForMoviesNotSeenByUser
 }
 
@@ -370,6 +336,48 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
   })
 }
 
+recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
+  // does kinda the same as in geteuclidian, move to function?
+  let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
+  let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
+    for (let i = 0; i < moviesSeenByUser.length; i++) {
+      if (moviesSeenByUser[i][1] === rating[1]) {
+        return false
+      }
+    }
+    return true
+  })
+  // console.log(ratingsForMoviesNotSeenByUser.length)
+  return ratingsForMoviesNotSeenByUser
+}
+
+recommender.getRatingsMoviesNotSeenByUserS = (userId, ratingsData) => {
+  let moviesSeenByUser = []
+  for (let i = 0; i < ratingsData.length; i++) {
+    if (ratingsData[i][0] === userId) {
+      moviesSeenByUser.push(ratingsData[i][1])
+    }
+  }
+
+  let ratingsForMoviesNotSeenByUser = []
+  let cnt = 0
+  for (let i = 0; i < ratingsData.length; i++) {
+    // if (ratingsData[i][0] !== userId) {
+    let seen = false
+    for (let y = 0; y < moviesSeenByUser.length; y++) {
+      if (ratingsData[i][1] === moviesSeenByUser[y]) {
+        seen = true
+      }
+    }
+    if (!seen) {
+      cnt++
+      ratingsForMoviesNotSeenByUser.push(ratingsData[i])
+    }
+  }
+
+  return ratingsForMoviesNotSeenByUser
+}
+
 module.exports = recommender
 
 // console.log(userAScores.length, userBScores.length)
@@ -391,4 +399,28 @@ module.exports = recommender
 // for (let i = 0, a = commonRatings.length; i < a; i++) {
 //   sim += (userAScores[i] - userBScores[i]) ** 2
 //   n += 1
+// }
+
+// let r = []
+// let avg = []
+// let iavg = []
+
+// function calcEuclideanScoreA(userAScores, userBScores) {
+//   let sim = 0
+//   let n = 0
+
+//   for (let i = 0, a = userBScores.length; i < a; i++) {
+//     // for (let j = 0, b = userBScores.length; j < b; j++) {
+//     sim += (userAScores[i] - userBScores[i]) ** 2
+//     n += 1
+//     // }
+//   }
+
+//   if (n === 0) {
+//     return 0
+//   }
+
+//   let inv = 1 / (1 + sim)
+
+//   return inv
 // }

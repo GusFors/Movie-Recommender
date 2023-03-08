@@ -36,7 +36,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    const runs = 1
+    const runs = 6
     for (let i = 0; i < runs; i++) {
       let userData = await dataReaderCsv.getUserIdLineI()
       let ratingsData = await dataReaderCsv.getRatingsLineI()
@@ -44,8 +44,9 @@ let isOptimized = false
       // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
       const movieData = await dataReaderCsv.getMoviesCompleteLineI()
       recommender.warmupOpt(1, await userData, await ratingsData)
-      console.log('opt done')
+     
     }
+    console.log('opt done')
     isOptimized = true
   }
 })()
@@ -85,7 +86,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
-  let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUserS(userId, await ratingsData)
+  let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUserR(userId, await ratingsData)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
   ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))

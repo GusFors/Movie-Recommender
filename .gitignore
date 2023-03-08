@@ -109,4 +109,5 @@ ignoredfiles
 
 
 csv-data/
-loop.js
+loops/
+loop-testing/

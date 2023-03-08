@@ -51,7 +51,7 @@ process.on('message', (data) => {
   // let checks = 0
 
   // let wScores = new Array(movieIds.length)
-
+  let c1 = performance.now()
   for (let i = 0, l = movieIds.length; i < l; i++) {
     let weightedScoreSum = 0
     let simScoreSum = 0
@@ -75,10 +75,10 @@ process.on('message', (data) => {
       })
     }
   }
-
+  let c2 = performance.now()
   let t2 = performance.now()
   // console.log('checks:', checks)
-  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`, calcData.length) // (${process.execArgv})
+  console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`, calcData.length, c2 - c1) // (${process.execArgv})
 
   process.send({ message: 'done', data: calcData, id: data.id })
 })
