@@ -102,6 +102,12 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
       // console.log(usersData[i])
       simScores.push({ userId: usersData[i], similarity: simScore })
     }
+
+    // if (i < 3) {
+    //   console.log(userIdRatings)
+    //   console.log(userB)
+    //   console.log(simScore)
+    // }
     // let i2 = performance.now()
     // iavg.push(i2 - i1)
   }
@@ -120,7 +126,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   //   avg.reduce((partialSum, a) => partialSum + a, 0)
   // )
   // avg = []
-
+  // console.log(simScores)
   return simScores
 }
 

@@ -59,6 +59,99 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
   return num / den
 }
 
+recommender.getEuclidianSimScoresForUserR = (userId, usersData, ratingsData) => {
+  let simScores = []
+
+  let userAMovIds = new Set()
+  let userAScores = []
+
+  let othersRatingUserIds = []
+  let otherMovRatIds = []
+  let otherScores = []
+  let relevantScores = []
+  // let aIndexes = []
+  let aMatchScores = []
+  let aMovidArr = []
+  let allScores = []
+  for (let r = 0, l = ratingsData.length; r < l; r++) {
+    if (ratingsData[r][0] === userId) {
+      // userIdRatings.push(ratingsData[r])
+      aMatchScores.push(ratingsData[r][1])
+      userAMovIds.add(ratingsData[r][1])
+      aMovidArr.push(ratingsData[r][1])
+      userAScores.push(ratingsData[r][2])
+      // aIndexes.push(r)
+    } else {
+      relevantScores.push(ratingsData[r])
+    }
+    allScores.push(ratingsData[r][2])
+  }
+  // console.log(aMatchScores)
+  let matchesIndexes = []
+  // let matchCntForOtherUsers = []
+  for (let r = 0, l = relevantScores.length; r < l; r++) {
+    if (userAMovIds.has(relevantScores[r][1])) {
+      // matchesIndexes.push(i)
+
+      matchesIndexes.push(aMatchScores.indexOf(relevantScores[r][1]))
+      othersRatingUserIds.push(relevantScores[r][0])
+      otherMovRatIds.push(relevantScores[r][1])
+      otherScores.push(relevantScores[r][2])
+
+      if (relevantScores[r][0] === 3) {
+        console.log(matchesIndexes[matchesIndexes.length-1], relevantScores[r][0], relevantScores[r][1], relevantScores[r][2])
+      }
+    }
+  }
+  
+  // console.log(othersRatingUserIds.length)
+  // console.log(matchesIndexes)
+  // console.log(userAScores[matchesIndexes[0]], aMovidArr[matchesIndexes[0]])
+  // for (let r = 0, l = othersRatingUserIds.length; r < l; r++) {}
+
+  let uniqueOtherIds = [...new Set(othersRatingUserIds)]
+  let alreadyCheckedRatingsIndexes = 0
+
+
+
+
+
+  for (let i = 0, u =  uniqueOtherIds.length; i < u; i++) {
+    let i1 = performance.now()
+    let userBMovIds = []
+    let userBScores = []
+    let userAScoresFromMatchingIndexes = []
+
+    // otherMovRatIds[r] === uniqueOtherIds[i]
+    for (let r = alreadyCheckedRatingsIndexes, l = othersRatingUserIds.length; r < l; r++) {
+      if (othersRatingUserIds[r] === uniqueOtherIds[i]) {
+        userBMovIds.push(otherMovRatIds[r])
+        userBScores.push(otherScores[r])
+        userAScoresFromMatchingIndexes.push(userAScores[matchesIndexes[r]])
+        //userAScoresFromMatchingIndexes.push(userAScores[aMatchScores.indexOf(matchesIndexes[i])])
+        alreadyCheckedRatingsIndexes++
+      } else {
+        break
+      }
+    }
+
+    let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
+    if (simScore > 0) {
+      simScores.push([uniqueOtherIds[i], simScore])
+    }
+
+    if (i === 1) {
+      // console.log(userAScores[matchesIndexes[i]])
+      console.log('userid?', uniqueOtherIds[i])
+      console.log(userAScoresFromMatchingIndexes)
+      console.log(userBScores)
+      console.log(simScore)
+    }
+  }
+  // console.log(simScores)
+  return simScores
+}
+
 recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   let simScores = []
 
@@ -99,7 +192,7 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
     //   otherScores.push(relevantScores[r][2])
     // }
   }
-
+  // console.log(othersRatingUserIds.length)
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
 
   // should be possible to ignore those when doing the next userId check?
@@ -347,7 +440,6 @@ recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
     }
     return true
   })
-  // console.log(ratingsForMoviesNotSeenByUser.length)
   return ratingsForMoviesNotSeenByUser
 }
 

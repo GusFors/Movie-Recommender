@@ -36,7 +36,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    const runs = 6
+    const runs = 0
     for (let i = 0; i < runs; i++) {
       let userData = await dataReaderCsv.getUserIdLineI()
       let ratingsData = await dataReaderCsv.getRatingsLineI()
@@ -75,7 +75,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t1 = performance.now()
   if (chosenSim === 'Euclidian') {
-    userSimScores = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
+    userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await userData, await ratingsData)
   }
 
   // if (chosenSim === 'Pearson') {
