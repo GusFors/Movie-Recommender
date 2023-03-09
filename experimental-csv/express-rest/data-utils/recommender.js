@@ -343,28 +343,51 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
     let forkProcesses = numForks
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    let movieChunkIds = []
+    let wScoresChunks = []
+    for (let y = 0; y < moviesChunks.length; y++) {
+      if (!movieChunkIds[y]) {
+        movieChunkIds[y] = []
+      }
+      for (let j = 0; j < moviesChunks[y].length; j++) {
+        movieChunkIds[y].push(moviesChunks[y][j].movieId)
+      }
+      movieChunkIds[y] = new Set(movieChunkIds[y])
+      wScoresChunks[y] = []
+      for (let w = 0; w < weightedScores.length; w++) {
+        if (movieChunkIds[y].has(weightedScores[w].movieId)) {
+          wScoresChunks[y].push(weightedScores[w])
+        }
+      }
+    }
+    // console.log(movieChunkIds)
+    // console.log(wScoresChunks[0][84000])
+    // console.log(weightedScores[84000])
     // let wScoresChunks = chunk.arrayChunkSplit(weightedScores, forkProcesses)
     let promises = []
-
+    // console.log(weightedScores)
+    // console.log(moviesData)
+    // console.log(numRatings)
     console.log('spawning forks....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
-      promises.push(spawnFork(moviesChunks[i], weightedScores, minNumRatings, numRatings, i))
+      promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // console.log('t', i)
+      console.log(i, 'push loop', performance.now() - t1)
     }
     let t2 = performance.now()
     console.log('forks spawned after', t2 - t1)
 
     Promise.all(promises).then((values) => {
-      let t1 = performance.now()
+      let ti1 = performance.now()
       for (let i = 0; i < values.length; i++) {
         for (let j = 0; j < values[i].length; j++) {
           movieRecommendations.push(values[i][j])
         }
       }
       let t2 = performance.now()
-      console.log('put together forks in', t2 - t1)
+      console.log('put together forks in', t2 - ti1, 'from spawn:', t2 - t1)
       resolve(movieRecommendations)
     })
   })
@@ -372,36 +395,39 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
 async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, id) {
   return new Promise((resolve, reject) => {
-    let movieRecommendations = []
-
     let t1 = performance.now()
     let calcScore = fork('./data-utils/scoreCalcSort.js', [], {
       // execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster
-
+    console.log(id, 'spawned in', performance.now() - t1)
     // timeout send to spawn other forks first?
     // calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
+    // let t2 = performance.now()
+    // console.log(`started fork and sent data to id:${id} in `, t2 - t1)
 
     // setTimeout(() => {
     //   calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
-    // }, 5 * id)
+    //   let t2 = performance.now()
+    //   console.log(`started fork and sent data to id:${id} in `, t2 - t1)
+    // }, 0 * id)
 
-    process.nextTick(() =>
+    process.nextTick(() => {
       calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
-    )
-
-    let t2 = performance.now()
-    console.log(`started fork and sent data to id:${id} in `, t2 - t1)
-
-    calcScore.on('message', async (data) => {
-      process.nextTick(() => {
-        if (data.message === 'done') {
-          calcScore.kill()
-          return resolve(data.data)
-        }
-      })
+      let t2 = performance.now()
+      console.log(`started fork and sent data to id:${id} in `, t2 - t1)
     })
+
+    // process.nextTick(() => {
+    calcScore.on('message', async (data) => {
+      // process.nextTick(() => {
+      if (data.message === 'done') {
+        calcScore.kill()
+        return resolve(data.data)
+      }
+      // })
+    })
+    // })
   })
 }
 

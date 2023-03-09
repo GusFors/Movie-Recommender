@@ -23,7 +23,7 @@ process.on('message', (data) => {
     return a.movieId - b.movieId
   })
   //   let wScoresortedByMovieId = data.weightedScores
-
+  //   console.log(wScoresortedByMovieId)
   let wScoreIds = []
   let wScoreRatings = []
   let wScoreSims = []
@@ -34,7 +34,7 @@ process.on('message', (data) => {
       wScoreSims.push(wScoresortedByMovieId[y].simScore)
     }
   }
-
+  //   console.log(performance.now() - t1)
   let alreadyCheckedRatingsIndexes = 0 // let j = //
 
   let c1 = performance.now()
@@ -43,12 +43,13 @@ process.on('message', (data) => {
     let simScoreSum = 0
     // let currMovId = movieIds[i]
 
-    for (let j = alreadyCheckedRatingsIndexes, w = wScoreIds.length; j < w; j++) {
+    for (let j = 0, w = wScoreIds.length; j < w; j++) {
       // checks++
       if (movieIds[i] === wScoreIds[j]) {
         weightedScoreSum = weightedScoreSum + wScoreRatings[j]
         simScoreSum = simScoreSum + wScoreSims[j]
-        alreadyCheckedRatingsIndexes++
+        // alreadyCheckedRatingsIndexes++
+        // alreadyCheckedRatingsIndexes = j
       }
     }
 

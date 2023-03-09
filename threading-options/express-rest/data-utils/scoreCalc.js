@@ -32,8 +32,6 @@ process.on('message', (data) => {
       }
     }
 
-   
-
     if (weightedScoreSum > 0) {
       calcData.push({
         movieId: moviesAboveMinNumRatings[i].movieId,
