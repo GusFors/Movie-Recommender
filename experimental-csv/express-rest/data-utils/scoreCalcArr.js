@@ -1,15 +1,17 @@
 process.on('message', (data) => {
-  //let data = JSON.parse(JSON.stringify(mdata)) // doesn't seem to make as much difference when forking compared to workers
-
   const minNumOfRatings = data.minNumRatings
   let calcData = []
-  // console.log(data.id, 'alive')
+
   let moviesAboveMinNumRatings = []
   let movieIds = []
-  let p1 = performance.now()
+
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
-      moviesAboveMinNumRatings.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings, title: data.moviesData[y].title })
+      moviesAboveMinNumRatings.push({
+        movieId: data.moviesData[y].movieId,
+        numRatings: data.moviesData[y].numRatings,
+        title: data.moviesData[y].title,
+      })
       movieIds.push(data.moviesData[y].movieId)
     }
   }
@@ -19,8 +21,6 @@ process.on('message', (data) => {
   for (let y = 0, l = data.weightedScores.length; y < l; y++) {
     wScoreIds.push(data.weightedScores[y].movieId)
   }
-
-  let p2 = performance.now()
 
   let t1 = performance.now()
 
@@ -50,25 +50,3 @@ process.on('message', (data) => {
 
   process.send({ message: 'done', data: calcData, id: data.id })
 })
-
-// calcData.push({
-//   ...sortedByMovieId[i],
-//   recommendationScore: weightedScoreSum / simScoreSum,
-// })
-// if (i < 5) {
-//   console.log(sortedByMovieId[i])
-// }
-// sortedByMovieId[i].recommendationScore = weightedScoreSum / simScoreSum
-// calcData.push(sortedByMovieId[i])
-// let isSameMap = %HaveSameMap(sortedByMovieId[i], last)
-// if (!isSameMap && i > 0) {
-//   console.log('not same')
-//   console.log(sortedByMovieId[i], last)
-// }
-// if (i > 0 && i < 5) {
-//   console.log()
-// }
-// if (moviesAboveMinNumRatings[i].numRatings >= minNumOfRatings) {
-// last = sortedByMovieId[i]
-// }
-// console.log(sortedByMovieId[0])

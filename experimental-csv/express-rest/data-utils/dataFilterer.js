@@ -1,13 +1,8 @@
 const dataFilterer = {}
 
 dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, numberOfResults, userNamesAndIds) => {
-  // let sortedData = rawUserRecommendationData.sort((a, b) => b.similarity - a.similarity)
-  // let numOfResultsData = sortedData.slice(0, numberOfResults)
-  let sortedData = rawUserRecommendationData.sort((a, b) => b[1] - a[1])
+  let sortedData = rawUserRecommendationData.sort((a, b) => b[1] - a[1]) // [0]: user id, [1]: similarity score
   let numOfResultsData = sortedData.slice(0, numberOfResults)
-  // let userIdSorted = userNamesAndIds.sort((a, b) => b.id - a.id)
-  // console.log(userNamesAndIds)
-  //  console.log(rawUserRecommendationData)
 
   // workaround
   let combined = []
@@ -23,7 +18,6 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
       combined.push(userObj)
       //user.similarity = parseFloat(user.similarity.toFixed(4))
     })
-    //  console.log(combined)
     return combined
   } else {
     numOfResultsData.forEach((user) => {
@@ -32,27 +26,6 @@ dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, number
 
     return numOfResultsData
   }
-
-  // if (userNamesAndIds) {
-  //   numOfResultsData.forEach((user) => {
-  //     console.log(user)
-  //     let userObj = {
-  //       similarity: parseFloat(user.similarity.toFixed(4)),
-  //       name: userNamesAndIds[parseInt(user.userId) - 1].name ? userNamesAndIds[parseInt(user.userId) - 1].name : 'Only Id',
-  //       userId: user.userId,
-  //     }
-  //     combined.push(userObj)
-  //     //user.similarity = parseFloat(user.similarity.toFixed(4))
-  //   })
-  //   //  console.log(combined)
-  //   return combined
-  // } else {
-  //   numOfResultsData.forEach((user) => {
-  //     user.similarity = parseFloat(user.similarity.toFixed(4))
-  //   })
-
-  //   return numOfResultsData
-  // }
 }
 
 dataFilterer.getFilteredRecommendedMovieData = (rawMovieRecommendationData, numberOfResults) => {
