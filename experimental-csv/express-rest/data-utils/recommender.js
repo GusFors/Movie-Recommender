@@ -291,11 +291,13 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
     let forkProcesses = numForks
 
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    // let wScoresChunks = chunk.arrayChunkSplit(weightedScores, forkProcesses)
     let promises = []
 
     console.log('spawning workers....')
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnWorker(moviesChunks[i], weightedScores, minNumRatings, i))
+      // promises.push(spawnWorker(moviesChunks[i], wScoresChunks[i], minNumRatings, i))
     }
 
     Promise.all(promises).then((values) => {
@@ -341,12 +343,14 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
     let forkProcesses = numForks
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    // let wScoresChunks = chunk.arrayChunkSplit(weightedScores, forkProcesses)
     let promises = []
 
     console.log('spawning forks....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnFork(moviesChunks[i], weightedScores, minNumRatings, numRatings, i))
+      // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // console.log('t', i)
     }
     let t2 = performance.now()
@@ -381,7 +385,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
 
     // setTimeout(() => {
     //   calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
-    // }, 30 * id)
+    // }, 5 * id)
 
     process.nextTick(() =>
       calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
@@ -391,10 +395,12 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
     console.log(`started fork and sent data to id:${id} in `, t2 - t1)
 
     calcScore.on('message', async (data) => {
-      if (data.message === 'done') {
-        calcScore.kill()
-        return resolve(data.data)
-      }
+      process.nextTick(() => {
+        if (data.message === 'done') {
+          calcScore.kill()
+          return resolve(data.data)
+        }
+      })
     })
   })
 }

@@ -6,6 +6,8 @@ process.on('message', (data) => {
   let movieNumRatings = []
   let movieTitles = []
 
+  let t1 = performance.now()
+
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
       movieIds.push(data.moviesData[y].movieId)
@@ -14,21 +16,26 @@ process.on('message', (data) => {
     }
   }
 
-  let t1 = performance.now()
+  let movIdSet = new Set(movieIds)
 
   // let wScoresortedByMovieId = JSON.parse(JSON.stringify(data.weightedScores))
-  let wScoresortedByMovieId = data.weightedScores
+  let wScoresortedByMovieId = data.weightedScores.sort((a, b) => {
+    return a.movieId - b.movieId
+  })
+  //   let wScoresortedByMovieId = data.weightedScores
 
   let wScoreIds = []
   let wScoreRatings = []
   let wScoreSims = []
   for (let y = 0, l = wScoresortedByMovieId.length; y < l; y++) {
-    wScoreIds.push(wScoresortedByMovieId[y].movieId)
-    wScoreRatings.push(wScoresortedByMovieId[y].weightedRating)
-    wScoreSims.push(wScoresortedByMovieId[y].simScore)
+    if (movIdSet.has(wScoresortedByMovieId[y].movieId)) {
+      wScoreIds.push(wScoresortedByMovieId[y].movieId)
+      wScoreRatings.push(wScoresortedByMovieId[y].weightedRating)
+      wScoreSims.push(wScoresortedByMovieId[y].simScore)
+    }
   }
 
-  // let alreadyCheckedRatingsIndexes = 0 // let j = //
+  let alreadyCheckedRatingsIndexes = 0 // let j = //
 
   let c1 = performance.now()
   for (let i = 0, l = movieIds.length; i < l; i++) {
@@ -36,12 +43,12 @@ process.on('message', (data) => {
     let simScoreSum = 0
     // let currMovId = movieIds[i]
 
-    for (let j = 0, w = wScoreIds.length; j < w; j++) {
+    for (let j = alreadyCheckedRatingsIndexes, w = wScoreIds.length; j < w; j++) {
       // checks++
       if (movieIds[i] === wScoreIds[j]) {
         weightedScoreSum = weightedScoreSum + wScoreRatings[j]
         simScoreSum = simScoreSum + wScoreSims[j]
-        // alreadyCheckedRatingsIndexes++
+        alreadyCheckedRatingsIndexes++
       }
     }
 

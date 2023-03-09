@@ -8,7 +8,11 @@ process.on('message', (data) => {
   let p1 = performance.now()
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
     if (data.moviesData[y].numRatings >= minNumOfRatings) {
-      moviesAboveMinNumRatings.push({ movieId: data.moviesData[y].movieId, numRatings: data.moviesData[y].numRatings, title: data.moviesData[y].title })
+      moviesAboveMinNumRatings.push({
+        movieId: data.moviesData[y].movieId,
+        numRatings: data.moviesData[y].numRatings,
+        title: data.moviesData[y].title,
+      })
     }
   }
 
@@ -28,6 +32,8 @@ process.on('message', (data) => {
       }
     }
 
+   
+
     if (weightedScoreSum > 0) {
       calcData.push({
         movieId: moviesAboveMinNumRatings[i].movieId,
@@ -37,7 +43,7 @@ process.on('message', (data) => {
       })
     }
   }
-
+  // console.log(calcData[0])
   let t2 = performance.now()
   console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`) // (${process.execArgv})
 
