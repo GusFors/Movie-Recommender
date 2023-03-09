@@ -36,21 +36,30 @@ process.on('message', (data) => {
   }
   //   console.log(performance.now() - t1)
   let alreadyCheckedRatingsIndexes = 0 // let j = //
-
+  //   console.log(wScoreIds)
   let c1 = performance.now()
   for (let i = 0, l = movieIds.length; i < l; i++) {
     let weightedScoreSum = 0
     let simScoreSum = 0
     // let currMovId = movieIds[i]
-
+    let currRatingMovId = wScoreIds[0]
     for (let j = 0, w = wScoreIds.length; j < w; j++) {
       // checks++
+      //   if (wScoreIds[j] !== currRatingMovId) {
+      //     currRatingMovId = wScoreIds[j]
+      //     break
+      //   }
       if (movieIds[i] === wScoreIds[j]) {
         weightedScoreSum = weightedScoreSum + wScoreRatings[j]
         simScoreSum = simScoreSum + wScoreSims[j]
         // alreadyCheckedRatingsIndexes++
         // alreadyCheckedRatingsIndexes = j
       }
+
+      //   else {
+      //     break
+      //     // j = w
+      //   }
     }
 
     if (weightedScoreSum > 0) {

@@ -35,10 +35,17 @@ dataFilterer.getFilteredRecommendedMovieData = (rawMovieRecommendationData, numb
   })
 
   let sortedScores = rawMovieRecommendationData.sort((a, b) => {
+    if (b.numRatings === a.numRatings && b.recommendationScore === a.recommendationScore) {
+      // console.log('b.movieId')
+      return a.movieId - b.movieId
+    }
+
     // if same score, sort by number of ratings
-    if (b.recommendationScore == a.recommendationScore) {
+    if (b.recommendationScore === a.recommendationScore) {
+      // console.log('yahaoo')
       return b.numRatings - a.numRatings
     }
+
     return b.recommendationScore - a.recommendationScore
   })
 

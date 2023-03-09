@@ -342,7 +342,17 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let movieRecommendations = []
 
     let forkProcesses = numForks
+
+    for (let r = 0; r < moviesData.length; r++) {
+      let holder = moviesData[r] /// ... or structuredclone? mby not needed
+      let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
+      //let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
+      moviesData[r] = moviesData[newIndex]
+      moviesData[newIndex] = holder
+    }
+
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+
     let movieChunkIds = []
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
@@ -360,20 +370,14 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-    // console.log(movieChunkIds)
-    // console.log(wScoresChunks[0][84000])
-    // console.log(weightedScores[84000])
-    // let wScoresChunks = chunk.arrayChunkSplit(weightedScores, forkProcesses)
+
     let promises = []
-    // console.log(weightedScores)
-    // console.log(moviesData)
-    // console.log(numRatings)
+
     console.log('spawning forks....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
-      // console.log('t', i)
       console.log(i, 'push loop', performance.now() - t1)
     }
     let t2 = performance.now()
@@ -418,16 +422,12 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
       console.log(`started fork and sent data to id:${id} in `, t2 - t1)
     })
 
-    // process.nextTick(() => {
     calcScore.on('message', async (data) => {
-      // process.nextTick(() => {
       if (data.message === 'done') {
         calcScore.kill()
         return resolve(data.data)
       }
-      // })
     })
-    // })
   })
 }
 
