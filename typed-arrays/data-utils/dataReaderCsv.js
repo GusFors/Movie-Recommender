@@ -8,7 +8,7 @@ const dataReader = {}
 
 const dataHolder = {
   userData: [],
-  userIdData: new Int32Array(),
+  userIdData: new Uint32Array(),
   ratingsData: [],
   movieTitles: [],
   movieIdData: [],
@@ -139,6 +139,7 @@ dataReader.getMoviesCompleteLineI = async () => {
         resolve(dataHolder.movieData)
       })
     } else {
+      // console.log(dataHolder.movieData)
       resolve(dataHolder.movieData)
     }
   })

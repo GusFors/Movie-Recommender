@@ -2,7 +2,7 @@ const dataFilterer = require('../data-utils/dataFilterer')
 const dataReaderRev = require('../data-utils/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
 const recommender = require('../data-utils/recommender')
-const recommenderOld = require('../data-utils/recommenderNoFork')
+// const recommenderOld = require('../data-utils/recommenderNoFork')
 
 const recommendationController = {}
 
@@ -36,7 +36,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    const runs = 15
+    const runs = 0
     for (let i = 0; i < runs; i++) {
       // let userData = await dataReaderCsv.getUserIdLineI()
       let ratingsData = await dataReaderCsv.getRatingsLineI()
@@ -108,9 +108,9 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, numRatings, threads)
   }
 
-  // if (type === 'Worker') {
-  //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, threads)
-  // }
+  if (type === 'Worker') {
+    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, numRatings, threads)
+  }
 
   // if (type === 'Slow') {
   //   rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, 'json')
@@ -138,5 +138,3 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   }
 }
 module.exports = recommendationController
-
-

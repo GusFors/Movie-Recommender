@@ -113,7 +113,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsData) => {
     }
   }
   // console.log('second section took', performance.now() - t2)
-  simScores.userIds = new Int32Array(simScores.userIds)
+  simScores.userIds = new Uint32Array(simScores.userIds)
   simScores.scores = new Float32Array(simScores.scores)
   return simScores
 }
@@ -124,23 +124,22 @@ recommender.warmupOpt = (userId, ratingsData) => {
   // prettier-ignore
   %PrepareFunctionForOptimization(recommender.calcEuclideanScoreA);
   // prettier-ignore
- // %PrepareFunctionForOptimization(recommender.getWeightedScoresTview);
+  // %PrepareFunctionForOptimization(recommender.getWeightedScoresTview);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUserR);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.calcEuclideanScoreA);
   // prettier-ignore
   // %NeverOptimizeFunction(recommender.getWeightedScoresTfull)
-  //%OptimizeFunctionOnNextCall(recommender.getWeightedScoresTview);
+  // %OptimizeFunctionOnNextCall(recommender.getWeightedScoresTview);
   // prettier-ignore
   // %DeoptimizeNow();
-  //console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
-  //%TypedArraySetFastCases(new Int32Array(16));
-  //%DeoptimizeFunction(recommender.getWeightedScoresTview);
+  // console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
+  // %TypedArraySetFastCases(new Uint32Array(16));
+  // %DeoptimizeFunction(recommender.getWeightedScoresTview);
   let simScores = recommender.getEuclidianSimScoresForUserR(userId, ratingsData)
   let ratings = recommender.getRatingsMoviesNotSeenByUserR(userId, ratingsData)
   recommender.getWeightedScoresTview(simScores, ratings)
-  
 }
 
 recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
@@ -180,8 +179,8 @@ recommender.getRatingsMoviesNotSeenByUserR = (userId, ratingsData) => {
     }
   }
 
-  ratingsForMoviesNotSeenByUser.userIds = new Int32Array(ratingsForMoviesNotSeenByUser.userIds)
-  ratingsForMoviesNotSeenByUser.movIds = new Int32Array(ratingsForMoviesNotSeenByUser.movIds)
+  ratingsForMoviesNotSeenByUser.userIds = new Uint32Array(ratingsForMoviesNotSeenByUser.userIds)
+  ratingsForMoviesNotSeenByUser.movIds = new Uint32Array(ratingsForMoviesNotSeenByUser.movIds)
   ratingsForMoviesNotSeenByUser.scores = new Float32Array(ratingsForMoviesNotSeenByUser.scores)
 
   return ratingsForMoviesNotSeenByUser
@@ -191,24 +190,23 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
   let weightedScores = []
 
   // %DebugPrint(similarityScores.userIds)
-  let uIds = new Int32Array(similarityScores.userIds.buffer)
-  let uIdView = new DataView(similarityScores.userIds.buffer, 0)
+  let uIds = new Uint32Array(similarityScores.userIds.buffer)
+  let uIdView = new DataView(uIds.buffer, 0)
 
   let simScores = new Float32Array(similarityScores.scores.buffer)
   // let sCopy = new Float32Array(simScores.buffer)
-  let simScoreView = new DataView(simScores.buffer, 0)
-  let ratingUserIds = new Int32Array(ratingsData.userIds.buffer)
-  let ratingIdview = new DataView(ratingUserIds.buffer, 0)
+  let simScoreView = new DataView(simScores.buffer)
+  let ratingUserIds = new Uint32Array(ratingsData.userIds.buffer)
+  let ratingIdview = new DataView(ratingUserIds.buffer)
 
-  movieIds = new Int32Array(ratingsData.movIds.buffer)
-  let moviesIdview = new DataView(movieIds.buffer, 0)
+  let movieIds = new Uint32Array(ratingsData.movIds.buffer)
+  let moviesIdview = new DataView(movieIds.buffer)
 
-  ratingScores = new Float32Array(ratingsData.scores.buffer)
-  let ratingScoreView = new DataView(ratingScores.buffer, 0)
+  let ratingScores = new Float32Array(ratingsData.scores.buffer)
+  let ratingScoreView = new DataView(ratingScores.buffer)
 
   //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
   for (let s = 0, l = uIds.length * 4; s < l; s += 4) {
-    // %DeoptimizeNow();
     // * 4 in inner loop makes deopt kick in
     for (let i = 0, r = ratingUserIds.length * 4; i < r; i += 4) {
       if (uIdView.getInt32(s, true) === ratingIdview.getInt32(i, true)) {
@@ -224,6 +222,8 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
   // %DeoptimizeFunction(recommender.getWeightedScoresTview);
   // %DisableOptimizationFinalization();
   %ClearMegamorphicStubCache()
+  // console.log(%HasSmiElements(uIds));
+  // %DebugPrint(uIds)
   // console.log('part took', performance.now() - t1)
 
   return weightedScores
@@ -232,11 +232,11 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
 recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
   let weightedScores = []
 
-  let uIds = new Uint32Array(similarityScores.userIds.buffer)
+  let uIds = new UUint32Array(similarityScores.userIds.buffer)
   let simScores = new Float32Array(similarityScores.scores.buffer)
 
-  let ratingUserIds = new Uint32Array(ratingsData.userIds.buffer)
-  let movieIds = new Uint32Array(ratingsData.movIds.buffer)
+  let ratingUserIds = new UUint32Array(ratingsData.userIds.buffer)
+  let movieIds = new UUint32Array(ratingsData.movIds.buffer)
   let ratingScores = new Float32Array(ratingsData.scores.buffer)
 
   //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
@@ -260,25 +260,25 @@ recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
 recommender.getWeightedScoresT = (similarityScores, ratingsData) => {
   let weightedScores = []
 
-  //let userIds = new Uint32Array(similarityScores.length) // do this in datareader instead?
+  //let userIds = new UUint32Array(similarityScores.length) // do this in datareader instead?
   //let userIds = new Array(similarityScores.length)
   let userIds = []
   let simScores = []
   // let userIdView = new DataView(new ArrayBuffer(10000000))
-  // let userIdView2 = new DataView(new Uint32Array(2).buffer)
+  // let userIdView2 = new DataView(new UUint32Array(2).buffer)
   for (let y = 0, l = similarityScores.userIds.length; y < l; y++) {
     //userIds[y] = similarityScores[y][0]
     // userIds[y] += similarityScores[y][0]
     userIds.push(similarityScores.userIds[y])
     simScores.push(similarityScores.scores[y])
   }
-  userIds = new Uint32Array(userIds, 0, userIds.length) // use typed array set? or dataview
+  userIds = new UUint32Array(userIds, 0, userIds.length) // use typed array set? or dataview
   let uIdView = new DataView(userIds.buffer, 0)
 
   simScores = new Float32Array(simScores, 0, simScores.length)
   let simScoreView = new DataView(simScores.buffer, 0)
 
-  //let ratingUserIds = new Uint32Array(ratingsData.length)
+  //let ratingUserIds = new UUint32Array(ratingsData.length)
   //let ratingUserIds = new Array(ratingsData.length)
   let ratingUserIds = []
 
@@ -291,10 +291,10 @@ recommender.getWeightedScoresT = (similarityScores, ratingsData) => {
     movieIds.push(ratingsData.movIds[y])
     ratingScores.push(ratingsData.scores[y])
   }
-  ratingUserIds = new Uint32Array(ratingUserIds)
+  ratingUserIds = new UUint32Array(ratingUserIds)
   let ratingIdview = new DataView(ratingUserIds.buffer, 0)
 
-  movieIds = new Uint32Array(movieIds)
+  movieIds = new UUint32Array(movieIds)
   let moviesIdview = new DataView(movieIds.buffer, 0)
 
   ratingScores = new Float32Array(ratingScores, 0, ratingScores.length)
@@ -353,7 +353,7 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
   return weightedScores
 }
 
-recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, minNumRatings, numForks) => {
+recommender.getMovieRecommendationWorkerScoresO = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
     let forkProcesses = numForks
@@ -379,7 +379,67 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
   })
 }
 
-async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
+recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
+  return new Promise((resolve, reject) => {
+    let movieRecommendations = []
+
+    let forkProcesses = numForks
+    let r1 = performance.now()
+    for (let r = 0; r < moviesData.length; r++) {
+      let holder = moviesData[r]
+      let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
+      //let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
+      moviesData[r] = moviesData[newIndex]
+      moviesData[newIndex] = holder
+    }
+
+    let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+
+    let movieChunkIds = []
+    let wScoresChunks = []
+    for (let y = 0; y < moviesChunks.length; y++) {
+      if (!movieChunkIds[y]) {
+        movieChunkIds[y] = []
+      }
+      for (let j = 0; j < moviesChunks[y].length; j++) {
+        movieChunkIds[y].push(moviesChunks[y][j].movieId)
+      }
+      movieChunkIds[y] = new Set(movieChunkIds[y])
+      wScoresChunks[y] = []
+      for (let w = 0; w < weightedScores.length; w++) {
+        if (movieChunkIds[y].has(weightedScores[w].movieId)) {
+          wScoresChunks[y].push(weightedScores[w])
+        }
+      }
+    }
+    console.log('randomize in:', performance.now() - r1)
+    let promises = []
+
+    console.log('spawning workers....')
+    let t1 = performance.now()
+    for (let i = 0; i < moviesChunks.length; i++) {
+      promises.push(spawnWorker(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
+      // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
+      // console.log(i, 'push loop', performance.now() - t1)
+    }
+    let t2 = performance.now()
+    console.log('workers spawned after', t2 - t1)
+
+    Promise.all(promises).then((values) => {
+      let ti1 = performance.now()
+      for (let i = 0; i < values.length; i++) {
+        for (let j = 0; j < values[i].length; j++) {
+          movieRecommendations.push(values[i][j])
+        }
+      }
+      let t2 = performance.now()
+      console.log('put together workers in', t2 - ti1, 'from spawn:', t2 - t1)
+      resolve(movieRecommendations)
+    })
+  })
+}
+
+async function spawnWorkerO(moviesData, weightedScores, minNumRatings, id) {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
@@ -397,6 +457,32 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, id) {
     worker.on('message', async (data) => {
       if (data.message === 'done') {
         console.log('worker id' + data.id + ' done')
+
+        worker.terminate()
+        return resolve(data.data)
+      }
+    })
+  })
+}
+
+async function spawnWorker(moviesData, weightedScores, minNumRatings, numRatings, id) {
+  return new Promise((resolve, reject) => {
+    let t1 = performance.now()
+    let worker = new Worker('./data-utils/scoreCalcSortW.js', {
+      execArgv: [''],
+      //  resourceLimits: { maxYoungGenerationSizeMb: 1024, stackSizeMb: 8 },
+    })
+    console.log(id, 'spawned in', performance.now() - t1)
+
+    process.nextTick(() => {
+      worker.postMessage({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
+      let t2 = performance.now()
+      console.log(`started worker and sent data to id:${id} in `, t2 - t1)
+    })
+
+    worker.on('message', async (data) => {
+      if (data.message === 'done') {
+        // console.log('worker id' + data.id + ' done')
 
         worker.terminate()
         return resolve(data.data)

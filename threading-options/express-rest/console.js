@@ -80,3 +80,4 @@ recommend()
 // --lite-mode --mcpu=... '--predictable-gc-schedule', '--huge-max-old-generation-size', '--always-sparkplug', '--max-opt=4', '--use-largepages=on', '--max-old-space-size=3072', '--max-semi-space-size=2048' --inline-new --fast-forward-schedule --turbo-fast-api-calls
 // --predictable-gc-schedule --huge-max-old-generation-size --use-largepages=on --random-gc-interval=10 --gc-experiment-less-compaction --experimental-json-modules --max-old-space-size=128 --max-semi-space-size=2 // less sometimes faster? 
 // --turbo-compress-translation-arrays
+// --trace-elements-transitions --trace-deopt
