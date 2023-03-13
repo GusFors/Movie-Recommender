@@ -342,7 +342,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let movieRecommendations = []
 
     let forkProcesses = numForks
-
+    let r1 = performance.now()
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r] /// ... or structuredclone? mby not needed
       let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
@@ -370,7 +370,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-
+    console.log('randomize in:', performance.now() - r1)
     let promises = []
 
     console.log('spawning forks....')

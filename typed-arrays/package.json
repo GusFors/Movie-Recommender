@@ -1,0 +1,18 @@
+{
+  "name": "a1---recommendation-system",
+  "version": "1.0.0",
+  "description": "A1 for the course 2dv515",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon --max-opt=10000 --trace-deopt --trace-elements-transitions --allow-natives-syntax app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "GusFors",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csvtojson": "^2.0.10",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.15"
+  }
+}
