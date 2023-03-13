@@ -36,7 +36,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 let isOptimized = false
 ;(async () => {
   if (!isOptimized) {
-    const runs = 0
+    const runs = 15
     for (let i = 0; i < runs; i++) {
       // let userData = await dataReaderCsv.getUserIdLineI()
       let ratingsData = await dataReaderCsv.getRatingsLineI()
@@ -137,42 +137,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     })
   }
 }
-function getWeightedScoresTfull(similarityScores, ratingsData) {
-  let weightedScores = []
-
-  // %DebugPrint(similarityScores.userIds)
-  let uIds = new Int32Array(similarityScores.userIds.buffer)
-  let uIdView = new DataView(similarityScores.userIds.buffer, 0)
-
-  let simScores = new Float32Array(similarityScores.scores.buffer)
-  // let sCopy = new Float32Array(simScores.buffer)
-  let simScoreView = new DataView(simScores.buffer, 0)
-  let ratingUserIds = new Int32Array(ratingsData.userIds.buffer)
-  let ratingIdview = new DataView(ratingUserIds.buffer, 0)
-
-  movieIds = new Int32Array(ratingsData.movIds.buffer)
-  let moviesIdview = new DataView(movieIds.buffer, 0)
-
-  ratingScores = new Float32Array(ratingsData.scores.buffer)
-  let ratingScoreView = new DataView(ratingScores.buffer, 0)
-
-  //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
-  for (let s = 0, l = uIds.length * 4; s < l; s += 4) {
-    // %DeoptimizeNow();
-    // * 4 in inner loop makes deopt kick in
-    for (let i = 0, r = ratingUserIds.length * 4; i < r; i += 4) {
-      if (uIdView.getInt32(s, true) === ratingIdview.getInt32(i, true)) {
-        weightedScores.push({
-          movieId: moviesIdview.getInt32(i, true),
-          weightedRating: simScoreView.getFloat32(s, true) * ratingScoreView.getFloat32(i, true),
-          simScore: simScoreView.getFloat32(s, true),
-        })
-      }
-    }
-  }
-
-  // console.log('part took', performance.now() - t1)
-
-  return weightedScores
-}
 module.exports = recommendationController
+
+

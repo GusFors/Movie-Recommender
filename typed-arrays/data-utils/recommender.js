@@ -1,9 +1,6 @@
 const { fork } = require('child_process')
 const { Worker } = require('worker_threads')
 const chunk = require('array-chunk-split')
-const { serialize, deserialize } = require('v8')
-const os = require('node:os')
-const { Buffer } = require('node:buffer')
 
 const recommender = {}
 
@@ -21,7 +18,6 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   }
 
   let inv = 1 / (1 + sim)
-
   return inv
 }
 
@@ -128,20 +124,23 @@ recommender.warmupOpt = (userId, ratingsData) => {
   // prettier-ignore
   %PrepareFunctionForOptimization(recommender.calcEuclideanScoreA);
   // prettier-ignore
-  // %PrepareFunctionForOptimization(recommender.getWeightedScoresTfull);
+ // %PrepareFunctionForOptimization(recommender.getWeightedScoresTview);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUserR);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.calcEuclideanScoreA);
   // prettier-ignore
   // %NeverOptimizeFunction(recommender.getWeightedScoresTfull)
-  // %OptimizeFunctionOnNextCall(recommender.getWeightedScoresTfull);
+  //%OptimizeFunctionOnNextCall(recommender.getWeightedScoresTview);
   // prettier-ignore
+  // %DeoptimizeNow();
   //console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
   //%TypedArraySetFastCases(new Int32Array(16));
+  //%DeoptimizeFunction(recommender.getWeightedScoresTview);
   let simScores = recommender.getEuclidianSimScoresForUserR(userId, ratingsData)
   let ratings = recommender.getRatingsMoviesNotSeenByUserR(userId, ratingsData)
-  recommender.getWeightedScoresTfull(simScores, ratings)
+  recommender.getWeightedScoresTview(simScores, ratings)
+  
 }
 
 recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
@@ -180,148 +179,12 @@ recommender.getRatingsMoviesNotSeenByUserR = (userId, ratingsData) => {
       ratingsForMoviesNotSeenByUser.scores.push(ratingsData[y][2])
     }
   }
+
   ratingsForMoviesNotSeenByUser.userIds = new Int32Array(ratingsForMoviesNotSeenByUser.userIds)
   ratingsForMoviesNotSeenByUser.movIds = new Int32Array(ratingsForMoviesNotSeenByUser.movIds)
   ratingsForMoviesNotSeenByUser.scores = new Float32Array(ratingsForMoviesNotSeenByUser.scores)
+
   return ratingsForMoviesNotSeenByUser
-}
-
-let V8OptimizationStatus = {
-  kIsFunction: 1 << 0,
-  kNeverOptimize: 1 << 1,
-  kAlwaysOptimize: 1 << 2,
-  kMaybeDeopted: 1 << 3,
-  kOptimized: 1 << 4,
-  kMaglevved: 1 << 5,
-  kTurboFanned: 1 << 6,
-  kInterpreted: 1 << 7,
-  kMarkedForOptimization: 1 << 8,
-  kMarkedForConcurrentOptimization: 1 << 9,
-  kOptimizingConcurrently: 1 << 10,
-  kIsExecuting: 1 << 11,
-  kTopmostFrameIsTurboFanned: 1 << 12,
-  kLiteMode: 1 << 13,
-  kMarkedForDeoptimization: 1 << 14,
-  kBaseline: 1 << 15,
-  kTopmostFrameIsInterpreted: 1 << 16,
-  kTopmostFrameIsBaseline: 1 << 17,
-  kIsLazy: 1 << 18,
-  kTopmostFrameIsMaglev: 1 << 19,
-}
-
-// {
-//   kIsFunction: 1,
-//   kNeverOptimize: 2,
-//   kAlwaysOptimize: 4,
-//   kMaybeDeopted: 8,
-//   kOptimized: 16,
-//   kMaglevved: 32,
-//   kTurboFanned: 64,
-//   kInterpreted: 128,
-//   kMarkedForOptimization: 256,
-//   kMarkedForConcurrentOptimization: 512,
-//   kOptimizingConcurrently: 1024,
-//   kIsExecuting: 2048,
-//   kTopmostFrameIsTurboFanned: 4096,
-//   kLiteMode: 8192,
-//   kMarkedForDeoptimization: 16384,
-//   kBaseline: 32768,
-//   kTopmostFrameIsInterpreted: 65536,
-//   kTopmostFrameIsBaseline: 131072,
-//   kIsLazy: 262144,
-//   kTopmostFrameIsMaglev: 524288
-// }
-
-recommender.getWeightedScoresTfull = (similarityScores, ratingsData) => {
-  return getWeightedScoresTfull(similarityScores, ratingsData)
-  let weightedScores = []
-  // prettier-ignore
-  // console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull) & V8OptimizationStatus.kTurboFanned);
-  // prettier-ignore
-  let status = %GetOptimizationStatus(recommender.getWeightedScoresTfull);
-  // prettier-ignore
-  %DebugPrint(recommender.getWeightedScoresTfull);
-  console.log(status)
-  // %DisableOptimizationFinalization();
-  //console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
-  // console.log(V8OptimizationStatus)
-  // %FinalizeOptimization();
-  // prettier-ignore
-  // %DeoptimizeNow();
-
-  // for (const [key, value] of Object.entries(V8OptimizationStatus)) {
-  //   console.log(`${key}: ${value & status}`);
-  // }
-
-  // console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
-  //let userIds = new Uint32Array(similarityScores.length) // do this in datareader instead?
-  //let userIds = new Array(similarityScores.length)
-  let userIds = []
-  let simScores = []
-  // let userIdView = new DataView(new ArrayBuffer(10000000))
-  // let userIdView2 = new DataView(new Uint32Array(2).buffer)
-  for (let y = 0, l = similarityScores.userIds.length; y < l; y++) {
-    //userIds[y] = similarityScores[y][0]
-    // userIds[y] += similarityScores[y][0]
-    userIds.push(similarityScores.userIds[y])
-    simScores.push(similarityScores.scores[y])
-  }
-  // prettier-ignore
-  // console.log(%HasHoleyElements());
-  //console.log(%HasFastElements([]));
-  // userIds = new Int32Array(similarityScores.userIds.buffer)
-  // userIds = new Int32Array(userIds) // use typed array set? or dataview
-  let uIdView = new DataView(similarityScores.userIds.buffer, 0)
-  // prettier-ignore
-  // console.log(%HasFixedInt32Elements(similarityScores.userIds));
-  simScores = new Float32Array(similarityScores.scores.buffer)
-  let sCopy = new Float32Array(simScores.buffer)
-  // simScores = new Float32Array(simScores)
-  let simScoreView = new DataView(simScores.buffer, 0)
-  // prettier-ignore
-  // %DeoptimizeNow();
-  //console.log(%IsSameHeapObject(simScores, sCopy));
-  //  console.log(%HasFixedFloat32Elements(simScores));
-  //let ratingUserIds = new Uint32Array(ratingsData.length)
-  //let ratingUserIds = new Array(ratingsData.length)
-  let ratingUserIds = []
-
-  let movieIds = []
-  let ratingScores = []
-  for (let y = 0, l = ratingsData.userIds.length; y < l; y++) {
-    // ratingUserIds[y] = ratingsData[y][0]
-    //ratingUserIds[y] += ratingsData[y][0]
-    ratingUserIds.push(ratingsData.userIds[y])
-    movieIds.push(ratingsData.movIds[y])
-    ratingScores.push(ratingsData.scores[y])
-  }
-  ratingUserIds = new Int32Array(ratingUserIds)
-  let ratingIdview = new DataView(ratingUserIds.buffer, 0)
-
-  movieIds = new Int32Array(movieIds)
-  let moviesIdview = new DataView(movieIds.buffer, 0)
-
-  ratingScores = new Float32Array(ratingScores, 0, ratingScores.length)
-  let ratingScoreView = new DataView(ratingScores.buffer, 0)
-
-  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
-    // %DeoptimizeNow();
-    for (let i = 0, r = ratingsData.userIds.length * 4; i < r; i += 4) {
-      // console.log(uIdView.getUint32(s, true))
-      if (uIdView.getInt32(s, true) === ratingIdview.getInt32(i, true)) {
-        weightedScores.push({
-          movieId: moviesIdview.getInt32(i, true),
-          weightedRating: simScoreView.getFloat32(s, true) * ratingScoreView.getFloat32(i, true),
-          simScore: simScoreView.getFloat32(s, true),
-        })
-        // alreadyCheckedRatingsIndexes++
-      }
-    }
-  }
-
-  // console.log('part took', performance.now() - t1)
-  // console.log(weightedScores)
-  return weightedScores
 }
 
 recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
@@ -357,7 +220,10 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
       }
     }
   }
-
+  // %DeoptimizeNow();
+  // %DeoptimizeFunction(recommender.getWeightedScoresTview);
+  // %DisableOptimizationFinalization();
+  %ClearMegamorphicStubCache()
   // console.log('part took', performance.now() - t1)
 
   return weightedScores
@@ -365,26 +231,14 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
 
 recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
   let weightedScores = []
-  // let similarityScores2 = structuredClone(similarityScores, { transfer: [similarityScores.userIds.buffer, similarityScores.scores.buffer] })
-  // let ratingsData2 = structuredClone(ratingsData, { transfer: [ratingsData.userIds.buffer, ratingsData.movIds.buffer, ratingsData.scores.buffer] })
-  // let similarityScores2 = structuredClone(similarityScores, { transfer: [similarityScores.userIds.buffer, similarityScores.scores.buffer] })
-  // let ratingsData2 = structuredClone(ratingsData, { transfer: [ratingsData.userIds.buffer, ratingsData.movIds.buffer, ratingsData.scores.buffer] })
-  
-  let uIds = new Uint32Array(similarityScores.userIds.buffer)
-  // let uIdView = new DataView(similarityScores.userIds.buffer, 0)
-  // console.log(uIds)
-  let simScores = new Float32Array(similarityScores.scores.buffer)
-  // let sCopy = new Float32Array(simScores.buffer)
-  // let simScoreView = new DataView(simScores.buffer, 0)
-  let ratingUserIds = new Uint32Array(ratingsData.userIds.buffer)
-  // let ratingIdview = new DataView(ratingUserIds.buffer, 0)
-  // console.log(ratingUserIds)
-  let movieIds = new Uint32Array(ratingsData.movIds.buffer)
-  // let moviesIdview = new DataView(movieIds.buffer, 0)
 
+  let uIds = new Uint32Array(similarityScores.userIds.buffer)
+  let simScores = new Float32Array(similarityScores.scores.buffer)
+
+  let ratingUserIds = new Uint32Array(ratingsData.userIds.buffer)
+  let movieIds = new Uint32Array(ratingsData.movIds.buffer)
   let ratingScores = new Float32Array(ratingsData.scores.buffer)
-  // let ratingScoreView = new DataView(ratingScores.buffer, 0)
-  // let t1 = performance.now()
+
   //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
   for (let s = 0, l = similarityScores.userIds.length; s < l; s++) {
     // %DeoptimizeNow();
@@ -399,77 +253,6 @@ recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
       }
     }
   }
-  
-  // %DebugPrint(similarityScores.userIds)
-  // let uIds = new Int32Array(similarityScores2.userIds.buffer)
-  // // let uIdView = new DataView(similarityScores.userIds.buffer, 0)
-  // // console.log(uIds)
-  // let simScores = new Float32Array(similarityScores2.scores.buffer)
-  // // let sCopy = new Float32Array(simScores.buffer)
-  // // let simScoreView = new DataView(simScores.buffer, 0)
-  // let ratingUserIds = new Int32Array(ratingsData2.userIds.buffer)
-  // // let ratingIdview = new DataView(ratingUserIds.buffer, 0)
-  // // console.log(ratingUserIds)
-  // let movieIds = new Int32Array(ratingsData2.movIds.buffer)
-  // // let moviesIdview = new DataView(movieIds.buffer, 0)
-
-  // let ratingScores = new Float32Array(ratingsData2.scores.buffer)
-  // // let ratingScoreView = new DataView(ratingScores.buffer, 0)
-  // // let t1 = performance.now()
-  // //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
-  // for (let s = 0, l = uIds.length; s < l; s++) {
-  //   // %DeoptimizeNow();
-  //   // * 4 in inner loop makes deopt kick in
-  //   for (let i = 0, r = ratingUserIds.length; i < r; i++) {
-  //     if (uIds[s] === ratingUserIds[i]) {
-  //       weightedScores.push({
-  //         movieId: movieIds[i],
-  //         weightedRating: simScores[s] * ratingScores[i],
-  //         simScore: simScores[s],
-  //       })
-  //     }
-  //   }
-  // }
-
-  //  console.log('part took', performance.now() - t1)
-
-  return weightedScores
-}
-
-function getWeightedScoresTfull(similarityScores, ratingsData) {
-  let weightedScores = []
-
-  // %DebugPrint(similarityScores.userIds)
-  let uIdView = new DataView(similarityScores.userIds.buffer, 0)
-
-  let simScores = new Float32Array(similarityScores.scores.buffer)
-  // let sCopy = new Float32Array(simScores.buffer)
-  let simScoreView = new DataView(simScores.buffer, 0)
-  let ratingUserIds = []
-
-  ratingUserIds = new Int32Array(ratingsData.userIds.buffer)
-  let ratingIdview = new DataView(ratingUserIds.buffer, 0)
-
-  movieIds = new Int32Array(ratingsData.movIds.buffer)
-  let moviesIdview = new DataView(movieIds.buffer, 0)
-
-  ratingScores = new Float32Array(ratingsData.scores.buffer)
-  let ratingScoreView = new DataView(ratingScores.buffer, 0)
-
-  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
-    // %DeoptimizeNow();
-    for (let i = 0, r = ratingsData.userIds.length * 4; i < r; i += 4) {
-      if (uIdView.getInt32(s, true) === ratingIdview.getInt32(i, true)) {
-        weightedScores.push({
-          movieId: moviesIdview.getInt32(i, true),
-          weightedRating: simScoreView.getFloat32(s, true) * ratingScoreView.getFloat32(i, true),
-          simScore: simScoreView.getFloat32(s, true),
-        })
-      }
-    }
-  }
-
-  // console.log('part took', performance.now() - t1)
 
   return weightedScores
 }
@@ -531,126 +314,6 @@ recommender.getWeightedScoresT = (similarityScores, ratingsData) => {
     }
   }
 
-  // console.log('part took', performance.now() - t1)
-  // console.log(weightedScores)
-  return weightedScores
-}
-
-recommender.getWeightedScoresTarr = (similarityScores, ratingsData) => {
-  let weightedScores = []
-
-  // let uidBuf = new ArrayBuffer(640 * 4)
-  // console.log(similarityScores)
-  // console.log(ratingsData)
-  let userIds = [...similarityScores.userIds]
-  let simScores = [...similarityScores.scores]
-
-  // let simScores = new Float64Array([...similarityScores.scores])
-  // let userIds = new Int32Array(similarityScores.length)
-
-  // let simScores = new Float32Array(similarityScores.length)
-
-  // for (let y = 0, l = similarityScores.length; y < l; y++) {
-  //   userIds[y] = similarityScores[y][0]
-  //   // userIds[y] += similarityScores[y][0]
-  //   // userIds.push(similarityScores[y][0])
-  //   // simScores.push(similarityScores[y][1])
-  //   simScores[y] = similarityScores[y][1]
-  // }
-  // console.log(userIds)
-  // console.log(serialize(userIds).values)
-  // for (const value of serialize(userIds).values()) {
-  //   console.log(value);
-  // }
-  // let uIdBuf = new Int16Array(userIds)
-  //  console.log(uIdBuf[253])
-  // const userIdsT = new Uint32Array([...userIds]) // use typed array set? or dataview
-
-  // simScores = new Float64Array(simScores, 0, simScores.length)
-
-  //let ratingUserIds = new Uint32Array(ratingsData.length)
-  //let ratingUserIds = new Array(ratingsData.length)
-
-  let ratingUserIds = [...ratingsData.userIds]
-  let movieIds = [...ratingsData.movIds]
-  let ratingScores = [...ratingsData.scores]
-  // ratingUserIds.fill(1)
-  // let movieIds = new Uint32Array([...ratingsData.movIds])
-  // let ratingScores = new Float64Array([...ratingsData.scores])
-
-  // let ratingUserIds = new Int32Array(ratingsData.length)
-  // // ratingUserIds.fill(1)
-  // let movieIds = new Uint32Array(ratingsData.length)
-  // let ratingScores = new Float32Array(ratingsData.length)
-  // for (let y = 0, l = ratingsData.length; y < l; y++) {
-  //   ratingUserIds[y] = ratingsData[y][0]
-  //   movieIds[y] = ratingsData[y][1]
-  //   ratingScores[y] = ratingsData[y][2]
-  //   //ratingUserIds[y] += ratingsData[y][0]
-  //   // ratingUserIds.push(ratingsData[y][0])
-  //   // movieIds.push(ratingsData[y][1])
-  //   // ratingScores.push(ratingsData[y][2])
-  // }
-  // let ratingUidbuf = Buffer.from(ratingUserIds)
-  // const ratingUserIdsT = new Uint32Array([...ratingUserIds])
-
-  // movieIds = new Uint32Array(movieIds)
-
-  // ratingScores = new Float64Array(ratingScores, 0, ratingScores.length)
-
-  // console.log(ratingUserIds.buffer)
-  // let t1 = performance.now()
-  // console.log(ratingsData.length)
-  //  let cnt = 0
-  // let uvals = userIds.values()
-  // let rvals = ratingUserIds.values()
-  // // for (const s of uvals) {
-  // //   // console.log(s)
-  // //   for (const i of rvals) {
-  // //     if (userIds[s] === ratingUserIds[i]) {
-  // //       weightedScores.push({
-  // //         movieId: movieIds[i],
-  // //         weightedRating: simScores[s] * ratingScores[i],
-  // //         simScore: simScores[s],
-  // //       })
-  // //       // alreadyCheckedRatingsIndexes++
-  // //     }
-  // //     //  cnt++
-  // //   }
-  // // }
-  // for (let s = 0, l = userIds.length; s < l; s++) {
-  //   // ratingUserIds.forEach((e) => {
-  //   //   cnt++
-  //   // })
-  //   ratingUserIds.every((e) => {
-  //     // cnt++
-  //     return e > 0
-  //   })
-  //   // for (let r of rvals) {
-  //   //   // console.log(r)
-  //   //   cnt++
-  //   // }
-  //   // for (const i of rvals) {
-  //   //   cnt++
-  //   // }
-  // }
-
-  for (let s = 0, l = userIds.length; s < l; s++) {
-    for (let i = 0, r = ratingUserIds.length; i < r; i++) {
-      // console.log(uIdView.getUint32(s, true))
-      if (userIds[s] === ratingUserIds[i]) {
-        weightedScores.push({
-          movieId: movieIds[i],
-          weightedRating: simScores[s] * ratingScores[i],
-          simScore: simScores[s],
-        })
-        // alreadyCheckedRatingsIndexes++
-      }
-    }
-  }
-
-  // console.log('part took', performance.now() - t1)
-
   return weightedScores
 }
 
@@ -686,13 +349,6 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
       }
     }
   }
-  // if (similarityScores[s] === ratingsData[i][0]) {
-  //   weightedScores.push({
-  //     movieId: ratingsData[i][1],
-  //     weightedRating: similarityScores[s][s+1] * ratingsData[i][2],
-  //     simScore: similarityScores[s][s+1],
-  //   })
-  // }
 
   return weightedScores
 }
@@ -907,12 +563,6 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
         otherScores.push(relevantScores[r][2])
       }
     }
-
-    // if (userAMovIds.includes(relevantScores[r][1])) {
-    //   othersRatingUserIds.push(relevantScores[r][0])
-    //   otherMovRatIds.push(relevantScores[r][1])
-    //   otherScores.push(relevantScores[r][2])
-    // }
   }
 
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
@@ -938,7 +588,6 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
       }
     }
 
-    // let simScore = ref(userAScoresFromMatchingIndexes, userBScores)
     let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
     if (simScore > 0) {
       simScores.push([uniqueOtherIds[i], simScore])
@@ -950,170 +599,4 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   return simScores
 }
 
-// recommender.getWeightedScoresTarr2 = (similarityScores, ratingsData) => {
-//   let weightedScores = []
-
-//   // let uidBuf = new ArrayBuffer(640 * 4)
-//   // console.log(similarityScores)
-//   // console.log(ratingsData)
-//   let userIds = [...similarityScores.ids]
-//   let simScores = [...similarityScores.scores]
-
-//   // let simScores = new Float64Array([...similarityScores.scores])
-//   // let userIds = new Int32Array(similarityScores.length)
-
-//   // let simScores = new Float32Array(similarityScores.length)
-
-//   // for (let y = 0, l = similarityScores.length; y < l; y++) {
-//   //   userIds[y] = similarityScores[y][0]
-//   //   // userIds[y] += similarityScores[y][0]
-//   //   // userIds.push(similarityScores[y][0])
-//   //   // simScores.push(similarityScores[y][1])
-//   //   simScores[y] = similarityScores[y][1]
-//   // }
-//   // console.log(userIds)
-//   // console.log(serialize(userIds).values)
-//   // for (const value of serialize(userIds).values()) {
-//   //   console.log(value);
-//   // }
-//   // let uIdBuf = new Int16Array(userIds)
-//   //  console.log(uIdBuf[253])
-//   // const userIdsT = new Uint32Array([...userIds]) // use typed array set? or dataview
-
-//   // simScores = new Float64Array(simScores, 0, simScores.length)
-
-//   //let ratingUserIds = new Uint32Array(ratingsData.length)
-//   //let ratingUserIds = new Array(ratingsData.length)
-
-//   let ratingUserIds = [...ratingsData.userIds]
-//   let movieIds = [...ratingsData.movIds]
-//   let ratingScores = [...ratingsData.scores]
-//   // ratingUserIds.fill(1)
-//   // let movieIds = new Uint32Array([...ratingsData.movIds])
-//   // let ratingScores = new Float64Array([...ratingsData.scores])
-
-//   // let ratingUserIds = new Int32Array(ratingsData.length)
-//   // // ratingUserIds.fill(1)
-//   // let movieIds = new Uint32Array(ratingsData.length)
-//   // let ratingScores = new Float32Array(ratingsData.length)
-//   // for (let y = 0, l = ratingsData.length; y < l; y++) {
-//   //   ratingUserIds[y] = ratingsData[y][0]
-//   //   movieIds[y] = ratingsData[y][1]
-//   //   ratingScores[y] = ratingsData[y][2]
-//   //   //ratingUserIds[y] += ratingsData[y][0]
-//   //   // ratingUserIds.push(ratingsData[y][0])
-//   //   // movieIds.push(ratingsData[y][1])
-//   //   // ratingScores.push(ratingsData[y][2])
-//   // }
-//   // let ratingUidbuf = Buffer.from(ratingUserIds)
-//   // const ratingUserIdsT = new Uint32Array([...ratingUserIds])
-
-//   // movieIds = new Uint32Array(movieIds)
-
-//   // ratingScores = new Float64Array(ratingScores, 0, ratingScores.length)
-
-//   // console.log(ratingUserIds.buffer)
-//   // let t1 = performance.now()
-//   // console.log(ratingsData.length)
-//   //  let cnt = 0
-//   // let uvals = userIds.values()
-//   // let rvals = ratingUserIds.values()
-//   // // for (const s of uvals) {
-//   // //   // console.log(s)
-//   // //   for (const i of rvals) {
-//   // //     if (userIds[s] === ratingUserIds[i]) {
-//   // //       weightedScores.push({
-//   // //         movieId: movieIds[i],
-//   // //         weightedRating: simScores[s] * ratingScores[i],
-//   // //         simScore: simScores[s],
-//   // //       })
-//   // //       // alreadyCheckedRatingsIndexes++
-//   // //     }
-//   // //     //  cnt++
-//   // //   }
-//   // // }
-//   // for (let s = 0, l = userIds.length; s < l; s++) {
-//   //   // ratingUserIds.forEach((e) => {
-//   //   //   cnt++
-//   //   // })
-//   //   ratingUserIds.every((e) => {
-//   //     // cnt++
-//   //     return e > 0
-//   //   })
-//   //   // for (let r of rvals) {
-//   //   //   // console.log(r)
-//   //   //   cnt++
-//   //   // }
-//   //   // for (const i of rvals) {
-//   //   //   cnt++
-//   //   // }
-//   // }
-
-//   for (let s = 0, l = userIds.length; s < l; s++) {
-//     for (let i = 0, r = ratingUserIds.length; i < r; i++) {
-//       // cnt++
-//       // console.log(uIdView.getUint32(s, true))
-//       if (userIds[s] === ratingUserIds[i]) {
-//         weightedScores.push({
-//           movieId: movieIds[i],
-//           weightedRating: simScores[s] * ratingScores[i],
-//           simScore: simScores[s],
-//         })
-//         // alreadyCheckedRatingsIndexes++
-//       }
-//     }
-//   }
-//   // console.log(cnt)
-//   // // console.log(ratingUserIds.length)
-//   // console.log('part took', performance.now() - t1)
-//   // uidBuf = null
-//   // userIds = null
-//   return weightedScores
-// }
-
 module.exports = recommender
-
-// console.log(userAScores.length, userBScores.length)
-// console.log(userAScores.length * userBScores.length)
-// n *= userAScores.length * userBScores.length ** 2
-// sim *= userAScores.length * userBScores.length ** 2
-// let commonRatings = []
-
-// for (let b = 0; b < userAScores.length; b++) {
-//   if (userBScores.includes(userAScores[b])) {
-//     commonRatings.push(userAScores[b])
-//   }
-// }
-
-// console.log(commonRatings.length)
-
-// // let t1 = performance.now()
-
-// for (let i = 0, a = commonRatings.length; i < a; i++) {
-//   sim += (userAScores[i] - userBScores[i]) ** 2
-//   n += 1
-// }
-
-// let r = []
-// let avg = []
-// let iavg = []
-
-// function calcEuclideanScoreA(userAScores, userBScores) {
-//   let sim = 0
-//   let n = 0
-
-//   for (let i = 0, a = userBScores.length; i < a; i++) {
-//     // for (let j = 0, b = userBScores.length; j < b; j++) {
-//     sim += (userAScores[i] - userBScores[i]) ** 2
-//     n += 1
-//     // }
-//   }
-
-//   if (n === 0) {
-//     return 0
-//   }
-
-//   let inv = 1 / (1 + sim)
-
-//   return inv
-// }
