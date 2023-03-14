@@ -207,19 +207,15 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
     }
   }
 
-  // userIds = new Uint32Array([...userIds])
-  // movIds = new Uint32Array([...movIds])
-  // scores = new Float32Array([...scores])
-
-  // ratingsForMoviesNotSeenByUser.userIds = new Uint32Array(ratingsForMoviesNotSeenByUser.userIds)
-  // ratingsForMoviesNotSeenByUser.movIds = new Uint32Array(ratingsForMoviesNotSeenByUser.movIds)
-  // ratingsForMoviesNotSeenByUser.scores = new Float32Array(ratingsForMoviesNotSeenByUser.scores)
+  // userIds = new Uint32Array(userIds)
+  // movIds = new Uint32Array(movIds)
+  // scores = new Float32Array(scores)
 
   let weightedScores = []
 
   // let uIds = new Uint32Array([...similarityScores.userIds])
   // let simScores = new Float32Array([...similarityScores.scores])
-  let uIds = new Uint32Array(similarityScores.userIds)
+  let simUids = new Uint32Array(similarityScores.userIds)
   let simScores = new Float32Array(similarityScores.scores)
 
   // let ratingUserIds = new Uint32Array([...ratingsData.userIds])
@@ -229,18 +225,13 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
   // let uIds = [...(similarityScores.userIds)]
   // let simScores = [...(similarityScores.scores)]
 
-  // let ratingUserIds = userIds
-  // let movieIds = movIds
-  // let ratingScores = scores
-  // console.log(userIds)
-  //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
   let start = 0
-  for (let s = 0, l = uIds.length; s < l; s++) {
+  for (let s = 0, l = simUids.length; s < l; s++) {
     // %DeoptimizeNow();
     let isUserSection = false
     let end = 0
     for (let i = start, r = userIds.length; i < r; i++) {
-      if (uIds[s] === userIds[i]) {
+      if (simUids[s] === userIds[i]) {
         if (!isUserSection) {
           isUserSection = true
           start = i
@@ -259,50 +250,15 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
       //   })
       // }
     }
-    // if (s === 0) {
-    //   console.log(start, end)
-    // }
-    // console.log(start, end)
 
-    // end is wrong, right when using r = userIds.length
-    // let cnt = 0
-    // if (end > 0) {
     for (let i = start, r = end > 0 ? end : userIds.length; i < r; i++) {
-      // if (s === 1) {
-      //   // if (uIds[s] === userIds[i]) {
-      //   cnt++
-      //   console.log(cnt, i)
-      //   // }
-      // }
-      // remove if when right amount of recommendations
-      // if (uIds[s] === userIds[i]) {
       weightedScores.push({
         movieId: movIds[i],
         weightedRating: simScores[s] * scores[i],
         simScore: simScores[s],
       })
-      // }
     }
   }
-  // else {
-  //   for (let i = start, r = userIds.length; i < r; i++) {
-  //     // if (s === 1) {
-  //     //   // if (uIds[s] === userIds[i]) {
-  //     //   cnt++
-  //     //   console.log(cnt, i)
-  //     //   // }
-  //     // }
-  //     // remove if when right amount of recommendations
-  //     // if (uIds[s] === userIds[i]) {
-  //     weightedScores.push({
-  //       movieId: movIds[i],
-  //       weightedRating: simScores[s] * scores[i],
-  //       simScore: simScores[s],
-  //     })
-  //     // }
-  //   }
-  // }
-  // }
 
   return weightedScores
 
@@ -606,9 +562,13 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, numRatings
 recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-
+    // console.log(numRatings)
     let forkProcesses = numForks
-    let r1 = performance.now()
+    // let r1 = performance.now()
+    // console.log(minNumRatings)
+
+    // console.log(moviesData.length)
+
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r] /// ... or structuredclone? mby not needed
       let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
@@ -616,7 +576,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
-
+    // console.log('randomize in:', performance.now() - r1)
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
 
     let movieChunkIds = []
@@ -636,7 +596,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-    console.log('randomize in:', performance.now() - r1)
+
     let promises = []
 
     console.log('spawning forks....')
