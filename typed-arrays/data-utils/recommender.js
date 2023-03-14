@@ -493,12 +493,12 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
       if (!movieChunkIds[y]) {
-        movieChunkIds[y] = []
+        movieChunkIds[y] = new Set()
       }
       for (let j = 0; j < moviesChunks[y].length; j++) {
-        movieChunkIds[y].push(moviesChunks[y][j].movieId)
+        movieChunkIds[y].add(moviesChunks[y][j].movieId)
       }
-      movieChunkIds[y] = new Set(movieChunkIds[y])
+      // movieChunkIds[y] = new Set(movieChunkIds[y])
       wScoresChunks[y] = []
       for (let w = 0; w < weightedScores.length; w++) {
         if (movieChunkIds[y].has(weightedScores[w].movieId)) {
@@ -571,11 +571,15 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r] /// ... or structuredclone? mby not needed
-      let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
+      let newIndex = Math.floor(Math.random() * moviesData.length)
+      // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
       //let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
+    // %DebugPrint(moviesData);
+    // prettier-ignore
+    // console.log(%HasHoleyElements(moviesData));
     // console.log('randomize in:', performance.now() - r1)
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
 
@@ -583,12 +587,12 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
       if (!movieChunkIds[y]) {
-        movieChunkIds[y] = []
+        movieChunkIds[y] = new Set()
       }
       for (let j = 0; j < moviesChunks[y].length; j++) {
-        movieChunkIds[y].push(moviesChunks[y][j].movieId)
+        movieChunkIds[y].add(moviesChunks[y][j].movieId)
       }
-      movieChunkIds[y] = new Set(movieChunkIds[y])
+      // movieChunkIds[y] = new Set(movieChunkIds[y])
       wScoresChunks[y] = []
       for (let w = 0; w < weightedScores.length; w++) {
         if (movieChunkIds[y].has(weightedScores[w].movieId)) {
@@ -597,6 +601,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
       }
     }
     console.log('chunk movies in:', performance.now() - r1)
+
     let promises = []
 
     console.log('spawning forks....')
