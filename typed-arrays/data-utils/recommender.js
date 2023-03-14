@@ -564,7 +564,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let movieRecommendations = []
 
     let forkProcesses = numForks
-    let r1 = performance.now()
+   
     // console.log(minNumRatings)
 
     // console.log(moviesData.length)
@@ -581,8 +581,45 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     // prettier-ignore
     // console.log(%HasHoleyElements(moviesData));
     // console.log('randomize in:', performance.now() - r1)
-    let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    let r1 = performance.now()
+    // let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    let mChunks = []
 
+    function arrayChunk(arr, chunkCnt) {
+      let chunkSize = arr.length % chunkCnt === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
+
+      let temp = []
+      // temp = temp.fill(new Array(), 0, chunkCnt)
+      // temp = temp.fill([], 0, chunkCnt)
+
+      for (let c = 0; c < chunkCnt; c++) {
+        temp.push([])
+      }
+
+      console.log(temp)
+      console.log(chunkSize)
+
+      // temp[0].push(1)
+      for (let c = 0; c < chunkCnt; c++) {
+        for (let i = 0; i < chunkSize; i++) {
+          temp[c].push(arr.pop())
+        }
+        // console.log(c)
+      }
+
+      if (arr.length % chunkCnt !== 0) {
+        for (let r = 0; r < moviesData.length; r++) {
+          temp[0].push(moviesData.pop())
+        }
+      }
+
+      // console.log('length', temp.length)
+      // console.log('chunklength', temp[0].length, temp[1].length, temp[2].length)
+      return temp
+    }
+    let moviesChunks = arrayChunk(moviesData, forkProcesses)
+    // console.log(moviesData)
+    console.log('chunk movies in:', performance.now() - r1)
     let movieChunkIds = []
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
@@ -600,7 +637,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-    console.log('chunk movies in:', performance.now() - r1)
+   
 
     let promises = []
 
