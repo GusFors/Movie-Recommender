@@ -58,7 +58,6 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
 
 recommender.getEuclidianSimScoresForUserR = (userId, ratingsData) => {
   let simScores = { userIds: [], scores: [] }
-
   // let t1 = performance.now()
   let userAMovIds = new Set()
   let userAScores = []
@@ -124,19 +123,10 @@ recommender.warmupOpt = (userId, ratingsData) => {
   // prettier-ignore
   %PrepareFunctionForOptimization(recommender.calcEuclideanScoreA);
   // prettier-ignore
-  // %PrepareFunctionForOptimization(recommender.getWeightedScoresTview);
-  // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.getEuclidianSimScoresForUserR);
   // prettier-ignore
   %OptimizeFunctionOnNextCall(recommender.calcEuclideanScoreA);
-  // prettier-ignore
-  // %NeverOptimizeFunction(recommender.getWeightedScoresTfull)
-  // %OptimizeFunctionOnNextCall(recommender.getWeightedScoresTview);
-  // prettier-ignore
-  // %DeoptimizeNow();
-  // console.log(%GetOptimizationStatus(recommender.getWeightedScoresTfull));
-  // %TypedArraySetFastCases(new Uint32Array(16));
-  // %DeoptimizeFunction(recommender.getWeightedScoresTview);
+
   let simScores = recommender.getEuclidianSimScoresForUserR(userId, ratingsData)
   let ratings = recommender.getRatingsMoviesNotSeenByUserR(userId, ratingsData)
   recommender.getWeightedScoresTview(simScores, ratings)
@@ -186,8 +176,10 @@ recommender.getRatingsMoviesNotSeenByUserR = (userId, ratingsData) => {
   return ratingsForMoviesNotSeenByUser
 }
 
-recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similarityScores) => {
+recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsData, similarityScores) => {
+  // set has
   let moviesSeenByUser = new Set()
+
   for (let i = 0; i < ratingsData.length; i++) {
     if (ratingsData[i][0] === userId) {
       moviesSeenByUser.add(ratingsData[i][1])
@@ -207,27 +199,13 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
     }
   }
 
-  // userIds = new Uint32Array(userIds)
-  // movIds = new Uint32Array(movIds)
-  // scores = new Float32Array(scores)
-
   let weightedScores = []
-
-  // let uIds = new Uint32Array([...similarityScores.userIds])
-  // let simScores = new Float32Array([...similarityScores.scores])
   let simUids = new Uint32Array(similarityScores.userIds)
   let simScores = new Float32Array(similarityScores.scores)
 
-  // let ratingUserIds = new Uint32Array([...ratingsData.userIds])
-  // let movieIds = new Uint32Array([...ratingsData.movIds])
-  // let ratingScores = new Float32Array([...ratingsData.scores])
-
-  // let uIds = [...(similarityScores.userIds)]
-  // let simScores = [...(similarityScores.scores)]
-
+  // since they are sorted by userId don't loop through every element each time, instead find the range for each user and only push the scores in that range
   let start = 0
   for (let s = 0, l = simUids.length; s < l; s++) {
-    // %DeoptimizeNow();
     let isUserSection = false
     let end = 0
     for (let i = start, r = userIds.length; i < r; i++) {
@@ -238,19 +216,12 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
         }
       } else {
         if (isUserSection) {
-          end = i // +- 1 ?
-          break // i += 100000000000000 // break
+          end = i
+          break
         }
       }
-      // if (uIds[s] === userIds[i]) {
-      //   weightedScores.push({
-      //     movieId: movIds[i],
-      //     weightedRating: simScores[s] * scores[i],
-      //     simScore: simScores[s],
-      //   })
-      // }
     }
-
+    // extra check to include last user
     for (let i = start, r = end > 0 ? end : userIds.length; i < r; i++) {
       weightedScores.push({
         movieId: movIds[i],
@@ -261,8 +232,6 @@ recommender.getRatingsMoviesNotSeenByUserWr = (userId, ratingsData, similaritySc
   }
 
   return weightedScores
-
-  // return ratingsForMoviesNotSeenByUser
 }
 
 recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
@@ -303,13 +272,7 @@ recommender.getWeightedScoresTview = (similarityScores, ratingsData) => {
       }
     }
   }
-  // %DeoptimizeNow();
-  // %DeoptimizeFunction(recommender.getWeightedScoresTview);
-  // %DisableOptimizationFinalization();
   %ClearMegamorphicStubCache()
-  // console.log(%HasSmiElements(uIds));
-  // %DebugPrint(uIds)
-  // console.log('part took', performance.now() - t1)
 
   return weightedScores
 }
@@ -326,8 +289,6 @@ recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
 
   //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
   for (let s = 0, l = similarityScores.userIds.length; s < l; s++) {
-    // %DeoptimizeNow();
-    // * 4 in inner loop makes deopt kick in
     for (let i = 0, r = ratingsData.userIds.length; i < r; i++) {
       if (uIds[s] === ratingUserIds[i]) {
         weightedScores.push({
@@ -344,10 +305,8 @@ recommender.getWeightedScoresTarrBuff = (similarityScores, ratingsData) => {
 
 recommender.getWeightedScoresArr = (similarityScores, ratingsData) => {
   let weightedScores = []
-
   // let uIds = new Uint32Array([...similarityScores.userIds])
   // let simScores = new Float32Array([...similarityScores.scores])
-
   // let ratingUserIds = new Uint32Array([...ratingsData.userIds])
   // let movieIds = new Uint32Array([...ratingsData.movIds])
   // let ratingScores = new Float32Array([...ratingsData.scores])
@@ -362,7 +321,6 @@ recommender.getWeightedScoresArr = (similarityScores, ratingsData) => {
   //  for (let s = 0, l = similarityScores.userIds.length * 4; s < l; s += 4) {
   for (let s = 0, l = uIds.length; s < l; s++) {
     // %DeoptimizeNow();
-    // * 4 in inner loop makes deopt kick in
     for (let i = 0, r = ratingUserIds.length; i < r; i++) {
       if (uIds[s] === ratingUserIds[i]) {
         weightedScores.push({
@@ -380,33 +338,33 @@ recommender.getWeightedScoresArr = (similarityScores, ratingsData) => {
 recommender.getWeightedScoresT = (similarityScores, ratingsData) => {
   let weightedScores = []
 
-  //let userIds = new Uint32Array(similarityScores.length) // do this in datareader instead?
-  //let userIds = new Array(similarityScores.length)
+  // let userIds = new Uint32Array(similarityScores.length) // do this in datareader instead?
+  // let userIds = new Array(similarityScores.length)
   let userIds = []
   let simScores = []
   // let userIdView = new DataView(new ArrayBuffer(10000000))
   // let userIdView2 = new DataView(new Uint32Array(2).buffer)
   for (let y = 0, l = similarityScores.userIds.length; y < l; y++) {
-    //userIds[y] = similarityScores[y][0]
+    // userIds[y] = similarityScores[y][0]
     // userIds[y] += similarityScores[y][0]
     userIds.push(similarityScores.userIds[y])
     simScores.push(similarityScores.scores[y])
   }
-  userIds = new Uint32Array(userIds, 0, userIds.length) // use typed array set? or dataview
+  userIds = new Uint32Array(userIds, 0, userIds.length)
   let uIdView = new DataView(userIds.buffer, 0)
 
   simScores = new Float32Array(simScores, 0, simScores.length)
   let simScoreView = new DataView(simScores.buffer, 0)
 
-  //let ratingUserIds = new Uint32Array(ratingsData.length)
-  //let ratingUserIds = new Array(ratingsData.length)
+  // let ratingUserIds = new Uint32Array(ratingsData.length)
+  // let ratingUserIds = new Array(ratingsData.length)
   let ratingUserIds = []
 
   let movieIds = []
   let ratingScores = []
   for (let y = 0, l = ratingsData.userIds.length; y < l; y++) {
     // ratingUserIds[y] = ratingsData[y][0]
-    //ratingUserIds[y] += ratingsData[y][0]
+    // ratingUserIds[y] += ratingsData[y][0]
     ratingUserIds.push(ratingsData.userIds[y])
     movieIds.push(ratingsData.movIds[y])
     ratingScores.push(ratingsData.scores[y])
@@ -513,8 +471,6 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnWorker(moviesChunks[i], wScoresChunks[i], i))
-      // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
-      // console.log(i, 'push loop', performance.now() - t1)
     }
     let t2 = performance.now()
     console.log('workers spawned after', t2 - t1)
@@ -538,7 +494,6 @@ async function spawnWorker(moviesData, weightedScores, id) {
     let t1 = performance.now()
     let worker = new Worker('./data-utils/scoreCalcSortW.js', {
       execArgv: [''],
-      //  resourceLimits: { maxYoungGenerationSizeMb: 1024, stackSizeMb: 8 },
     })
     console.log(id, 'spawned in', performance.now() - t1)
 
@@ -550,8 +505,6 @@ async function spawnWorker(moviesData, weightedScores, id) {
 
     worker.on('message', async (data) => {
       if (data.message === 'done') {
-        // console.log('worker id' + data.id + ' done')
-
         worker.terminate()
         return resolve(data.data)
       }
@@ -565,23 +518,20 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let forkProcesses = numForks
 
     for (let r = 0; r < moviesData.length; r++) {
-      let holder = moviesData[r] /// ... or structuredclone? mby not needed
+      let holder = moviesData[r]
       let newIndex = Math.floor(Math.random() * moviesData.length)
       // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
       // let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
-    // %DebugPrint(moviesData);
-    // prettier-ignore
-    // console.log(%HasHoleyElements(moviesData));
+
     // console.log('randomize in:', performance.now() - r1)
     let r1 = performance.now()
     // let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
-
     let moviesChunks = arrayChunkPush(moviesData, forkProcesses)
-    // console.log(moviesData)
     console.log('chunk movies in:', performance.now() - r1)
+
     let movieChunkIds = []
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
@@ -704,7 +654,6 @@ function arrayChunkPop(arr, chunkCnt) {
 }
 
 recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
-  // does kinda the same as in geteuclidian, move to function?
   let moviesSeenByUser = ratingsData.filter((rating) => rating[0] === userId)
   let ratingsForMoviesNotSeenByUser = ratingsData.filter((rating) => {
     for (let i = 0; i < moviesSeenByUser.length; i++) {
@@ -780,7 +729,6 @@ recommender.getEuclidianSimScoresForUser = (userId, usersData, ratingsData) => {
   }
 
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
-  // should be possible to ignore those when doing the next userId check?
   // let ref = recommender.calcEuclideanScoreA
   let alreadyCheckedRatingsIndexes = 0
   // let ref = calcEuclideanScoreA

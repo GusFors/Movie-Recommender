@@ -85,7 +85,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
-  let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUserWr(userId, await ratingsData, userSimScores)
+  let ratingsMoviesNotSeen = recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
   // ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))
@@ -94,7 +94,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   // console.log(ratingsMoviesNotSeen)
   let t5 = performance.now()
   // let weightedScores = recommender.getWeightedScoresTarr(userSimScores, ratingsMoviesNotSeen)
-
   // let weightedScores = recommender.getWeightedScoresArr(userSimScores, ratingsMoviesNotSeen)
   // console.log(weightedScores)
   let t6 = performance.now()
@@ -103,7 +102,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let t7 = performance.now()
   let rawRecommendations
   movieData = movieData.filter((m) => m.numRatings >= minNumRatings)
-  let numRatings = dataReaderCsv.getMovieNumRatings()
+  // let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads)
   }
