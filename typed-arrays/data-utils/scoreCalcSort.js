@@ -48,7 +48,7 @@ process.on('message', (data) => {
     let weightedScoreSum = 0
     let simScoreSum = 0
     // let currMovId = movieIds[i]
-    let currRatingMovId = wScoreIds[0]
+    // let currRatingMovId = wScoreIds[0]
     for (let j = 0, w = wScoreIds.length; j < w; j++) {
       // checks++
       //   if (wScoreIds[j] !== currRatingMovId) {

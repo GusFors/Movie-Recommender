@@ -42,7 +42,6 @@ dataFilterer.getFilteredRecommendedMovieData = (rawMovieRecommendationData, numb
 
     // if same score, sort by number of ratings
     if (b.recommendationScore === a.recommendationScore) {
-      // console.log('yahaoo')
       return b.numRatings - a.numRatings
     }
 
