@@ -1,5 +1,5 @@
 process.on('message', (data) => {
-  const minNumOfRatings = data.minNumRatings
+  // const minNumOfRatings = data.minNumRatings
   let calcData = []
 
   let movieIds = []
@@ -9,11 +9,11 @@ process.on('message', (data) => {
   let t1 = performance.now()
 
   for (let y = 0, l = data.moviesData.length; y < l; y++) {
-    if (data.moviesData[y].numRatings >= minNumOfRatings) {
+    // if (data.moviesData[y].numRatings >= minNumOfRatings) {
       movieIds.push(data.moviesData[y].movieId)
       movieNumRatings.push(data.moviesData[y].numRatings)
       movieTitles.push(data.moviesData[y].title)
-    }
+    // }
   }
 
   let movIdSet = new Set(movieIds)

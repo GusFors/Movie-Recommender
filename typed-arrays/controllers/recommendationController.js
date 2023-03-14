@@ -105,17 +105,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   movieData = movieData.filter((m) => m.numRatings >= minNumRatings)
   let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, minNumRatings, numRatings, threads)
+    rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads)
   }
 
   if (type === 'Worker') {
-    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(
-      ratingsMoviesNotSeen,
-      await movieData,
-      minNumRatings,
-      numRatings,
-      threads
-    )
+    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
   }
   // if (type === 'Fork') {
   //   rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, numRatings, threads)

@@ -473,7 +473,7 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
   return weightedScores
 }
 
-recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
+recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
@@ -512,7 +512,7 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
     console.log('spawning workers....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
-      promises.push(spawnWorker(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
+      promises.push(spawnWorker(moviesChunks[i], wScoresChunks[i], i))
       // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // console.log(i, 'push loop', performance.now() - t1)
     }
@@ -533,7 +533,7 @@ recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesDa
   })
 }
 
-async function spawnWorker(moviesData, weightedScores, minNumRatings, numRatings, id) {
+async function spawnWorker(moviesData, weightedScores, id) {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
     let worker = new Worker('./data-utils/scoreCalcSortW.js', {
@@ -543,7 +543,7 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, numRatings
     console.log(id, 'spawned in', performance.now() - t1)
 
     process.nextTick(() => {
-      worker.postMessage({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
+      worker.postMessage({ weightedScores: weightedScores, moviesData: moviesData, id: id })
       let t2 = performance.now()
       console.log(`started worker and sent data to id:${id} in `, t2 - t1)
     })
@@ -559,12 +559,12 @@ async function spawnWorker(moviesData, weightedScores, minNumRatings, numRatings
   })
 }
 
-recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, minNumRatings, numRatings, numForks) => {
+recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-    // console.log(numRatings)
+
     let forkProcesses = numForks
-    // let r1 = performance.now()
+    let r1 = performance.now()
     // console.log(minNumRatings)
 
     // console.log(moviesData.length)
@@ -596,13 +596,13 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-
+    console.log('chunk movies in:', performance.now() - r1)
     let promises = []
 
     console.log('spawning forks....')
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
-      promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
+      promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], i))
       // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
       // console.log(i, 'push loop', performance.now() - t1)
     }
@@ -623,7 +623,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
   })
 }
 
-async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, id) {
+async function spawnFork(moviesData, weightedScores, id) {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
     let calcScore = fork('./data-utils/scoreCalcSort.js', [], {
@@ -633,7 +633,7 @@ async function spawnFork(moviesData, weightedScores, minNumRatings, numRatings, 
     console.log(id, 'spawned in', performance.now() - t1)
 
     process.nextTick(() => {
-      calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, minNumRatings: minNumRatings, numRatings: numRatings, id: id })
+      calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, id: id })
       let t2 = performance.now()
       console.log(`started fork and sent data to id:${id} in `, t2 - t1)
     })
