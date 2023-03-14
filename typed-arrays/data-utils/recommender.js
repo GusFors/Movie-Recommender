@@ -562,18 +562,13 @@ async function spawnWorker(moviesData, weightedScores, id) {
 recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, numForks) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-
     let forkProcesses = numForks
-   
-    // console.log(minNumRatings)
-
-    // console.log(moviesData.length)
 
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r] /// ... or structuredclone? mby not needed
       let newIndex = Math.floor(Math.random() * moviesData.length)
       // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
-      //let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
+      // let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
@@ -583,41 +578,8 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     // console.log('randomize in:', performance.now() - r1)
     let r1 = performance.now()
     // let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
-    let mChunks = []
 
-    function arrayChunk(arr, chunkCnt) {
-      let chunkSize = arr.length % chunkCnt === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
-
-      let temp = []
-      // temp = temp.fill(new Array(), 0, chunkCnt)
-      // temp = temp.fill([], 0, chunkCnt)
-
-      for (let c = 0; c < chunkCnt; c++) {
-        temp.push([])
-      }
-
-      console.log(temp)
-      console.log(chunkSize)
-
-      // temp[0].push(1)
-      for (let c = 0; c < chunkCnt; c++) {
-        for (let i = 0; i < chunkSize; i++) {
-          temp[c].push(arr.pop())
-        }
-        // console.log(c)
-      }
-
-      if (arr.length % chunkCnt !== 0) {
-        for (let r = 0; r < moviesData.length; r++) {
-          temp[0].push(moviesData.pop())
-        }
-      }
-
-      // console.log('length', temp.length)
-      // console.log('chunklength', temp[0].length, temp[1].length, temp[2].length)
-      return temp
-    }
-    let moviesChunks = arrayChunk(moviesData, forkProcesses)
+    let moviesChunks = arrayChunkPush(moviesData, forkProcesses)
     // console.log(moviesData)
     console.log('chunk movies in:', performance.now() - r1)
     let movieChunkIds = []
@@ -637,7 +599,6 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-   
 
     let promises = []
 
@@ -645,8 +606,6 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     let t1 = performance.now()
     for (let i = 0; i < moviesChunks.length; i++) {
       promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], i))
-      // promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], minNumRatings, numRatings, i))
-      // console.log(i, 'push loop', performance.now() - t1)
     }
     let t2 = performance.now()
     console.log('forks spawned after', t2 - t1)
@@ -658,6 +617,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
           movieRecommendations.push(values[i][j])
         }
       }
+
       let t2 = performance.now()
       console.log('put together forks in', t2 - ti1, 'from spawn:', t2 - t1)
       resolve(movieRecommendations)
@@ -687,6 +647,60 @@ async function spawnFork(moviesData, weightedScores, id) {
       }
     })
   })
+}
+
+function arrayChunkPush(arr, chunkCnt) {
+  let chunkSize = arr.length % chunkCnt === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
+
+  let temp = []
+
+  for (let c = 0; c < chunkCnt; c++) {
+    temp.push([])
+  }
+
+  for (let c = 0; c < chunkCnt; c++) {
+    for (let i = c * chunkSize; i < chunkSize * (c + 1); i++) {
+      temp[c].push(arr[i])
+    }
+  }
+
+  if (arr.length % chunkCnt !== 0) {
+    for (let r = arr.length - 1; r >= arr.length - (arr.length % chunkCnt); r--) {
+      temp[0].push(arr[r])
+    }
+  }
+
+  return temp
+}
+
+function arrayChunkPop(arr, chunkCnt) {
+  let mod = arr.length % chunkCnt
+  let chunkSize = mod === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
+
+  let temp = []
+
+  for (let c = 0; c < chunkCnt; c++) {
+    temp.push([])
+  }
+
+  console.log(temp)
+  console.log(chunkSize)
+
+  for (let c = 0; c < chunkCnt; c++) {
+    for (let i = 0; i < chunkSize; i++) {
+      temp[c].push(arr.pop())
+    }
+  }
+  let rem = arr.length
+  console.log(rem)
+  if (mod !== 0) {
+    for (let r = 0; r < rem; r++) {
+      console.log(r)
+      temp[0].push(arr.pop())
+    }
+  }
+
+  return temp
 }
 
 recommender.getRatingsMoviesNotSeenByUser = (userId, ratingsData) => {
