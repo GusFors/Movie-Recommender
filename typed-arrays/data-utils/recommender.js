@@ -130,6 +130,7 @@ recommender.warmupOpt = (userId, ratingsData) => {
   let simScores = recommender.getEuclidianSimScoresForUserR(userId, ratingsData)
   let ratings = recommender.getRatingsMoviesNotSeenByUserR(userId, ratingsData)
   recommender.getWeightedScoresTview(simScores, ratings)
+  recommender.getWeightedScoresMoviesNotSeenByUser(userId, ratingsData, simScores)
 }
 
 recommender.getPearsonSimScoresForUser = (userId, usersData, ratingsData) => {
@@ -223,6 +224,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsData, similar
     }
     // extra check to include last user
     for (let i = start, r = end > 0 ? end : userIds.length; i < r; i++) {
+      // slice and push range instead of loop push?
       weightedScores.push({
         movieId: movIds[i],
         weightedRating: simScores[s] * scores[i],
@@ -431,21 +433,21 @@ recommender.getWeightedScores = (similarityScores, ratingsData) => {
   return weightedScores
 }
 
-recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, numForks) => {
+recommender.getMovieRecommendationWorkerScores = async (weightedScores, moviesData, threads) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
-    let forkProcesses = numForks
     let r1 = performance.now()
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r]
       let newIndex = Math.floor(Math.random() * moviesData.length) // randomize to more evenly distribute ratings across threads since most likely older movies have more ratings
-      //let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
+      // let newIndex = Math.floor(Math.random() * moviesData.length) || moviesData.length - r
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
 
-    let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
+    // let moviesChunks = chunk.arrayChunkSplit(moviesData, threads)
+    let moviesChunks = arrayChunkPush(moviesData, threads)
 
     let movieChunkIds = []
     let wScoresChunks = []
@@ -512,10 +514,9 @@ async function spawnWorker(moviesData, weightedScores, id) {
   })
 }
 
-recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, numForks) => {
+recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, threads) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-    let forkProcesses = numForks
 
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r]
@@ -528,8 +529,8 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
     // console.log('randomize in:', performance.now() - r1)
     let r1 = performance.now()
-    // let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
-    let moviesChunks = arrayChunkPush(moviesData, forkProcesses)
+    // let moviesChunks = chunk.arrayChunkSplit(moviesData, threads)
+    let moviesChunks = arrayChunkPush(moviesData, threads)
     console.log('chunk movies in:', performance.now() - r1)
 
     let movieChunkIds = []
@@ -579,6 +580,7 @@ async function spawnFork(moviesData, weightedScores, id) {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
     let calcScore = fork('./data-utils/scoreCalcSort.js', [], {
+      execArgv: ['--use-strict'],
       // execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
     }) // seri json seems to get sent slower but calculated faster

@@ -1,3 +1,5 @@
+'use strict'
+
 const { parentPort, threadId } = require('worker_threads')
 
 parentPort.on('message', (data) => {
@@ -19,7 +21,7 @@ parentPort.on('message', (data) => {
   }
 
   let movIdSet = new Set(movieIds)
-
+  // console.log('push in:', performance.now() - t1)
   // let wScoresortedByMovieId = JSON.parse(JSON.stringify(data.weightedScores))
   let s1 = performance.now()
   let wScoresortedByMovieId = data.weightedScores.sort((a, b) => {
@@ -34,6 +36,7 @@ parentPort.on('message', (data) => {
   let wScoreRatings = []
   let wScoreSims = []
   for (let y = 0, l = wScoresortedByMovieId.length; y < l; y++) {
+    // no need to check as it's already done in recommender?
     if (movIdSet.has(wScoresortedByMovieId[y].movieId)) {
       wScoreIds.push(wScoresortedByMovieId[y].movieId)
       wScoreRatings.push(wScoresortedByMovieId[y].weightedRating)
