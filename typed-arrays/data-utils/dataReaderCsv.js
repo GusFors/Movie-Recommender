@@ -1,9 +1,12 @@
 'use strict'
 
 const fs = require('fs')
-const DATAPATH = 'small'
-const split = ','
-const startCount = -1
+// const DATAPATH = 'small'
+// const split = ','
+// const startCount = -1
+const DATAPATH = 'dat'
+const split = '::'
+const startCount = 0
 
 const readline = require('node:readline')
 const dataReader = {}
@@ -50,13 +53,13 @@ dataReader.getRatingsLineI = async () => {
         // let rating = new Int32Array(3)
         let ratingValues = line.split(split)
 
-        rating[0] = parseInt(ratingValues[0])
-        rating[1] = parseInt(ratingValues[1])
-        rating[2] = parseFloat(ratingValues[2])
+        rating[0] = +ratingValues[0]
+        rating[1] = +ratingValues[1]
+        rating[2] = +ratingValues[2]
 
-        ratingUserIds.push(parseInt(ratingValues[0]))
-        ratingMovieIds.push(parseInt(ratingValues[1]))
-        ratingScores.push(parseFloat(ratingValues[2]))
+        ratingUserIds.push(+ratingValues[0])
+        ratingMovieIds.push(+ratingValues[1])
+        ratingScores.push(+ratingValues[2])
 
         // rating = new Float32Array(rating)
         ratings.push(rating)
@@ -99,7 +102,7 @@ dataReader.getMoviesIdLineI = async () => {
           return
         }
 
-        movieIds.push(parseInt(line.split(split)[0]))
+        movieIds.push(+line.split(split)[0])
         total++
       })
 
@@ -131,7 +134,7 @@ dataReader.getMoviesTitleLineI = async () => {
           total++
           return
         }
-        movieTitles.push(parseInt(line.split(split)[1]))
+        movieTitles.push(+line.split(split)[1])
         total++
       })
 
@@ -173,7 +176,7 @@ dataReader.getMoviesCompleteLineI = async () => {
         if (values.length > 3) {
           title = RegExp(/"([^|]+)"/).exec(line)[1]
         }
-        movies.push({ movieId: parseInt(values[0]), title: title })
+        movies.push({ movieId: +values[0], title: title })
         total++
       })
 
@@ -233,7 +236,7 @@ dataReader.getUserIdLineI = async () => {
           return
         }
 
-        userIdSet.add(parseInt(line.split(split)[0])) // after
+        userIdSet.add(+line.split(split)[0]) // after
         total++
       })
 
@@ -267,7 +270,7 @@ dataReader.getUserIdLineObj = async () => {
         total++
         return
       }
-      userIdSet.add(parseInt(line.split(split)[0])) // after
+      userIdSet.add(+line.split(split)[0]) // after
       total++
     })
 
@@ -303,12 +306,12 @@ dataReader.getRatingsLineObj = async () => {
 
       let rating = {}
       let ratingValues = line.split(split)
-      rating.userId = parseInt(ratingValues[0])
-      rating.movieId = parseInt(ratingValues[1])
-      rating.rating = parseFloat(ratingValues[2])
-      // rating[0] = parseInt(ratingValues[0])
-      // rating[1] = parseInt(ratingValues[1])
-      // rating[2] = parseFloat(ratingValues[2])
+      rating.userId = +ratingValues[0]
+      rating.movieId = +ratingValues[1]
+      rating.rating = +ratingValues[2]
+      // rating[0] = +(ratingValues[0])
+      // rating[1] = +(ratingValues[1])
+      // rating[2] = +(ratingValues[2])
       ratings.push(rating)
       total++
     })

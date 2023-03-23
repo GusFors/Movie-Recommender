@@ -50,6 +50,10 @@ let isOptimized = false
   }
 })()
 
+// void function () {
+
+// }()
+
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
   let userId = req.params.id
   userId = parseInt(userId)
