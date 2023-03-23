@@ -1,3 +1,5 @@
+'use strict'
+
 const fs = require('fs')
 const DATAPATH = 'small'
 const split = ','
@@ -14,6 +16,68 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
+  ratingUserIds: [],
+  ratingMovieIds: [],
+  ratingScores: new Float32Array(),
+}
+
+dataReader.getRatingsLineI = async () => {
+  return new Promise((resolve, reject) => {
+    if (!dataHolder.ratingsData.length > 0) {
+      const rl = readline.createInterface({
+        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+        crlfDelay: Infinity,
+      })
+
+      let total = startCount
+      let cats
+      let ratings = []
+
+      let ratingUserIds = []
+      let ratingMovieIds = []
+      let ratingScores = []
+
+      rl.on('line', function (line) {
+        if (total === startCount) {
+          cats = line.split(split)
+          total++
+          return
+        }
+
+        let rating = []
+        // let rating = new Float32Array(3)
+        //let rating = new Float64Array(3)
+        // let rating = new Int32Array(3)
+        let ratingValues = line.split(split)
+
+        rating[0] = parseInt(ratingValues[0])
+        rating[1] = parseInt(ratingValues[1])
+        rating[2] = parseFloat(ratingValues[2])
+
+        ratingUserIds.push(parseInt(ratingValues[0]))
+        ratingMovieIds.push(parseInt(ratingValues[1]))
+        ratingScores.push(parseFloat(ratingValues[2]))
+
+        // rating = new Float32Array(rating)
+        ratings.push(rating)
+        total++
+      })
+
+      rl.on('close', () => {
+        dataHolder.ratingsData = ratings
+        dataHolder.ratingUserIds = new Int16Array(ratingUserIds)
+        //dataHolder.ratingUserIds = ratingUserIds
+        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
+        // dataHolder.ratingMovieIds = ratingMovieIds
+        dataHolder.ratingScores = new Float32Array(ratingScores)
+        // resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+        resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      })
+    } else {
+      // console.log(dataHolder.ratingsData)
+      resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+    }
+  })
 }
 
 dataReader.getMoviesIdLineI = async () => {
@@ -215,47 +279,6 @@ dataReader.getUserIdLineObj = async () => {
       }
       resolve(idObjs)
     })
-  })
-}
-
-dataReader.getRatingsLineI = async () => {
-  return new Promise((resolve, reject) => {
-    if (!dataHolder.ratingsData.length > 0) {
-      const rl = readline.createInterface({
-        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
-        crlfDelay: Infinity,
-      })
-
-      let total = startCount
-      let cats
-      let ratings = []
-
-      rl.on('line', function (line) {
-        if (total === startCount) {
-          cats = line.split(split)
-          total++
-          return
-        }
-
-        //let rating = []
-        let rating = []
-        let ratingValues = line.split(split)
-
-        rating[0] = parseInt(ratingValues[0])
-        rating[1] = parseInt(ratingValues[1])
-        rating[2] = parseFloat(ratingValues[2])
-        ratings.push(rating)
-        total++
-      })
-
-      rl.on('close', () => {
-        dataHolder.ratingsData = ratings
-        resolve(ratings)
-      })
-    } else {
-      // console.log(dataHolder.ratingsData)
-      resolve(dataHolder.ratingsData)
-    }
   })
 }
 

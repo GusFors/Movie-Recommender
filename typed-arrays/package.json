@@ -4,7 +4,7 @@
   "description": "A1 for the course 2dv515",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon --use-strict --turbo-compress-translation-arrays --allow-natives-syntax app.js",
+    "start": "nodemon --use-strict --allow-natives-syntax app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "GusFors",

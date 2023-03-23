@@ -1,3 +1,5 @@
+'use strict'
+
 const { fork } = require('child_process')
 const { Worker } = require('worker_threads')
 const chunk = require('array-chunk-split')
@@ -56,7 +58,8 @@ recommender.calcPearsonScore = (userAratings, userBratings) => {
   return num / den
 }
 
-recommender.getEuclidianSimScoresForUserR = (userId, ratingsData) => {
+recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
+  let ratingsData = ratingsDataObj.r
   let simScores = { userIds: [], scores: [] }
   // let t1 = performance.now()
   let userAMovIds = new Set()
@@ -177,29 +180,60 @@ recommender.getRatingsMoviesNotSeenByUserR = (userId, ratingsData) => {
   return ratingsForMoviesNotSeenByUser
 }
 
-recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsData, similarityScores) => {
+recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObj, similarityScores) => {
+  // let ratingsData = ratingsDataObj.r
+  let ratingsLength = ratingsDataObj.u.length
   // set has
   let moviesSeenByUser = new Set()
-
-  for (let i = 0; i < ratingsData.length; i++) {
-    if (ratingsData[i][0] === userId) {
-      moviesSeenByUser.add(ratingsData[i][1])
+  // console.log(ratingsData[0])
+  let r1 = performance.now()
+  // let isUser = false
+  for (let i = 0, l = ratingsLength; i < l; i++) {
+    if (ratingsDataObj.u[i] === userId) {
+      moviesSeenByUser.add(ratingsDataObj.m[i])
     }
+    // if (ratingsData[i][0] === userId) {
+    //   moviesSeenByUser.add(ratingsData[i][1])
+    // }
   }
+  console.log('found user ratings in', performance.now() - r1)
+  // console.log(moviesSeenByUser)
+  // let moviesSeenByUserT = [...moviesSeenByUser]
+  // let moviesSeenByUserT = new Int32Array(Array.from(moviesSeenByUser))
+  // let moviesSeenByUserT = new Int32Array(Array.from(moviesSeenByUser)) //.fill(0)
+  // console.log(moviesSeenByUserT)
+  // console.log(moviesSeenByUserT.indexOf(99999))
 
   let userIds = []
   let movIds = []
   let scores = []
-
-  for (let y = 0; y < ratingsData.length; y++) {
-    if (!moviesSeenByUser.has(ratingsData[y][1])) {
+  // console.log(ratingsData[50][0])
+  let t1 = performance.now()
+  for (let y = 0, l = ratingsLength; y < l; y++) {
+    // let c = ratingsDataObj.m[y]
+    if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
+      // if (!moviesSeenByUserT.includes(ratingsDataObj.m[y])) {
+      // if (!moviesSeenByUserT.indexOf(ratingsDataObj.m[y])) {
+      // if(!moviesSeenByUser.findIndex(e => e === y)) {
       // ratingsForMoviesNotSeenByUser.push(ratingsData[y])
-      userIds.push(ratingsData[y][0])
-      movIds.push(ratingsData[y][1])
-      scores.push(ratingsData[y][2])
+      // userIds.push(ratingsData[y][0])
+      // movIds.push(ratingsData[y][1])
+      // scores.push(ratingsData[y][2])
+      userIds.push(ratingsDataObj.u[y])
+      movIds.push(ratingsDataObj.m[y])
+      scores.push(ratingsDataObj.s[y])
     }
   }
-
+  // for (let y = 0; y < ratingsData.length; y++) {
+  //   if (!moviesSeenByUser.has(ratingsData[y][1])) {
+  //     // ratingsForMoviesNotSeenByUser.push(ratingsData[y])
+  //     // userIds.push(ratingsData[y][0])
+  //     // movIds.push(ratingsData[y][1])
+  //     // scores.push(ratingsData[y][2])
+  //     // scores.push(ratingsDataObj.s[y])
+  //   }
+  // }
+  console.log('w section took', performance.now() - t1)
   let weightedScores = []
   let simUids = new Uint32Array(similarityScores.userIds)
   let simScores = new Float32Array(similarityScores.scores)
