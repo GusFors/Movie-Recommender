@@ -18,7 +18,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let ratingsData = await dataReaderCsv.getRatingsLineI()
 
   if (chosenSim === 'Euclidian') {
-    let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await userData, await ratingsData)
+    let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await ratingsData)
     filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
   }
 
@@ -51,7 +51,6 @@ let isOptimized = false
 })()
 
 // void function () {
-
 // }()
 
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
@@ -60,6 +59,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   // let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
+  // console.log(ratingsData)
   // const movieData = await dataReaderCsv.getMoviesIdLineI()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
 
@@ -71,10 +71,6 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let type = req.query.type
 
   let userSimScores
-  // userData = JSON.parse(JSON.stringify(await userData))
-  // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
-  // userData = structuredClone(userData)
-  // ratingsData = structuredClone(ratingsData)
 
   let t1 = performance.now()
   if (chosenSim === 'Euclidian') {
@@ -92,10 +88,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let ratingsMoviesNotSeen = recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
-  // ratingsMoviesNotSeen = JSON.parse(JSON.stringify(ratingsMoviesNotSeen))
 
-  // userSimScores = JSON.parse(JSON.stringify(userSimScores))
-  // console.log(ratingsMoviesNotSeen)
   let t5 = performance.now()
   // let weightedScores = recommender.getWeightedScoresTarr(userSimScores, ratingsMoviesNotSeen)
   // let weightedScores = recommender.getWeightedScoresArr(userSimScores, ratingsMoviesNotSeen)
@@ -105,26 +98,15 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t7 = performance.now()
   let rawRecommendations
-  movieData = movieData.filter((m) => m.numRatings >= minNumRatings)
+  movieData = movieData.filter((m) => m.numRatings >= minNumRatings) // also filter movies that user has seen?
   // let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads)
+    rawRecommendations = await recommender.getMovieRecommendationForkScoresA(ratingsMoviesNotSeen, await movieData, threads)
   }
 
   if (type === 'Worker') {
     rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
   }
-  // if (type === 'Fork') {
-  //   rawRecommendations = await recommender.getMovieRecommendationForkScores(weightedScores, await movieData, minNumRatings, numRatings, threads)
-  // }
-
-  // if (type === 'Worker') {
-  //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(weightedScores, await movieData, minNumRatings, numRatings, threads)
-  // }
-
-  // if (type === 'Slow') {
-  //   rawRecommendations = stRecommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, 'json')
-  // }
 
   let t8 = performance.now()
 

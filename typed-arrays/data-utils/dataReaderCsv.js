@@ -1,40 +1,37 @@
 'use strict'
 
 const fs = require('fs')
-// const DATAPATH = 'small'
-// const split = ','
-// const startCount = -1
-const DATAPATH = 'dat'
-const split = '::'
-const startCount = 0
+const DATAPATH = 'small'
+const split = ','
+const startCount = -1
 
 const readline = require('node:readline')
 const dataReader = {}
 
 const dataHolder = {
   userData: [],
-  userIdData: new Uint32Array(),
+  userIdData: new Set(),
   ratingsData: [],
   movieTitles: [],
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: [],
-  ratingMovieIds: [],
+  ratingUserIds: new Uint16Array(),
+  ratingMovieIds: new Uint32Array(),
   ratingScores: new Float32Array(),
 }
 
 dataReader.getRatingsLineI = async () => {
   return new Promise((resolve, reject) => {
-    if (!dataHolder.ratingsData.length > 0) {
+    if (!dataHolder.ratingScores.length > 0) {
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
         crlfDelay: Infinity,
       })
 
       let total = startCount
-      let cats
-      let ratings = []
+      // let cats
+      // let ratings = []
 
       let ratingUserIds = []
       let ratingMovieIds = []
@@ -42,43 +39,62 @@ dataReader.getRatingsLineI = async () => {
 
       rl.on('line', function (line) {
         if (total === startCount) {
-          cats = line.split(split)
+          // cats = line.split(split)
           total++
           return
         }
 
-        let rating = []
+        // let rating = []
         // let rating = new Float32Array(3)
-        //let rating = new Float64Array(3)
+        // let rating = new Float64Array(3)
         // let rating = new Int32Array(3)
         let ratingValues = line.split(split)
 
-        rating[0] = +ratingValues[0]
-        rating[1] = +ratingValues[1]
-        rating[2] = +ratingValues[2]
+        // rating[0] = +ratingValues[0]
+        // rating[1] = +ratingValues[1]
+        // rating[2] = +ratingValues[2]
 
         ratingUserIds.push(+ratingValues[0])
         ratingMovieIds.push(+ratingValues[1])
         ratingScores.push(+ratingValues[2])
 
         // rating = new Float32Array(rating)
-        ratings.push(rating)
+        // ratings.push(rating)
         total++
       })
 
       rl.on('close', () => {
-        dataHolder.ratingsData = ratings
-        dataHolder.ratingUserIds = new Int16Array(ratingUserIds)
-        //dataHolder.ratingUserIds = ratingUserIds
-        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
+        // dataHolder.ratingsData = ratings
+
+        // dataHolder.ratingUserIds = ratingUserIds
         // dataHolder.ratingMovieIds = ratingMovieIds
+        // dataHolder.ratingScores = ratingScores
+
+        dataHolder.ratingUserIds = new Uint16Array(ratingUserIds)
+        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
+
         // resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-        resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+        // let wm = new WeakMap()
+        // wm.set('u', dataHolder.ratingUserIds)
+        // wm.set('m', dataHolder.ratingMovieIds)
+        // wm.set('s', dataHolder.ratingScores)
+        // resolve(wm)
+        resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+        // new WeakRef()
+        // let w = new WeakRef({t: 'test'})
+        // console.log(w.deref())
+        // resolve(new WeakRef({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores }))
       })
     } else {
       // console.log(dataHolder.ratingsData)
-      resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      // let wm = new WeakMap()
+      // wm.set('u', dataHolder.ratingUserIds)
+      // wm.set('m', dataHolder.ratingMovieIds)
+      // wm.set('s', dataHolder.ratingScores)
+      // resolve(wm)
+      resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      // resolve(new WeakRef({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores }))
     }
   })
 }
@@ -151,7 +167,7 @@ dataReader.getMoviesTitleLineI = async () => {
 dataReader.getMoviesCompleteLineI = async () => {
   return new Promise(async (resolve, reject) => {
     if (!dataHolder.movieData.length > 0) {
-      if (!dataHolder.ratingsData.length > 0) {
+      if (!dataHolder.ratingScores.length > 0) {
         await dataReader.getRatingsLineI()
       }
 
@@ -183,8 +199,8 @@ dataReader.getMoviesCompleteLineI = async () => {
       rl.on('close', () => {
         let rMovIds = []
 
-        for (let i = 0, l = dataHolder.ratingsData.length; i < l; i++) {
-          rMovIds.push(dataHolder.ratingsData[i][1])
+        for (let i = 0, l = dataHolder.ratingScores.length; i < l; i++) {
+          rMovIds.push(dataHolder.ratingMovieIds[i])
         }
 
         let sortedByMovieId = rMovIds.sort((a, b) => a - b)
