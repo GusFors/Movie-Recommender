@@ -274,7 +274,7 @@ async function spawnFork(moviesData, weightedScores, id) {
       execArgv: ['--use-strict'],
       // execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
-    }) // seri json seems to get sent slower but calculated faster
+    })
 
     console.log(id, 'spawned in', performance.now() - t1)
 
@@ -288,17 +288,16 @@ async function spawnFork(moviesData, weightedScores, id) {
     // for (let i = 0; i < moviesData.length; i++) {
     //   mValues.push(Object.values(moviesData[i]))
     // }
-    // console.log(Object.entries(weightedScores))
-    let o1 = performance.now()
+
+    // let o1 = performance.now()
     for (let i = 0; i < moviesData.length; i++) {
       mValues.push(Object.entries(moviesData[i])[0][1])
     }
-    // console.log(mValues[0], moviesData[0])
-    console.log('object entries:', performance.now() - o1)
+
+    // console.log('object entries:', performance.now() - o1)
 
     process.nextTick(() => {
       calcScore.send({ weightedScores: weightedScores, moviesData: mValues, id: id })
-
       let t2 = performance.now()
       console.log(`started fork and sent data to id:${id} in `, t2 - t1)
     })
