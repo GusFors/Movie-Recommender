@@ -113,8 +113,8 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
       moviesSeenByUser.add(ratingsDataObj.m[i])
     }
   }
-  console.log('found user ratings in', performance.now() - r1)
-  console.log(moviesSeenByUser.size)
+  // console.log('found user ratings in', performance.now() - r1)
+  // console.log(moviesSeenByUser.size)
 
   let userIds = []
   let movIds = []
@@ -130,7 +130,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
     }
   }
 
-  console.log('w section took', performance.now() - t1)
+  // console.log('w section took', performance.now() - t1)
   let weightedScores = []
   let simUids = new Uint32Array(similarityScores.userIds)
   let simScores = new Float32Array(similarityScores.scores)
@@ -168,7 +168,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
 }
 
 // spawn forks early before doing calculations to skip some of the delay? send data later
-recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData, threads, timer) => {
+recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
 
@@ -190,7 +190,13 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     // moviesData = moviesData.filter((m) => wSmovIds.has(m.movieId))
     // console.log(moviesData.length)
 
-    console.time('fork') // first onmessage takes around 65ms extra
+    // console.time('fork') // first onmessage takes around 65ms extra
+
+    let weightedScores = weightedScoresA.sort((a, b) => {
+      // sort typed arrays with ids faster?
+      // return a[0] - b[0]
+      return a.movieId - b.movieId
+    })
 
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r]
@@ -218,7 +224,11 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
       wScoresChunks[y] = []
       for (let w = 0; w < weightedScores.length; w++) {
         if (movieChunkIds[y].has(weightedScores[w].movieId)) {
-          wScoresChunks[y].push(weightedScores[w])
+          // wScoresChunks[y].push(weightedScores[w])
+          // next 3 indexes are related
+          wScoresChunks[y].push(weightedScores[w].movieId)
+          wScoresChunks[y].push(weightedScores[w].weightedRating)
+          wScoresChunks[y].push(weightedScores[w].simScore)
         }
       }
     }
@@ -240,7 +250,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
     console.log('forks spawned after', t2 - t1)
 
     Promise.all(promises).then((values) => {
-      console.log('async?')
+      // console.log('async?')
       let ti1 = performance.now()
       for (let i = 0; i < values.length; i++) {
         for (let j = 0; j < values[i].length; j++) {
@@ -253,14 +263,14 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
 
       resolve(movieRecommendations)
     })
-    console.log('timer arg', performance.now() - timer)
+    // console.log('timer arg', performance.now() - timer)
   })
 }
 
 async function spawnFork(moviesData, weightedScores, id) {
   return new Promise((resolve, reject) => {
     let t1 = performance.now()
-    let calcScore = fork('./data-utils/scoreCalcSort.js', [], {
+    let calcScore = fork('./data-utils/scoreCalcId.js', [], {
       execArgv: ['--use-strict'],
       // execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
       serialization: 'advanced',
@@ -268,8 +278,26 @@ async function spawnFork(moviesData, weightedScores, id) {
 
     console.log(id, 'spawned in', performance.now() - t1)
 
+    // console.log(Object.values(weightedScores[0]), weightedScores[0])
+    // let wsValues = []
+    // for (let i = 0; i < weightedScores.length; i++) {
+    //   wsValues.push(Object.values(weightedScores[i]))
+    // }
+
+    let mValues = []
+    // for (let i = 0; i < moviesData.length; i++) {
+    //   mValues.push(Object.values(moviesData[i]))
+    // }
+    // console.log(Object.entries(weightedScores))
+    let o1 = performance.now()
+    for (let i = 0; i < moviesData.length; i++) {
+      mValues.push(Object.entries(moviesData[i])[0][1])
+    }
+    // console.log(mValues[0], moviesData[0])
+    console.log('object entries:', performance.now() - o1)
+
     process.nextTick(() => {
-      calcScore.send({ weightedScores: weightedScores, moviesData: moviesData, id: id })
+      calcScore.send({ weightedScores: weightedScores, moviesData: mValues, id: id })
 
       let t2 = performance.now()
       console.log(`started fork and sent data to id:${id} in `, t2 - t1)
@@ -277,12 +305,28 @@ async function spawnFork(moviesData, weightedScores, id) {
 
     calcScore.on('message', async (data) => {
       if (data.message === 'alive') {
-        console.timeEnd('fork')
+        // console.timeEnd('fork')
       }
 
       if (data.message === 'done') {
-        calcScore.kill()
-        return resolve(data.data)
+        setTimeout(() => {
+          calcScore.kill()
+        }, 5)
+
+        let results = []
+        // console.log(data.data[0], moviesData.length, data.data.length)
+        for (let y = 0; y < data.data.length; y++) {
+          if (data.data[y].recommendationScore > 0) {
+            results.push({
+              movieId: data.data[y].movieId,
+              title: moviesData[y].title, // movieTitles[i]
+              numRatings: moviesData[y].numRatings, // movieNumRatings[i]
+              recommendationScore: data.data[y].recommendationScore,
+            })
+          }
+        }
+        return resolve(results)
+        // return resolve(data.data)
       }
     })
   })

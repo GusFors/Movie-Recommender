@@ -111,3 +111,4 @@ ignoredfiles
 csv-data/
 loops/
 loop-testing/
+native-addon/

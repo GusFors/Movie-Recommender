@@ -5,6 +5,10 @@ const DATAPATH = 'small'
 const split = ','
 const startCount = -1
 
+// const DATAPATH = 'original'
+// const split = ';'
+// const startCount = -1
+
 const readline = require('node:readline')
 const dataReader = {}
 

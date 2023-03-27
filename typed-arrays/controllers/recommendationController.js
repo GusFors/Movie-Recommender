@@ -1,7 +1,7 @@
 const dataFilterer = require('../data-utils/dataFilterer')
 const dataReaderRev = require('../data-utils/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
-const recommender = require('../data-utils/recommender')
+const recommender = require('../data-utils/recommenderId')
 // const recommenderOld = require('../data-utils/recommenderNoFork')
 
 const recommendationController = {}
@@ -98,10 +98,12 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let t7 = performance.now()
   let rawRecommendations
+  // console.time('movierec')
+
   movieData = movieData.filter((m) => m.numRatings >= minNumRatings) // also filter movies that user has seen?
   // let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScoresA(ratingsMoviesNotSeen, await movieData, threads)
+    rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)
   }
 
   if (type === 'Worker') {
