@@ -99,8 +99,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let t7 = performance.now()
   let rawRecommendations
   // console.time('movierec')
-
+  let f1 = performance.now()
+  // movieData = recommender.getMovieIdsAboveMinNumRatings(minNumRatings, await movieData)
   movieData = movieData.filter((m) => m.numRatings >= minNumRatings) // also filter movies that user has seen?
+  console.log('filter in:', performance.now() - f1)
+
   // let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)

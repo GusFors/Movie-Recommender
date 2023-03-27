@@ -167,6 +167,18 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
   return weightedScores
 }
 
+recommender.getMovieIdsAboveMinNumRatings = (minNumRatings, moviesData) => {
+  // console.log(moviesData)
+  let movieIdsAboveMin = []
+  for (let i = 0; i < moviesData.length; i++) {
+    if (moviesData[i].numRatings >= minNumRatings) {
+      movieIdsAboveMin.push(moviesData[i].movieId)
+    }
+  }
+  // console.log(movieIdsAboveMin)
+  return movieIdsAboveMin
+}
+
 // spawn forks early before doing calculations to skip some of the delay? send data later
 recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
@@ -198,19 +210,22 @@ recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesDat
       return a.movieId - b.movieId
     })
 
+    let m1 = performance.now()
     for (let r = 0; r < moviesData.length; r++) {
       let holder = moviesData[r]
-      let newIndex = Math.floor(Math.random() * moviesData.length)
+      let newIndex = Math.floor(Math.random() * (moviesData.length - 1)) // -1?
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
 
-    // console.log('randomize in:', performance.now() - r1)
+    console.log('randomize in:', performance.now() - m1)
     let r1 = performance.now()
     // let moviesChunks = chunk.arrayChunkSplit(moviesData, threads)
     let moviesChunks = arrayChunkPush(moviesData, threads)
+    // console.log(moviesChunks)
     console.log('chunk movies in:', performance.now() - r1)
 
+    let w1 = performance.now()
     let movieChunkIds = []
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
@@ -232,6 +247,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesDat
         }
       }
     }
+    console.log('chunk ws:', performance.now() - w1)
     // console.log(moviesChunks[0])
     // console.log(movieChunkIds)
     let promises = []
@@ -263,7 +279,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesDat
 
       resolve(movieRecommendations)
     })
-    // console.log('timer arg', performance.now() - timer)
+    console.log('timer arg', performance.now() - timer)
   })
 }
 
@@ -290,8 +306,10 @@ async function spawnFork(moviesData, weightedScores, id) {
     // }
 
     // let o1 = performance.now()
+    // console.log(moviesData)
     for (let i = 0; i < moviesData.length; i++) {
-      mValues.push(Object.entries(moviesData[i])[0][1])
+      // mValues.push(Object.entries(moviesData[i])[0][1])
+      mValues.push((moviesData[i]).movieId)
     }
 
     // console.log('object entries:', performance.now() - o1)

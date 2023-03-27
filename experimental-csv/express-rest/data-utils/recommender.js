@@ -350,9 +350,10 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
       moviesData[r] = moviesData[newIndex]
       moviesData[newIndex] = holder
     }
-
+    console.log('randomize in:', performance.now() - r1)
     let moviesChunks = chunk.arrayChunkSplit(moviesData, forkProcesses)
 
+    let w1 = performance.now()
     let movieChunkIds = []
     let wScoresChunks = []
     for (let y = 0; y < moviesChunks.length; y++) {
@@ -370,7 +371,8 @@ recommender.getMovieRecommendationForkScores = async (weightedScores, moviesData
         }
       }
     }
-    console.log('randomize in:', performance.now() - r1)
+    console.log('chunk ws:', performance.now() - w1)
+
     let promises = []
 
     console.log('spawning forks....')
