@@ -99,6 +99,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
   // }
 
+   if (type === 'Slow') {
+    console.log('main thread')
+    rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
+  }
+
   let t8 = performance.now()
 
   console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)

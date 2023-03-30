@@ -25,13 +25,11 @@ dataReader.getRatingsLineI = async () => {
   return new Promise((resolve, reject) => {
     if (!dataHolder.ratingScores.length > 0) {
       const rl = readline.createInterface({
-        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`),
+        input: fs.createReadStream(`./data/csv-data/${DATAPATH}/ratings.csv`, {}),
         crlfDelay: Infinity,
       })
 
       let total = startCount
-      // let cats
-      // let ratings = []
 
       let ratingUserIds = []
       let ratingMovieIds = []
@@ -64,15 +62,9 @@ dataReader.getRatingsLineI = async () => {
       })
 
       rl.on('close', () => {
-        // dataHolder.ratingsData = ratings
-        // dataHolder.ratingUserIds = ratingUserIds
-        // dataHolder.ratingMovieIds = ratingMovieIds
-        // dataHolder.ratingScores = ratingScores
-
         dataHolder.ratingUserIds = new Uint16Array(ratingUserIds)
         dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
-
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {

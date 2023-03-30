@@ -333,6 +333,127 @@ async function spawnFork(moviesData, weightedScores, id, wBuffers) {
   })
 }
 
+recommender.getMovieRecommendationScores = async (weightedScoresA, moviesData, threads, timer) => {
+  return new Promise((resolve, reject) => {
+    let movieRecommendations = []
+
+    let weightedScores = weightedScoresA.sort((a, b) => {
+      // sort typed arrays with ids faster?
+      return a.movieId - b.movieId
+    })
+
+    let m1 = performance.now()
+    // for (let r = 0; r < moviesData.length; r++) {
+    //   let holder = moviesData[r]
+    //   let newIndex = Math.floor(Math.random() * (moviesData.length - 1)) // -1?
+    //   moviesData[r] = moviesData[newIndex]
+    //   moviesData[newIndex] = holder
+    // }
+    console.log('randomize in:', performance.now() - m1)
+
+    let r1 = performance.now()
+    let moviesChunks = arrayChunkPush(moviesData, threads)
+    console.log('chunk movies in:', performance.now() - r1)
+
+    let w1 = performance.now()
+    let movieChunkIds = []
+    let wScoresChunks = []
+    let wBuffers = []
+    for (let y = 0; y < moviesChunks.length; y++) {
+      if (!movieChunkIds[y]) {
+        movieChunkIds[y] = new Set()
+      }
+      for (let j = 0; j < moviesChunks[y].length; j++) {
+        movieChunkIds[y].add(moviesChunks[y][j].movieId)
+      }
+
+      wScoresChunks[y] = []
+      wBuffers[y] = []
+      for (let w = 0; w < weightedScores.length; w++) {
+        if (movieChunkIds[y].has(weightedScores[w].movieId)) {
+          let start = w
+          let end = 0
+          let currId = weightedScores[w].movieId
+
+          for (let i = start; i < weightedScores.length; i++) {
+            if (weightedScores[i].movieId !== currId) {
+              break
+            }
+            end++
+          }
+
+          let rBuffer = new ArrayBuffer(end * 12)
+          let v = new DataView(rBuffer) // create buffer in constr? skip let
+
+          // for (let i = start; i < start + end; i += 12)
+          for (let i = 0; i < end; i++) {
+            v.setInt32(i * 12, weightedScores[i + start].movieId, true) // only set four first bits to movid? dont repeat
+            v.setFloat32(i * 12 + 4, weightedScores[i + start].weightedRating, true)
+            v.setFloat32(i * 12 + 8, weightedScores[i + start].simScore, true)
+            w++
+          }
+          wScoresChunks[y].push(rBuffer)
+          w--
+        }
+      }
+    }
+    console.log('chunk ws:', performance.now() - w1)
+    console.log('timer arg', performance.now() - timer)
+
+    let t1 = performance.now()
+    let calcData = []
+
+    for (let i = 0; i < wScoresChunks[0].length; i++) {
+      let weightedScoreSum = 0
+      let simScoreSum = 0
+      let floatView = new Float32Array(wScoresChunks[0][i])
+      let int32View = new Int32Array(wScoresChunks[0][i])
+      let id
+      for (let j = 0; j < floatView.length; j += 3) {
+        if (j === 0) {
+          id = int32View[j]
+        }
+        weightedScoreSum = weightedScoreSum + floatView[j + 1]
+        simScoreSum = simScoreSum + floatView[j + 2]
+      }
+
+      calcData.push({
+        movieId: new Int32Array(wScoresChunks[0][i])[0],
+        // title: i, // movieTitles[i]
+        // numRatings: i, // movieNumRatings[i]
+        recommendationScore: typeof (weightedScoreSum / simScoreSum) === 'number' ? weightedScoreSum / simScoreSum : 0,
+      })
+    }
+    let f1 = performance.now()
+    let wsMovIds = new Set(
+      wScoresChunks[0].map((ws) => {
+        return new Int32Array(ws)[0]
+      })
+    )
+
+    moviesData = moviesData.filter((m) => wsMovIds.has(m.movieId))
+    console.log('map/filter in', performance.now() - f1)
+
+    for (let y = 0; y < calcData.length; y++) {
+      if (calcData[y].recommendationScore > 0) {
+        movieRecommendations.push({
+          movieId: calcData[y].movieId,
+          title: moviesData[y].title, // movieTitles[i]
+          numRatings: moviesData[y].numRatings, // movieNumRatings[i]
+          // title: 'moviesData[y].title', // movieTitles[i]
+          // numRatings: 'moviesData[y].numRatings,', // movieNumRatings[i]
+          recommendationScore: calcData[y].recommendationScore,
+        })
+      }
+    }
+
+    let t2 = performance.now()
+    console.log('put together recommendations in', t2 - t1, 'from spawn:', t2 - t1)
+
+    resolve(movieRecommendations)
+  })
+}
+
 function arrayChunkPush(arr, chunkCnt) {
   let chunkSize = arr.length % chunkCnt === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
 
