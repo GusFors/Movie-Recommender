@@ -36,21 +36,39 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   // let relevantScoresUserIds = []
   // let relevantScoresMovIds = []
   // let relevantScoresRatings = []
-  let relevantScoresUserIds = new Array(ratingsLength)
-  let relevantScoresMovIds = new Array(ratingsLength)
-  let relevantScoresRatings = new Array(ratingsLength)
+
+  // let relevantScoresUserIds = new Array(ratingsLength)
+  // let relevantScoresMovIds = new Array(ratingsLength)
+  // let relevantScoresRatings = new Array(ratingsLength)
+
+  let relevantScoresUserIds = new Int32Array(ratingsLength)
+  let relevantScoresMovIds = new Int32Array(ratingsLength)
+  let relevantScoresRatings = new Float32Array(ratingsLength)
 
   let p1 = performance.now()
 
+  let isUser = false
   for (let r = 0, l = ratingsLength; r < l; r++) {
     if (ratingsDataObj.u[r] === userId) {
       userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
+      // userAMovIds.add(ratingsDataObj.m[r])
     } else {
       relevantScoresUserIds[r] = ratingsDataObj.u[r]
       relevantScoresMovIds[r] = ratingsDataObj.m[r]
       relevantScoresRatings[r] = ratingsDataObj.s[r]
     }
   }
+
+  // for (let r = 0, l = ratingsLength; r < l; r++) {
+  //   if (ratingsDataObj.u[r] === userId) {
+  //     userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
+  //     // userAMovIds.add(ratingsDataObj.m[r])
+  //   } else {
+  //     relevantScoresUserIds[r] = ratingsDataObj.u[r]
+  //     relevantScoresMovIds[r] = ratingsDataObj.m[r]
+  //     relevantScoresRatings[r] = ratingsDataObj.s[r]
+  //   }
+  // }
 
   // for (let r = 0, l = ratingsLength; r < l; r++) {
   //   if (ratingsDataObj.u[r] === userId) {
@@ -62,7 +80,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   //   }
   // }
 
-  //let isUser = false
+  // let isUser = false
   // for (let r = 0, l = ratingsLength; r < l; r++) {
 
   //     if (ratingsDataObj.u[r] === userId) {
