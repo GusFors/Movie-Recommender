@@ -233,73 +233,8 @@ recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesDat
             w++
           }
           wScoresChunks[y].push(rBuffer)
-
-          for (let i = start; i < start + end; i++) {
-            // let wrBuffer = new ArrayBuffer(12) // create long buffer for every rating for one movie?
-            // // batch and find range for one movieId and set it to one arraybuffer?
-            // let dv = new DataView(wrBuffer)
-            // dv.setInt32(0, weightedScores[i].movieId, true)
-            // dv.setFloat32(4, weightedScores[i].weightedRating, true)
-            // dv.setFloat32(8, weightedScores[i].simScore, true)
-            // // wBuffers[y].push(wrBuffer)
-            // wBuffers[y].push(dv)
-            //  w++ // wrong title bug here?
-          }
           w--
-          //  w+=  end
-
-          // console.log(w)
-          // w += end
-          // wScoresChunks[y].push(weightedScores[w])
-
-          // let wrBuffer = new ArrayBuffer(12)
-          // let dv = new DataView(wrBuffer)
-          // dv.setInt32(0, weightedScores[w].movieId, true)
-          // dv.setFloat32(4, weightedScores[w].weightedRating, true)
-          // dv.setFloat32(8, weightedScores[w].simScore, true)
-          // // wBuffers[y].push(wrBuffer)
-          // wBuffers[y].push(dv)
-
-          // let wrBuffer = new ArrayBuffer(12) // create long buffer for every rating for one movie?
-          // // batch and find range for one movieId and set it to one arraybuffer?
-          // let dv = new DataView(wrBuffer)
-          // dv.setInt32(0, weightedScores[w].movieId, true)
-          // dv.setFloat32(4, weightedScores[w].weightedRating, true)
-          // dv.setFloat32(8, weightedScores[w].simScore, true)
-          // // wBuffers[y].push(wrBuffer)
-          // wBuffers[y].push(dv)
-
-          // next 3 indexes are related
-          // wScoresChunks[y].push(weightedScores[w].movieId)
-          // wScoresChunks[y].push(weightedScores[w].weightedRating)
-          // wScoresChunks[y].push(weightedScores[w].simScore)
         }
-
-        // if (movieChunkIds[y].has(weightedScores[w].movieId)) {
-        //   // wScoresChunks[y].push(weightedScores[w])
-
-        //   // let wrBuffer = new ArrayBuffer(12)
-        //   // let dv = new DataView(wrBuffer)
-        //   // dv.setInt32(0, weightedScores[w].movieId, true)
-        //   // dv.setFloat32(4, weightedScores[w].weightedRating, true)
-        //   // dv.setFloat32(8, weightedScores[w].simScore, true)
-        //   // // wBuffers[y].push(wrBuffer)
-        //   // wBuffers[y].push(dv)
-
-        //   let wrBuffer = new ArrayBuffer(12) // create long buffer for every rating for one movie?
-        //   // batch and find range for one movieId and set it to one arraybuffer?
-        //   let dv = new DataView(wrBuffer)
-        //   dv.setInt32(0, weightedScores[w].movieId, true)
-        //   dv.setFloat32(4, weightedScores[w].weightedRating, true)
-        //   dv.setFloat32(8, weightedScores[w].simScore, true)
-        //   // wBuffers[y].push(wrBuffer)
-        //   wBuffers[y].push(dv)
-
-        //   // next 3 indexes are related
-        //   // wScoresChunks[y].push(weightedScores[w].movieId)
-        //   // wScoresChunks[y].push(weightedScores[w].weightedRating)
-        //   // wScoresChunks[y].push(weightedScores[w].simScore)
-        // }
       }
     }
     console.log('chunk ws:', performance.now() - w1)

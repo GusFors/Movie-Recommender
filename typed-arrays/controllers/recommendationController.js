@@ -95,9 +95,9 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)
   }
 
-  if (type === 'Worker') {
-    rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
-  }
+  // if (type === 'Worker') {
+  //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
+  // }
 
   let t8 = performance.now()
 
