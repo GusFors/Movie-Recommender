@@ -21,8 +21,8 @@ recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
   return inv
 }
 
-recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
-  // let ratingsDataObj = ratingsDataObjR //ratingsDataObjR.deref()
+recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
+  let ratingsDataObj = ratingsDataObjR //ratingsDataObjR.deref()
   // let ratingsData = ratingsDataObj.r
   let ratingsLength = ratingsDataObj.u.length
   let simScores = { userIds: [], scores: [] }
@@ -33,63 +33,25 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   let aMatchScores = [] // keep track of userId movieIds to match scores with other users
 
   // let relevantScores = []
-  // let relevantScoresUserIds = []
-  // let relevantScoresMovIds = []
-  // let relevantScoresRatings = []
-  let relevantScoresUserIds = new Array(ratingsLength)
-  let relevantScoresMovIds = new Array(ratingsLength)
-  let relevantScoresRatings = new Array(ratingsLength)
+  let relevantScoresUserIds = []
+  let relevantScoresMovIds = []
+  let relevantScoresRatings = []
 
   let p1 = performance.now()
-
   for (let r = 0, l = ratingsLength; r < l; r++) {
     if (ratingsDataObj.u[r] === userId) {
+      // aMatchScores.push(ratingsDataObj.m[r]) // ['m']
+      // userAMovIds.add(ratingsDataObj.m[r])
+      // userAScores.push(ratingsDataObj.s[r])
       userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
     } else {
-      relevantScoresUserIds[r] = ratingsDataObj.u[r]
-      relevantScoresMovIds[r] = ratingsDataObj.m[r]
-      relevantScoresRatings[r] = ratingsDataObj.s[r]
+      // relevantScores.push(ratingsData[r])
+      relevantScoresUserIds.push(ratingsDataObj.u[r])
+      relevantScoresMovIds.push(ratingsDataObj.m[r])
+      relevantScoresRatings.push(ratingsDataObj.s[r])
     }
   }
-
-  // for (let r = 0, l = ratingsLength; r < l; r++) {
-  //   if (ratingsDataObj.u[r] === userId) {
-  //     userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-  //   } else {
-  //     relevantScoresUserIds.push(ratingsDataObj.u[r])
-  //     relevantScoresMovIds.push(ratingsDataObj.m[r])
-  //     relevantScoresRatings.push(ratingsDataObj.s[r])
-  //   }
-  // }
-
-  //let isUser = false
-  // for (let r = 0, l = ratingsLength; r < l; r++) {
-
-  //     if (ratingsDataObj.u[r] === userId) {
-  //       // aMatchScores.push(ratingsDataObj.m[r]) // ['m']
-  //       // userAMovIds.add(ratingsDataObj.m[r])
-  //       // userAScores.push(ratingsDataObj.s[r])
-  //       userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-  //     } else {
-  //       // relevantScores.push(ratingsData[r])
-  //       relevantScoresUserIds.push(ratingsDataObj.u[r])
-  //       relevantScoresMovIds.push(ratingsDataObj.m[r])
-  //       relevantScoresRatings.push(ratingsDataObj.s[r])
-  //     }
-
-  // }
-
-  // for (let r = 0, l = ratingsLength; r < l; r++) {
-  //   if (ratingsDataObj.u[r] ^ userId) {
-  //     relevantScoresUserIds.push(ratingsDataObj.u[r])
-  //     relevantScoresMovIds.push(ratingsDataObj.m[r])
-  //     relevantScoresRatings.push(ratingsDataObj.s[r])
-  //   } else {
-  //     userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-  //   }
-  // }
-
-  console.log('push/index took', performance.now() - p1)
+  console.log('push took', performance.now() - p1)
 
   let i1 = performance.now()
   let matchesIndexes = []
@@ -106,7 +68,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
       otherMovIds.push(relevantScoresMovIds[r])
     }
   }
-  console.log('indexof match took', performance.now() - i1)
+  // console.log('indexof match took', performance.now() - i1)
 
   let t2 = performance.now()
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
@@ -133,10 +95,9 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
       simScores.scores.push(simScore)
     }
   }
-
+  console.log('second section took', performance.now() - t2)
   simScores.userIds = new Uint32Array(simScores.userIds)
   simScores.scores = new Float32Array(simScores.scores)
-  console.log('second section took', performance.now() - t2)
 
   return simScores
 }
@@ -209,168 +170,9 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
   return weightedScores
 }
 
-// spawn forks early before doing calculations to skip some of the delay? send data later
-recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesData, threads, timer) => {
-  return new Promise((resolve, reject) => {
-    let movieRecommendations = []
 
-    // console.time('fork') // first onmessage takes around 65ms extra
 
-    let weightedScores = weightedScoresA.sort((a, b) => {
-      // sort typed arrays with ids faster?
-      return a.movieId - b.movieId
-    })
 
-    let m1 = performance.now()
-    // for (let r = 0; r < moviesData.length; r++) {
-    //   let holder = moviesData[r]
-    //   let newIndex = Math.floor(Math.random() * (moviesData.length - 1)) // -1?
-    //   moviesData[r] = moviesData[newIndex]
-    //   moviesData[newIndex] = holder
-    // }
-    console.log('randomize in:', performance.now() - m1)
-
-    let r1 = performance.now()
-    let moviesChunks = arrayChunkPush(moviesData, threads)
-    console.log('chunk movies in:', performance.now() - r1)
-
-    let w1 = performance.now()
-    let movieChunkIds = []
-    let wScoresChunks = []
-    let wBuffers = []
-    for (let y = 0; y < moviesChunks.length; y++) {
-      if (!movieChunkIds[y]) {
-        movieChunkIds[y] = new Set()
-      }
-      for (let j = 0; j < moviesChunks[y].length; j++) {
-        movieChunkIds[y].add(moviesChunks[y][j].movieId)
-      }
-
-      wScoresChunks[y] = []
-      wBuffers[y] = []
-      for (let w = 0; w < weightedScores.length; w++) {
-        if (movieChunkIds[y].has(weightedScores[w].movieId)) {
-          let start = w
-          let end = 0
-          let currId = weightedScores[w].movieId
-
-          for (let i = start; i < weightedScores.length; i++) {
-            if (weightedScores[i].movieId !== currId) {
-              break
-            }
-            end++
-          }
-
-          let rBuffer = new ArrayBuffer(end * 12)
-          let v = new DataView(rBuffer) // create buffer in constr? skip let
-
-          // for (let i = start; i < start + end; i += 12)
-          for (let i = 0; i < end; i++) {
-            v.setInt32(i * 12, weightedScores[i + start].movieId, true) // only set four first bits to movid? dont repeat
-            v.setFloat32(i * 12 + 4, weightedScores[i + start].weightedRating, true)
-            v.setFloat32(i * 12 + 8, weightedScores[i + start].simScore, true)
-            w++
-          }
-          wScoresChunks[y].push(rBuffer)
-          w--
-        }
-      }
-    }
-    console.log('chunk ws:', performance.now() - w1)
-
-    let promises = []
-
-    console.log('spawning forks....')
-    let t1 = performance.now()
-    for (let i = 0; i < moviesChunks.length; i++) {
-      promises.push(spawnFork(moviesChunks[i], wScoresChunks[i], i, wBuffers[i]))
-    }
-
-    let t2 = performance.now()
-    console.log('forks spawned after', t2 - t1)
-
-    Promise.all(promises).then((values) => {
-      let ti1 = performance.now()
-      for (let i = 0; i < values.length; i++) {
-        for (let j = 0; j < values[i].length; j++) {
-          movieRecommendations.push(values[i][j])
-        }
-      }
-
-      let t2 = performance.now()
-      console.log('put together forks in', t2 - ti1, 'from spawn:', t2 - t1)
-
-      resolve(movieRecommendations)
-    })
-    console.log('timer arg', performance.now() - timer)
-  })
-}
-
-async function spawnFork(moviesData, weightedScores, id, wBuffers) {
-  return new Promise((resolve, reject) => {
-    let t1 = performance.now()
-    let calcScore = fork('./data-utils/arraybuffer-views/scoreCalcId.js', [], {
-      execArgv: ['--use-strict'],
-      // execArgv: ['--predictable-gc-schedule', '--max-semi-space-size=512', '--allow-natives-syntax'],
-      serialization: 'advanced',
-    })
-    console.log(id, 'spawned in', performance.now() - t1)
-
-    let mValues = []
-
-    // let o1 = performance.now()
-    for (let i = 0; i < moviesData.length; i++) {
-      // mValues.push(Object.entries(moviesData[i])[0][1])
-      mValues.push(moviesData[i].movieId)
-      // mValues[i] = moviesData[i].movieId
-    }
-
-    // console.log('mvalues', performance.now() - o1)
-
-    process.nextTick(() => {
-      calcScore.send({ weightedScores: weightedScores, moviesData: mValues, id: id, wBuffers: wBuffers })
-      let t2 = performance.now()
-      console.log(`started fork and sent data to id:${id} in `, t2 - t1)
-    })
-
-    let wsMovIds = new Set(
-      weightedScores.map((ws) => {
-        return new Int32Array(ws)[0]
-      })
-    )
-
-    moviesData = moviesData.filter((m) => wsMovIds.has(m.movieId))
-
-    calcScore.on('message', async (data) => {
-      if (data.message === 'alive') {
-        // console.timeEnd('fork')
-      }
-
-      if (data.message === 'done') {
-        setTimeout(() => {
-          calcScore.kill()
-        }, 5)
-
-        let results = []
-
-        for (let y = 0; y < data.data.length; y++) {
-          if (data.data[y].recommendationScore > 0) {
-            results.push({
-              movieId: data.data[y].movieId,
-              title: moviesData[y].title, // movieTitles[i]
-              numRatings: moviesData[y].numRatings, // movieNumRatings[i]
-              // title: 'moviesData[y].title', // movieTitles[i]
-              // numRatings: 'moviesData[y].numRatings,', // movieNumRatings[i]
-              recommendationScore: data.data[y].recommendationScore,
-            })
-          }
-        }
-
-        return resolve(results)
-      }
-    })
-  })
-}
 
 recommender.getMovieRecommendationScores = async (weightedScoresA, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
@@ -382,7 +184,7 @@ recommender.getMovieRecommendationScores = async (weightedScoresA, moviesData, t
       return a.movieId - b.movieId
     })
 
-    console.log('sort in:', performance.now() - m1)
+    console.log('sort weightedScorest in:', performance.now() - m1)
 
     // for (let r = 0; r < moviesData.length; r++) {
     //   let holder = moviesData[r]

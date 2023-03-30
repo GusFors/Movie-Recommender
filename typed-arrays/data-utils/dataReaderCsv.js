@@ -1,9 +1,14 @@
 'use strict'
 
 const fs = require('fs')
-const DATAPATH = 'small'
-const split = ','
-const startCount = -1
+
+const DATAPATH = 'dat'
+const split = '::'
+const startCount = 0
+
+// const DATAPATH = 'small'
+// const split = ','
+// const startCount = -1
 
 const readline = require('node:readline')
 const dataReader = {}

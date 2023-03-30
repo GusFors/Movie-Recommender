@@ -2,6 +2,7 @@ const dataFilterer = require('../data-utils/dataFilterer')
 const dataReaderRev = require('../data-utils/old-compatibility/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
 const recommender = require('../data-utils/arraybuffer-views/recommenderBuffer')
+const recommenderM = require('../data-utils/arraybuffer-views/recommenderBufferM')
 
 const recommendationController = {}
 
@@ -89,7 +90,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   // let ignoredMovIds = recommender.getIgnoredMovieIds(userId, await ratingsData)
   // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) && !ignoredMovIds.has(m.movieId))
   movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) // also filter movies that user has seen?
-  console.log('filter in:', performance.now() - f1)
+  console.log('filter moviedata in:', performance.now() - f1)
 
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)
@@ -101,7 +102,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
    if (type === 'Slow') {
     console.log('main thread')
-    rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
+    rawRecommendations = await recommenderM.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
   }
 
   let t8 = performance.now()
