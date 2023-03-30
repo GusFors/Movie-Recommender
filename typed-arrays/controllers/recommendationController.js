@@ -1,8 +1,7 @@
 const dataFilterer = require('../data-utils/dataFilterer')
-const dataReaderRev = require('../data-utils/dataReaderRev')
+const dataReaderRev = require('../data-utils/old-compatibility/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
-const recommender = require('../data-utils/recommenderId')
-// const recommenderOld = require('../data-utils/recommenderNoFork')
+const recommender = require('../data-utils/arraybuffer-views/recommenderBuffer')
 
 const recommendationController = {}
 
@@ -57,10 +56,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let userId = req.params.id
   userId = parseInt(userId)
 
-  // let userData = await dataReaderCsv.getUserIdLineI()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
-  // console.log(ratingsData)
-  // const movieData = await dataReaderCsv.getMoviesIdLineI()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
 
   let filteredRecommendations
@@ -71,16 +67,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let type = req.query.type
 
   let userSimScores
-
   // ratingsData = ratingsData.filter((r) => !ignoredMovIds.has(r.movieId)) // but filter all ratingsData properties and not only id array, or filter in datareader as arg
   let t1 = performance.now()
   if (chosenSim === 'Euclidian') {
     userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
   }
-
-  // if (chosenSim === 'Pearson') {
-  //   userSimScores = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
-  // }
 
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
@@ -90,35 +81,16 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
-  let t5 = performance.now()
-  // let weightedScores = recommender.getWeightedScoresTarr(userSimScores, ratingsMoviesNotSeen)
-  // let weightedScores = recommender.getWeightedScoresArr(userSimScores, ratingsMoviesNotSeen)
-  // console.log(weightedScores)
-  let t6 = performance.now()
-  console.log('getWeightedScores', t6 - t5, 'ms')
-
   let t7 = performance.now()
   let rawRecommendations
-  // console.time('movierec')
+
   let f1 = performance.now()
-  // movieData = recommender.getMovieIdsAboveMinNumRatings(minNumRatings, await movieData)
-  // console.log(ratingsData)
   let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
-  let ignoredMovIds = recommender.getIgnoredMovieIds(userId, await ratingsData)
-  console.log('ignoredMovIds.has(68269)', ignoredMovIds.has(68269))
-  // console.log(ignoredMovIds)
-  //  console.log(movSeen)
-  console.log(movieData.length)
-  // console.log(movieData.find((m) => m.movieId === 78836))
-  // && !movSeen.includes(m.movieId)
-  // movieData = movieData.filter((m) => m.numRatings >= minNumRatings)
-  // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !ignoredMovIds.has(m.movieId)))
+  // let ignoredMovIds = recommender.getIgnoredMovieIds(userId, await ratingsData)
   // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) && !ignoredMovIds.has(m.movieId))
-  movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId))) // also filter movies that user has seen?
-  // console.log(movieData.length)
+  movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) // also filter movies that user has seen?
   console.log('filter in:', performance.now() - f1)
 
-  // let numRatings = dataReaderCsv.getMovieNumRatings()
   if (type === 'Fork') {
     rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)
   }

@@ -8,7 +8,6 @@ converter.fromFile(args[0]).then((convertedCsv) => {
   console.log(convertedCsv)
   let users = []
   for (let i = 0; i < convertedCsv.length; i++) {
-    // amount of userIds for movieLens dataset
     if (i < 610) {
       let userId = `${i + 1}`
       let userObj = {}

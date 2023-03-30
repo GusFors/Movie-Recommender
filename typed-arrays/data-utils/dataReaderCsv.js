@@ -5,10 +5,6 @@ const DATAPATH = 'small'
 const split = ','
 const startCount = -1
 
-// const DATAPATH = 'original'
-// const split = ';'
-// const startCount = -1
-
 const readline = require('node:readline')
 const dataReader = {}
 
@@ -69,7 +65,6 @@ dataReader.getRatingsLineI = async () => {
 
       rl.on('close', () => {
         // dataHolder.ratingsData = ratings
-
         // dataHolder.ratingUserIds = ratingUserIds
         // dataHolder.ratingMovieIds = ratingMovieIds
         // dataHolder.ratingScores = ratingScores
@@ -78,27 +73,10 @@ dataReader.getRatingsLineI = async () => {
         dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
 
-        // resolve({ r: dataHolder.ratingsData, u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-        // let wm = new WeakMap()
-        // wm.set('u', dataHolder.ratingUserIds)
-        // wm.set('m', dataHolder.ratingMovieIds)
-        // wm.set('s', dataHolder.ratingScores)
-        // resolve(wm)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-        // new WeakRef()
-        // let w = new WeakRef({t: 'test'})
-        // console.log(w.deref())
-        // resolve(new WeakRef({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores }))
       })
     } else {
-      // console.log(dataHolder.ratingsData)
-      // let wm = new WeakMap()
-      // wm.set('u', dataHolder.ratingUserIds)
-      // wm.set('m', dataHolder.ratingMovieIds)
-      // wm.set('s', dataHolder.ratingScores)
-      // resolve(wm)
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-      // resolve(new WeakRef({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores }))
     }
   })
 }
@@ -350,4 +328,8 @@ module.exports = dataReader
 
 // const DATAPATH = 'small'
 // const split = ','
+// const startCount = -1
+
+// const DATAPATH = 'original'
+// const split = ';'
 // const startCount = -1
