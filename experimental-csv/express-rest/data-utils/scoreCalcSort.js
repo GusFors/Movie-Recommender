@@ -25,7 +25,7 @@ process.on('message', (data) => {
     return a.movieId - b.movieId
   })
   console.log('sort in:', performance.now() - s1)
-
+  console.log(wScoresortedByMovieId.length)
   //   let wScoresortedByMovieId = data.weightedScores
   //   console.log(wScoresortedByMovieId)
   let wScoreIds = []
@@ -80,6 +80,7 @@ process.on('message', (data) => {
   }
   let c2 = performance.now()
   let t2 = performance.now()
+  console.log(calcData.length)
   // console.log('checks:', checks)
   console.log(`fork with id: ${data.id} took ${t2 - t1}ms to calc`, calcData.length, c2 - c1) // (${process.execArgv})
 

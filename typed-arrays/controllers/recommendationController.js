@@ -72,6 +72,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let userSimScores
 
+  // ratingsData = ratingsData.filter((r) => !ignoredMovIds.has(r.movieId)) // but filter all ratingsData properties and not only id array, or filter in datareader as arg
   let t1 = performance.now()
   if (chosenSim === 'Euclidian') {
     userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
@@ -101,7 +102,20 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   // console.time('movierec')
   let f1 = performance.now()
   // movieData = recommender.getMovieIdsAboveMinNumRatings(minNumRatings, await movieData)
-  movieData = movieData.filter((m) => m.numRatings >= minNumRatings) // also filter movies that user has seen?
+  // console.log(ratingsData)
+  let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
+  let ignoredMovIds = recommender.getIgnoredMovieIds(userId, await ratingsData)
+  console.log('ignoredMovIds.has(68269)', ignoredMovIds.has(68269))
+  // console.log(ignoredMovIds)
+  //  console.log(movSeen)
+  console.log(movieData.length)
+  // console.log(movieData.find((m) => m.movieId === 78836))
+  // && !movSeen.includes(m.movieId)
+  // movieData = movieData.filter((m) => m.numRatings >= minNumRatings)
+  // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !ignoredMovIds.has(m.movieId)))
+  // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) && !ignoredMovIds.has(m.movieId))
+  movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId))) // also filter movies that user has seen?
+  // console.log(movieData.length)
   console.log('filter in:', performance.now() - f1)
 
   // let numRatings = dataReaderCsv.getMovieNumRatings()

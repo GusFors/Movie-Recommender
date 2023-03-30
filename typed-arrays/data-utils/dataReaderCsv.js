@@ -20,7 +20,7 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: new Uint16Array(),
+  ratingUserIds: new Uint16Array(), // 32?
   ratingMovieIds: new Uint32Array(),
   ratingScores: new Float32Array(),
 }
@@ -196,7 +196,7 @@ dataReader.getMoviesCompleteLineI = async () => {
         if (values.length > 3) {
           title = RegExp(/"([^|]+)"/).exec(line)[1]
         }
-        movies.push({ movieId: +values[0], title: title })
+        movies.push({ movieId: +values[0], title: title, numRatings: 0 })
         total++
       })
 
