@@ -22,7 +22,7 @@ const dataHolder = {
   movieData: [],
   numRatings: [],
   ratingUserIds: new Uint16Array(), // 32?
-  ratingMovieIds: new Uint32Array(),
+  ratingMovieIds: new Int32Array(),
   ratingScores: new Float32Array(),
 }
 
@@ -68,7 +68,7 @@ dataReader.getRatingsLineI = async () => {
 
       rl.on('close', () => {
         dataHolder.ratingUserIds = new Uint16Array(ratingUserIds)
-        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
+        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })

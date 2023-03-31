@@ -52,10 +52,11 @@ let isOptimized = false
 
 // void function () {
 // }()
+// const cache = new Map()
 
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
-  let userId = req.params.id
-  userId = parseInt(userId)
+  let userId = +req.params.id
+  // userId = parseInt(userId)
 
   let ratingsData = await dataReaderCsv.getRatingsLineI()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
@@ -67,12 +68,14 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
   let type = req.query.type
 
-  let userSimScores
-  // ratingsData = ratingsData.filter((r) => !ignoredMovIds.has(r.movieId)) // but filter all ratingsData properties and not only id array, or filter in datareader as arg
+  // let userSimScores
+  // // ratingsData = ratingsData.filter((r) => !ignoredMovIds.has(r.movieId)) // but filter all ratingsData properties and not only id array, or filter in datareader as arg
   let t1 = performance.now()
-  if (chosenSim === 'Euclidian') {
-    userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
-  }
+  // if (chosenSim === 'Euclidian') {
+  //   userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
+  // }
+
+  const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
 
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
@@ -100,7 +103,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
   // }
 
-   if (type === 'Slow') {
+  if (type === 'Slow') {
     console.log('main thread')
     rawRecommendations = await recommenderM.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
   }
@@ -125,5 +128,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
       userMovieRecommendations: [],
     })
   }
+  // prettier-ignore
+  // %CollectGarbage(1);
 }
 module.exports = recommendationController

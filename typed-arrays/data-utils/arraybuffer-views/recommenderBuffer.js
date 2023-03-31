@@ -1,7 +1,7 @@
 'use strict'
 
 const { fork } = require('child_process')
-
+const { setFlagsFromString, getHeapStatistics } = require('node:v8')
 const recommender = {}
 
 recommender.calcEuclideanScoreA = (userAScores, userBScores) => {
@@ -27,10 +27,10 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   let ratingsLength = ratingsDataObj.u.length
   let simScores = { userIds: [], scores: [] }
   // let t1 = performance.now()
-  let userAMovIds = new Set() // function since looping through movies seen by userId several times?
+  // let userAMovIds = new Set() // function since looping through movies seen by userId several times?
   let userAMovIdsM = new Map()
-  let userAScores = []
-  let aMatchScores = [] // keep track of userId movieIds to match scores with other users
+  // let userAScores = []
+  // let aMatchScores = [] // keep track of userId movieIds to match scores with other users
 
   // let relevantScores = []
   // let relevantScoresUserIds = []
@@ -41,23 +41,70 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   // let relevantScoresMovIds = new Array(ratingsLength)
   // let relevantScoresRatings = new Array(ratingsLength)
 
-  let relevantScoresUserIds = new Int32Array(ratingsLength)
+  let relevantScoresUserIds = new Uint16Array(ratingsLength) // set length after find userId?
   let relevantScoresMovIds = new Int32Array(ratingsLength)
   let relevantScoresRatings = new Float32Array(ratingsLength)
 
   let p1 = performance.now()
 
   let isUser = false
+  let start = 0
+  let end = 0
   for (let r = 0, l = ratingsLength; r < l; r++) {
     if (ratingsDataObj.u[r] === userId) {
       userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
       // userAMovIds.add(ratingsDataObj.m[r])
+      if (start === 0) {
+        start = r
+        isUser = true
+      }
     } else {
+      if (isUser === true) {
+        end = r
+        break
+      }
+      // arrLength++
+    }
+  }
+
+  for (let r = 0, l = ratingsLength; r < l; r++) {
+    if (ratingsDataObj.u[r] !== userId) {
       relevantScoresUserIds[r] = ratingsDataObj.u[r]
       relevantScoresMovIds[r] = ratingsDataObj.m[r]
       relevantScoresRatings[r] = ratingsDataObj.s[r]
     }
+
+    // if (r > end) {
+    //   relevantScoresUserIds[r] = ratingsDataObj.u[r]
+    //   relevantScoresMovIds[r] = ratingsDataObj.m[r]
+    //   relevantScoresRatings[r] = ratingsDataObj.s[r]
+    //   continue
+    // }
+
+    // if (r < start) {
+    //   relevantScoresUserIds[r] = ratingsDataObj.u[r]
+    //   relevantScoresMovIds[r] = ratingsDataObj.m[r]
+    //   relevantScoresRatings[r] = ratingsDataObj.s[r]
+    // }
   }
+
+  // let relevantScoresUserIds = new Uint16Array(ratingsLength)
+  // let relevantScoresMovIds = new Int32Array(ratingsLength)
+  // let relevantScoresRatings = new Float32Array(ratingsLength)
+
+  // let p1 = performance.now()
+
+  // let isUser = false
+  // for (let r = 0, l = ratingsLength; r < l; r++) {
+  //   if (ratingsDataObj.u[r] === userId) {
+  //     userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
+  //     // userAMovIds.add(ratingsDataObj.m[r])
+  //   } else {
+  //     relevantScoresUserIds[r] = ratingsDataObj.u[r]
+  //     relevantScoresMovIds[r] = ratingsDataObj.m[r]
+  //     relevantScoresRatings[r] = ratingsDataObj.s[r]
+  //   }
+  // }
 
   // for (let r = 0, l = ratingsLength; r < l; r++) {
   //   if (ratingsDataObj.u[r] === userId) {
@@ -110,7 +157,6 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   console.log('push/index took', performance.now() - p1)
 
   let i1 = performance.now()
-  let matchesIndexes = []
   let othersRatingUserIds = []
   let otherScores = []
   let otherMovIds = []
@@ -122,9 +168,33 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
       othersRatingUserIds.push(relevantScoresUserIds[r])
       otherScores.push(relevantScoresRatings[r])
       otherMovIds.push(relevantScoresMovIds[r])
+      // othersRatingUserIds[r] = relevantScoresUserIds[r]
+      // otherScores[r] = relevantScoresRatings[r]
+      // otherMovIds[r] = relevantScoresMovIds[r]
     }
   }
+  // let matchesIndexes = []
+  // let othersRatingUserIds = []
+  // let otherScores = []
+  // let otherMovIds = []
+
+  // for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
+  //   // if (userAMovIds.has(relevantScoresMovIds[r]))
+  //   if (userAMovIdsM.has(relevantScoresMovIds[r])) {
+  //     // matchesIndexes.push(aMatchScores.indexOf(relevantScoresMovIds[r])) // store value instead? ~3.2ms
+  //     othersRatingUserIds.push(relevantScoresUserIds[r])
+  //     otherScores.push(relevantScoresRatings[r])
+  //     otherMovIds.push(relevantScoresMovIds[r])
+  //   }
+  // }
   console.log('indexof match took', performance.now() - i1)
+
+  // let othersRatingUserIds = new Uint16Array(othersRatingUserIdsPush)
+  // let otherMovIds = new Int32Array(otherMovIdsPush)
+  // let otherScores = new Float32Array(otherScoresPush)
+
+  // let t2 = performance.now()
+  // let uniqueOtherIds = new Uint16Array([...new Set(othersRatingUserIds)])
 
   let t2 = performance.now()
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
@@ -159,10 +229,13 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   return simScores
 }
 
-recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, similarityScores) => {
-  let ratingsDataObj = ratingsDataObjR // ratingsDataObjR.deref()
+// function sometimes gets deopted after some runs
+// seems to happen if not constantly called and after gc collects temp objects pushed to weightedScores arr
+// can keep weightedScores arr outside function to somewhat negate this?
+// or use --max-semi-space-size=384 --min-semi-space-size=192 --max-old-space-size=512 --initial-old-space-size=256
+let weightedScores = []
+recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObj, similarityScores) => {
   let ratingsLength = ratingsDataObj.u.length
-
   let moviesSeenByUser = new Set()
 
   let r1 = performance.now()
@@ -189,11 +262,21 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
       //}
     }
   }
-
-  // console.log('w section took', performance.now() - t1)
-  let weightedScores = []
+  console.log('w section took', performance.now() - t1)
+  
+  // let weightedScores = []
+  weightedScores = []
   let simUids = new Uint32Array(similarityScores.userIds)
   let simScores = new Float32Array(similarityScores.scores)
+
+  // let s1 = performance.now();
+  // // prettier-ignore
+  // // simScores.sort()
+  // %TypedArraySortFast(simScores);
+
+  // console.log('sortfast:', performance.now() - s1);
+  // let simUids = similarityScores.userIds
+  // let simScores = similarityScores.scores
 
   // since they are sorted by userId don't loop through every element each time, instead find the range for each user and only push the scores in that range
   let start = 0
@@ -223,7 +306,9 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
       })
     }
   }
-
+  // %CollectGarbage(1); // makes it deopt instantly?
+  // console.log(weightedScores[0])
+  // console.log(getHeapStatistics())
   return weightedScores
 }
 
@@ -231,14 +316,13 @@ recommender.getWeightedScoresMoviesNotSeenByUser = (userId, ratingsDataObjR, sim
 recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-
+    // console.log(weightedScoresA[0])
     // console.time('fork') // first onmessage takes around 65ms extra
 
     let weightedScores = weightedScoresA.sort((a, b) => {
-      // sort typed arrays with ids faster?
       return a.movieId - b.movieId
     })
-
+    // console.log(weightedScoresA[0].movieId)
     let m1 = performance.now()
     // for (let r = 0; r < moviesData.length; r++) {
     //   let holder = moviesData[r]
@@ -294,7 +378,7 @@ recommender.getMovieRecommendationForkScores = async (weightedScoresA, moviesDat
         }
       }
     }
-    console.log('chunk ws:', performance.now() - w1)
+    console.log('chunk ws:', performance.now() - w1) // gc kick ins every other call after memory limit reached?
 
     let promises = []
 
