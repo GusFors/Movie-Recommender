@@ -2,7 +2,7 @@ const dataFilterer = require('../data-utils/dataFilterer')
 const dataReaderRev = require('../data-utils/old-compatibility/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
 const recommender = require('../data-utils/arraybuffer-views/recommenderBuffer')
-const recommenderM = require('../data-utils/arraybuffer-views/recommenderBufferM')
+const recommenderM = require('../data-utils/arraybuffer-views/recommenderBufferMap')
 
 const recommendationController = {}
 
@@ -60,7 +60,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let ratingsData = await dataReaderCsv.getRatingsLineI()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
-
+ 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
@@ -81,7 +81,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
-  let ratingsMoviesNotSeen = recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
+  let ratingsMoviesNotSeen = recommenderM.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 

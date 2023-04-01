@@ -330,3 +330,7 @@ module.exports = dataReader
 // const DATAPATH = 'original'
 // const split = ';'
 // const startCount = -1
+
+// const DATAPATH = 'full'
+// const split = ','
+// const startCount = -1
