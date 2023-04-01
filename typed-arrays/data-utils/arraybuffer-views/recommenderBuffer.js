@@ -41,7 +41,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObj) => {
   // let relevantScoresMovIds = new Array(ratingsLength)
   // let relevantScoresRatings = new Array(ratingsLength)
 
-  let relevantScoresUserIds = new Uint16Array(ratingsLength) // set length after find userId?
+  let relevantScoresUserIds = new Uint32Array(ratingsLength) // set length after find userId?
   let relevantScoresMovIds = new Int32Array(ratingsLength)
   let relevantScoresRatings = new Float32Array(ratingsLength)
 

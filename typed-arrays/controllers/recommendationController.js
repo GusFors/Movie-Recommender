@@ -57,10 +57,21 @@ let isOptimized = false
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
   let userId = +req.params.id
   // userId = parseInt(userId)
-
+  let r1 = performance.now()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
+  console.log('load ratings in:', performance.now() - r1)
+  let m1 = performance.now()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
- 
+  console.log('load movies in:', performance.now() - m1)
+  console.log()
+
+  // res.status(200).json({
+  //   message: `Movie recommendations for user with id: ${userId}`,
+  //   userMovieRecommendations: [],
+  //   totalRecommendations: 0,
+  // })
+  // return
+
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'

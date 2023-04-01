@@ -6,11 +6,16 @@ const DATAPATH = 'dat'
 const split = '::'
 const startCount = 0
 
+// const DATAPATH = 'full'
+// const split = ','
+// const startCount = -1
+
 // const DATAPATH = 'small'
 // const split = ','
 // const startCount = -1
 
 const readline = require('node:readline')
+const cluster = require('node:cluster')
 const dataReader = {}
 
 const dataHolder = {
@@ -21,7 +26,7 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: new Uint16Array(), // 32?
+  ratingUserIds: new Uint32Array(), // 32?
   ratingMovieIds: new Int32Array(),
   ratingScores: new Float32Array(),
 }
@@ -67,7 +72,7 @@ dataReader.getRatingsLineI = async () => {
       })
 
       rl.on('close', () => {
-        dataHolder.ratingUserIds = new Uint16Array(ratingUserIds)
+        dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
         dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
@@ -154,11 +159,19 @@ dataReader.getMoviesCompleteLineI = async () => {
         input: fs.createReadStream(`./data/csv-data/${DATAPATH}/movies.csv`),
         crlfDelay: Infinity,
       })
+      cluster.setupPrimary({ exec: './data-utils/dataWorker.js', serialization: 'advanced' })
+      cluster.on('online', (worker) => {
+        console.log('fork online')
+      })
+
+      // let fork = cluster.fork()
+      // fork.send('hello fork')
 
       let total = startCount
       let cats
       let movies = []
-
+      let movIds = []
+      let t1 = performance.now()
       rl.on('line', function (line) {
         if (total === startCount) {
           cats = line.split(split)
@@ -172,30 +185,99 @@ dataReader.getMoviesCompleteLineI = async () => {
           title = RegExp(/"([^|]+)"/).exec(line)[1]
         }
         movies.push({ movieId: +values[0], title: title, numRatings: 0 })
+        movIds.push(+values[0])
         total++
       })
 
-      rl.on('close', () => {
+      rl.on('close', async () => {
         let rMovIds = []
 
         for (let i = 0, l = dataHolder.ratingScores.length; i < l; i++) {
           rMovIds.push(dataHolder.ratingMovieIds[i])
         }
+        console.log('movies close', performance.now() - t1)
+        let sort1 = performance.now()
+        // let sortedByMovieId = rMovIds.sort((a, b) => a - b)
+        // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
+        let sortedByMovieId = new Int32Array(rMovIds).sort()
+        console.log('sort movies', performance.now() - sort1)
+        // console.log(sortedByMovieId)
+        // movIds = new Array(...movIds)
+        let threads = 1
+        let promises = []
+        console.log(movIds)
 
-        let sortedByMovieId = rMovIds.sort((a, b) => a - b)
-        let alreadyCheckedRatingsIndexes = 0
-
-        for (let j = 0; j < movies.length; j++) {
-          let numRatings = 0
-          for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
-            if (sortedByMovieId[i] === movies[j].movieId) {
-              numRatings++
-              alreadyCheckedRatingsIndexes++
-            }
-          }
-          movies[j].numRatings = numRatings
-          dataHolder.numRatings.push(numRatings)
+        for (let w = 0; w < threads; w++) {
+          let fork = cluster.fork()
+          fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIds })
+          promises[w] = new Promise(async (resolve, reject) => {
+            fork.on('message', (msg) => {
+              // console.log(msg)
+              if (msg.work === 'numratings') {
+                // console.log(msg)
+                resolve(msg.numRatingsArr)
+              }
+            })
+          })
         }
+
+        let numRatingsArr = []
+
+        let values = await Promise.all(promises)
+        let w1 = performance.now()
+        for (let j = 0; j < values.length; j++) {
+          for (let i = 0; i < values[j].length; i++) {
+            numRatingsArr.push(values[j][i])
+          }
+        }
+        console.log('put together fork data', performance.now() - w1)
+        console.log(numRatingsArr)
+        // let numRatingsArr = await new Promise(async (resolve, reject) => {
+        //   cluster.on('message', (worker, msg) => {
+        //     // console.log(msg)
+        //     if (msg.work === 'numratings') {
+        //       resolve(msg.numRatingsArr)
+        //     }
+        //   })
+        //   // setTimeout(() => {
+        //   //   console.log('been awaited')
+        //   //   resolve(1)
+        //   // }, 3000);
+        // })
+        console.log('waited?')
+        // let numRatingsArr = []
+        // let alreadyCheckedRatingsIndexes = 0
+        // let isMovieId = false
+        // for (let j = 0; j < movIds.length; j++) {
+        //   let numRatings = 0
+        //   for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
+        //     if (sortedByMovieId[i] === movIds[j]) {
+        //       numRatings++
+        //       alreadyCheckedRatingsIndexes++
+        //     }
+        //   }
+        //   // movies[j].numRatings = numRatings
+        //   numRatingsArr.push(numRatings)
+        //   // dataHolder.numRatings.push(numRatings)
+        // }
+        // console.log()
+        for (let y = 0; y < numRatingsArr.length; y++) {
+          movies[y].numRatings = numRatingsArr[y]
+        }
+
+        // Promise.all()
+
+        // for (let j = 0; j < movies.length; j++) {
+        //   let numRatings = 0
+        //   for (let i = alreadyCheckedRatingsIndexes, l = sortedByMovieId.length; i < l; i++) {
+        //     if (sortedByMovieId[i] === movies[j].movieId) {
+        //       numRatings++
+        //       alreadyCheckedRatingsIndexes++
+        //     }
+        //   }
+        //   movies[j].numRatings = numRatings
+        //   dataHolder.numRatings.push(numRatings)
+        // }
 
         dataHolder.movieData = movies
         resolve(dataHolder.movieData)
