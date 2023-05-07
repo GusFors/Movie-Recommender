@@ -204,12 +204,14 @@ dataReader.getMoviesCompleteLineI = async () => {
         // console.log(sortedByMovieId)
         // movIds = new Array(...movIds)
         let threads = 1
+        let movIdChunks = arrayChunkPush(movIds, threads)
         let promises = []
-        console.log(movIds)
+        // console.log(movIds)
+        // console.log(movIdChunks)
 
         for (let w = 0; w < threads; w++) {
           let fork = cluster.fork()
-          fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIds })
+          fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
           promises[w] = new Promise(async (resolve, reject) => {
             fork.on('message', (msg) => {
               // console.log(msg)
@@ -221,17 +223,27 @@ dataReader.getMoviesCompleteLineI = async () => {
           })
         }
 
-        let numRatingsArr = []
+        let numRatingsArr = new Array(movIds.length) // []
 
-        let values = await Promise.all(promises)
+        let values = await Promise.all(promises) // promise all order preserved?
         let w1 = performance.now()
-        for (let j = 0; j < values.length; j++) {
-          for (let i = 0; i < values[j].length; i++) {
-            numRatingsArr.push(values[j][i])
-          }
+        // console.log(values)
+        let combinedNumRatings = values.flat()
+
+        for (let j = 0; j < combinedNumRatings.length; j++) {
+          numRatingsArr[j] = combinedNumRatings[j]
+          // numRatingsArr.push(values[j][i])
         }
+
+        // let values = await Promise.all(promises)
+        // let w1 = performance.now()
+        // for (let j = 0; j < values.length; j++) {
+        //   for (let i = 0; i < values[j].length; i++) {
+        //     numRatingsArr.push(values[j][i])
+        //   }
+        // }
         console.log('put together fork data', performance.now() - w1)
-        console.log(numRatingsArr)
+        // console.log(numRatingsArr)
         // let numRatingsArr = await new Promise(async (resolve, reject) => {
         //   cluster.on('message', (worker, msg) => {
         //     // console.log(msg)
@@ -261,9 +273,12 @@ dataReader.getMoviesCompleteLineI = async () => {
         //   // dataHolder.numRatings.push(numRatings)
         // }
         // console.log()
+        let m1 = performance.now()
         for (let y = 0; y < numRatingsArr.length; y++) {
           movies[y].numRatings = numRatingsArr[y]
         }
+
+        console.log('set numRatings', performance.now() - m1)
 
         // Promise.all()
 
@@ -400,6 +415,36 @@ dataReader.getRatingsLineObj = async () => {
 }
 
 module.exports = dataReader
+
+function arrayChunkPush(arr, chunkCnt) {
+  let chunkSize = arr.length % chunkCnt === 0 ? arr.length / chunkCnt : Math.floor(arr.length / chunkCnt)
+
+  let temp = []
+
+  for (let c = 0; c < chunkCnt; c++) {
+    temp.push([])
+  }
+
+  for (let c = 0; c < chunkCnt; c++) {
+    for (let i = c * chunkSize; i < chunkSize * (c + 1); i++) {
+      temp[c].push(arr[i])
+    }
+  }
+
+  // if (arr.length % chunkCnt !== 0) {
+  //   for (let r = arr.length - 1; r >= arr.length - (arr.length % chunkCnt); r--) {
+  //     temp[0].push(arr[r])
+  //   }
+  // }
+
+  if (arr.length % chunkCnt !== 0) {
+    for (let r = arr.length - (arr.length % chunkCnt); r <= arr.length - 1; r++) {
+      temp[temp.length - 1].push(arr[r])
+    }
+  }
+
+  return temp
+}
 
 // const DATAPATH = 'dat'
 // const split = '::'
