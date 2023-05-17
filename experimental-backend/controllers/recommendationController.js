@@ -1,8 +1,6 @@
 const dataFilterer = require('../data-utils/dataFilterer')
-const dataReaderRev = require('../data-utils/old-compatibility/dataReaderRev')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
-const recommender = require('../data-utils/arraybuffer-views/recommenderBuffer')
-const recommenderM = require('../data-utils/arraybuffer-views/recommenderBufferMap')
+const recommender = require('../data-utils/arraybuffer-views/recommenderBufferMap')
 
 const recommendationController = {}
 
@@ -10,26 +8,26 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
   let userId = req.params.id
   userId = parseInt(userId)
 
-  let filteredRecommendations
-  let amountOfResults = req.query.results ? req.query.results : '3'
-  let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
+  // let filteredRecommendations
+  // let amountOfResults = req.query.results ? req.query.results : '3'
+  // let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
 
-  let userData = await dataReaderCsv.getUserIdLineI()
-  let ratingsData = await dataReaderCsv.getRatingsLineI()
+  // let userData = await dataReaderCsv.getUserIdLineI()
+  // let ratingsData = await dataReaderCsv.getRatingsLineI()
 
-  if (chosenSim === 'Euclidian') {
-    let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await ratingsData)
-    filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
-  }
+  // if (chosenSim === 'Euclidian') {
+  //   let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await ratingsData)
+  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
+  // }
 
-  if (chosenSim === 'Pearson') {
-    let rawUserRecommendations = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
-    filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
-  }
+  // if (chosenSim === 'Pearson') {
+  //   let rawUserRecommendations = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
+  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
+  // }
 
   res.status(200).json({
     message: `Similar user recommendations for user with id: ${userId}`,
-    similarUsers: filteredRecommendations,
+    similarUsers: [],
   })
 }
 
@@ -50,28 +48,16 @@ let isOptimized = false
   }
 })()
 
-// void function () {
-// }()
-// const cache = new Map()
-
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
   let userId = +req.params.id
-  // userId = parseInt(userId)
+
   let r1 = performance.now()
   let ratingsData = await dataReaderCsv.getRatingsLineI()
   console.log('load ratings in:', performance.now() - r1)
   let m1 = performance.now()
   let movieData = await dataReaderCsv.getMoviesCompleteLineI()
-  console.log('load movies in:', performance.now() - m1)
-  console.log()
-
-  // res.status(200).json({
-  //   message: `Movie recommendations for user with id: ${userId}`,
-  //   userMovieRecommendations: [],
-  //   totalRecommendations: 0,
-  // })
-  // return
-
+  console.log('load movies in:', performance.now() - m1, '\n')
+ 
   let filteredRecommendations
   let amountOfResults = req.query.results ? req.query.results : '3'
   let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
@@ -79,20 +65,13 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
   let type = req.query.type
 
-  // let userSimScores
-  // // ratingsData = ratingsData.filter((r) => !ignoredMovIds.has(r.movieId)) // but filter all ratingsData properties and not only id array, or filter in datareader as arg
   let t1 = performance.now()
-  // if (chosenSim === 'Euclidian') {
-  //   userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
-  // }
-
   const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
-
   let t2 = performance.now()
   console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
   let t3 = performance.now()
-  let ratingsMoviesNotSeen = recommenderM.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
+  let ratingsMoviesNotSeen = recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
   let t4 = performance.now()
   console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
@@ -101,29 +80,14 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   let f1 = performance.now()
   let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
-  // let ignoredMovIds = recommender.getIgnoredMovieIds(userId, await ratingsData)
-  // movieData = movieData.filter((m) => (m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) && !ignoredMovIds.has(m.movieId))
-  movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId)) // also filter movies that user has seen?
+  movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId))
   console.log('filter moviedata in:', performance.now() - f1)
 
-  if (type === 'Fork') {
-    rawRecommendations = await recommender.getMovieRecommendationForkScores(ratingsMoviesNotSeen, await movieData, threads, t7)
-  }
-
-  // if (type === 'Worker') {
-  //   rawRecommendations = await recommender.getMovieRecommendationWorkerScores(ratingsMoviesNotSeen, await movieData, threads)
-  // }
-
-  if (type === 'Slow') {
-    console.log('main thread')
-    rawRecommendations = await recommenderM.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
-  }
-
+  rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
   let t8 = performance.now()
-
   console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
-  console.log(`Total time:`, t8 - t1)
-  console.log()
+
+  console.log(`Total time:`, t8 - t1, '\n')
 
   filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
 
