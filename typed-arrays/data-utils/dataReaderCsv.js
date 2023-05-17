@@ -56,7 +56,7 @@ dataReader.getRatingsLineI = async () => {
         // let rating = new Float32Array(3)
         // let rating = new Float64Array(3)
         // let rating = new Int32Array(3)
-        let ratingValues = line.split(split)
+        let ratingValues = line.split(split) // slowest part // parse line buffer?
 
         // rating[0] = +ratingValues[0]
         // rating[1] = +ratingValues[1]
