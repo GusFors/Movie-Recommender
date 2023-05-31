@@ -1,11 +1,11 @@
 const fs = require('fs')
-const DATAPATH = 'dat'
-const split = '::'
-const startCount = 0
+// const DATAPATH = 'dat'
+// const split = '::'
+// const startCount = 0
 
-// const DATAPATH = 'small'
-// const split = ','
-// const startCount = -1
+const DATAPATH = 'small'
+const split = ','
+const startCount = -1
 
 // const DATAPATH = 'original'
 // const split = ';'
