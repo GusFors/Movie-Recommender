@@ -1,6 +1,8 @@
 'use strict'
 
 const fs = require('fs')
+const readline = require('node:readline')
+const cluster = require('node:cluster')
 
 const DATAPATH = 'dat'
 const split = '::'
@@ -14,8 +16,10 @@ const startCount = 0
 // const split = ','
 // const startCount = -1
 
-const readline = require('node:readline')
-const cluster = require('node:cluster')
+// const DATAPATH = 'original'
+// const split = ';'
+// const startCount = -1
+
 const dataReader = {}
 
 const dataHolder = {
@@ -26,7 +30,7 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: new Uint32Array(), // 32?
+  ratingUserIds: new Uint32Array(),
   ratingMovieIds: new Int32Array(),
   ratingScores: new Float32Array(),
 }
@@ -56,15 +60,51 @@ dataReader.getRatingsLineI = async () => {
         // let rating = new Float32Array(3)
         // let rating = new Float64Array(3)
         // let rating = new Int32Array(3)
-        let ratingValues = line.split(split) // slowest part // parse line buffer?
 
-        // rating[0] = +ratingValues[0]
-        // rating[1] = +ratingValues[1]
-        // rating[2] = +ratingValues[2]
+        let valueCnt = 0
+        // let ratingUserId = line[0]
+        let ratingUserId = ''
+        let ratingMovieId = ''
+        let ratingScore = ''
 
-        ratingUserIds.push(+ratingValues[0])
-        ratingMovieIds.push(+ratingValues[1])
-        ratingScores.push(+ratingValues[2])
+        for (let i = 0; i < line.length; i++) {
+          if (valueCnt > 2) {
+            break
+          }
+
+          if (line[i] === split[0]) {
+            valueCnt += 1 / split.length
+            continue
+          }
+
+          if (valueCnt === 0) {
+            ratingUserId += line[i]
+          }
+
+          if (valueCnt === 1) {
+            ratingMovieId += line[i]
+            // valueCnt += 1 / split.length
+          }
+
+          if (valueCnt === 2) {
+            ratingScore += line[i]
+            // valueCnt += 1 / split.length
+          }
+        }
+
+        ratingUserIds.push(+ratingUserId)
+        ratingMovieIds.push(+ratingMovieId)
+        ratingScores.push(+ratingScore)
+
+        // let ratingValues = line.split(split) // slowest part // parse line buffer?
+
+        // ratingUserIds.push(+ratingValues[0])
+        // ratingMovieIds.push(+ratingValues[1])
+        // ratingScores.push(+ratingValues[2])
+
+        // // rating[0] = +ratingValues[0]
+        // // rating[1] = +ratingValues[1]
+        // // rating[2] = +ratingValues[2]
 
         // rating = new Float32Array(rating)
         // ratings.push(rating)
@@ -75,6 +115,14 @@ dataReader.getRatingsLineI = async () => {
         dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
         dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
+        // console.log('close')
+        // console.log(ratingScores)
+        // console.log(ratingScores2)
+        // for (let i = 0; i < ratingMovieIds2.length; i++) {
+        //   if (ratingMovieIds2[i] !== ratingMovieIds[i]) {
+        //     console.log('err')
+        //   }
+        // }
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {

@@ -1,4 +1,5 @@
 'use strict'
+
 const { arrayChunkPush, arrayChunkPop, arrayChunkShift } = require('../arrayChunk.js')
 
 const recommender = {}
