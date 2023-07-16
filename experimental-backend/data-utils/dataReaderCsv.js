@@ -42,18 +42,34 @@ dataReader.getRatingsLineI = async () => {
           return
         }
 
-        // let rating = []
-        // let rating = new Float32Array(3)
-        // let rating = new Float64Array(3)
-        // let rating = new Int32Array(3)
-
-        let valueCnt = 0
         // let ratingUserId = line[0]
+        let valueCnt = 0
         let ratingUserId = ''
         let ratingMovieId = ''
         let ratingScore = ''
 
         for (let i = 0; i < line.length; i++) {
+          // if (valueCnt > 2) {
+          //   break
+          // }
+
+          // if (line[i] === DATASET.separator[0]) {
+          //   valueCnt += 1 / DATASET.separator.length
+          //   continue
+          // }
+
+          // if (valueCnt === 0) {
+          //   ratingUserId += line[i]
+          // }
+
+          // if (valueCnt === 1) {
+          //   ratingMovieId += line[i]
+          // }
+
+          // if (valueCnt === 2) {
+          //   ratingScore += line[i]
+          // }
+
           if (valueCnt > 2) {
             break
           }
@@ -63,37 +79,38 @@ dataReader.getRatingsLineI = async () => {
             continue
           }
 
+          // switch (valueCnt) {
+          //   case 0:
+          //     ratingUserId += line[i]
+          //   case 1:
+          //     ratingMovieId += line[i]
+          //   case 2:
+          //     ratingScore += line[i]
+
+          // }
+
           if (valueCnt === 0) {
             ratingUserId += line[i]
           }
 
           if (valueCnt === 1) {
             ratingMovieId += line[i]
-            // valueCnt += 1 / split.length
           }
 
           if (valueCnt === 2) {
             ratingScore += line[i]
-            // valueCnt += 1 / split.length
           }
         }
 
+        // if(total > 7000000) {
+        //  return
+        // }
         ratingUserIds.push(+ratingUserId)
         ratingMovieIds.push(+ratingMovieId)
         ratingScores.push(+ratingScore)
 
         // let ratingValues = line.split(split) // slowest part // parse line buffer?
 
-        // ratingUserIds.push(+ratingValues[0])
-        // ratingMovieIds.push(+ratingValues[1])
-        // ratingScores.push(+ratingValues[2])
-
-        // // rating[0] = +ratingValues[0]
-        // // rating[1] = +ratingValues[1]
-        // // rating[2] = +ratingValues[2]
-
-        // rating = new Float32Array(rating)
-        // ratings.push(rating)
         total++
       })
 
@@ -169,7 +186,9 @@ dataReader.getMoviesCompleteLineI = async () => {
 
         for (let w = 0; w < threads; w++) {
           let fork = cluster.fork()
-          fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+          setTimeout(() => {
+            fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+          }, 0)
           promises[w] = new Promise(async (resolve, reject) => {
             fork.on('message', (msg) => {
               // console.log(msg)
