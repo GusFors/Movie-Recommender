@@ -88,8 +88,11 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
     }
   }
   console.log('second section took', performance.now() - t2)
+
   simScores.userIds = new Uint32Array(simScores.userIds)
   simScores.scores = new Float32Array(simScores.scores)
+  // simScores.userIds = new Uint32Array(simScores.userIds).buffer
+  // simScores.scores = new Float32Array(simScores.scores).buffer
 
   return simScores
 }
@@ -161,20 +164,47 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     //     scores.push(ratingsDataObj.s[y])
     //   }
     // }
-    console.log('reached', performance.now() - t1)
-    let simUids = new Uint32Array(similarityScores.userIds)
-    let simScores = new Float32Array(similarityScores.scores)
 
-    //let simUids = JSON.parse(JSON.stringify(new Array(...similarityScores.userIds)))
-    //let simScores = JSON.parse(JSON.stringify(new Array(...similarityScores.scores)))
+    // let simUids = similarityScores.userIds
+    // let simScores = similarityScores.scores
+    console.log(similarityScores.userIds)
+    // let copy = structuredClone(similarityScores.userIds, {transfer: [similarityScores.userIds.buffer]})
+
+    // let simUids = structuredClone(similarityScores.userIds, { transfer: [similarityScores.userIds.buffer] })
+    // let simScores = structuredClone(similarityScores.scores, { transfer: [similarityScores.scores.buffer] })
+
+    // let clone = structuredClone(similarityScores, { transfer: [similarityScores.userIds.buffer, similarityScores.scores.buffer] })
+    // let simUids = clone.userIds
+    // let simScores = clone.scores
+
+    // let simUids = structuredClone(similarityScores.userIds, { transfer: [similarityScores.userIds.buffer] })
+    // let simScores = structuredClone(similarityScores.scores, { transfer: [similarityScores.scores.buffer] })
+
+    // console.log(simUids.buffer === similarityScores.userIds.buffer)
+
+    // let simUids = new Uint32Array(similarityScores.userIds)
+    // let simScores = new Float32Array(similarityScores.scores)
+
+    let simUids = new Uint32Array(similarityScores.userIds.buffer)
+    let simScores = new Float32Array(similarityScores.scores.buffer)
 
     // spawn worker?
-    let movIdKeys = [...new Set(movIds)]
+
+    console.log('reached', performance.now() - t1)
 
     let weightedScores = {}
-    for (let i = 0; i < movIdKeys.length; i++) {
-      weightedScores[movIdKeys[i]] = []
+
+    for (let i = 0; i < movIds.length; i++) {
+      if (!weightedScores[movIds[i]]) {
+        weightedScores[movIds[i]] = []
+      }
     }
+
+    // let movIdKeys = [...new Set(movIds)]
+    // let weightedScores = {}
+    // for (let i = 0; i < movIdKeys.length; i++) {
+    //   weightedScores[movIdKeys[i]] = []
+    // }
 
     // cluster.setupPrimary({ exec: './data-utils/arraybuffer-views/clusterW.js', serialization: 'advanced' })
     // // cluster.on('online', (worker) => {

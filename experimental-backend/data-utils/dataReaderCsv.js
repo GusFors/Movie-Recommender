@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').smallData
+const DATASET = require('./dataFormats').largeData
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
 const dataReader = {}
