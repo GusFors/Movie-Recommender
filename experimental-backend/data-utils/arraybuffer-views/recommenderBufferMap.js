@@ -94,9 +94,9 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
   return simScores
 }
 
-recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjR, similarityScores) => {
+recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj, similarityScores) => {
   return new Promise(async (resolve, reject) => {
-    let ratingsDataObj = ratingsDataObjR
+    //let ratingsDataObj = ratingsDataObjR
     let ratingsLength = ratingsDataObj.u.length
 
     let moviesSeenByUser = new Set()
@@ -110,19 +110,58 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     }
     console.log('found user ratings in', performance.now() - r1)
 
-    let userIds = []
-    let movIds = []
-    let scores = []
+    // let userIds = []
+    // let movIds = []
+    // let scores = []
+    // // console.log(ratingsDataObj)
+    // // let totalUnseenCnt = 0
+    // // let indexes = []
+    // let t1 = performance.now()
 
+    // for (let y = 0, l = ratingsLength; y < l; y++) {
+    //   if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
+    //     // ++totalUnseenCnt
+    //     // indexes.push(y)
+    //     userIds.push(ratingsDataObj.u[y])
+    //     movIds.push(ratingsDataObj.m[y])
+    //     scores.push(ratingsDataObj.s[y])
+    //   }
+    // }
+
+    // let userIds = []
+    // let movIds = []
+    // let scores = []
+    // console.log(ratingsDataObj)
+    let totalUnseenCnt = 0
+    let indexes = []
     let t1 = performance.now()
+
     for (let y = 0, l = ratingsLength; y < l; y++) {
       if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
-        userIds.push(ratingsDataObj.u[y])
-        movIds.push(ratingsDataObj.m[y])
-        scores.push(ratingsDataObj.s[y])
+        ++totalUnseenCnt
+        indexes.push(y)
       }
     }
 
+    let userIds = new Uint32Array(totalUnseenCnt)
+    let movIds = new Uint32Array(totalUnseenCnt)
+    let scores = new Float32Array(totalUnseenCnt)
+
+    for (let y = 0, l = indexes.length; y < l; y++) {
+      userIds[y] = ratingsDataObj.u[indexes[y]]
+      movIds[y] = ratingsDataObj.m[indexes[y]]
+      scores[y] = ratingsDataObj.s[indexes[y]]
+    }
+    // console.log(userIds)
+    // for (let y = 0, l = ratingsLength; y < l; y++) {
+    //   if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
+    //     ++totalUnseenCnt
+    //     userIds.push(ratingsDataObj.u[y])
+    //     movIds.push(ratingsDataObj.m[y])
+    //     scores.push(ratingsDataObj.s[y])
+    //   }
+    // }
+    console.log('reached', performance.now() - t1)
     let simUids = new Uint32Array(similarityScores.userIds)
     let simScores = new Float32Array(similarityScores.scores)
 
@@ -136,38 +175,38 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     for (let i = 0; i < movIdKeys.length; i++) {
       weightedScores[movIdKeys[i]] = []
     }
-    console.log('reached')
+
     // cluster.setupPrimary({ exec: './data-utils/arraybuffer-views/clusterW.js', serialization: 'advanced' })
     // // cluster.on('online', (worker) => {
     // //   console.log('score fork online')
     // // })
 
     // let fork = cluster.fork()
-  //   fork.send({
-  //     work: 'scores',
-  //     userIds: userIds,
-  //     movIds: movIds,
-  //     scores: scores,
-  //     weightedScores: weightedScores,
-  //     simUids: simUids,
-  //     simScores: simScores,
-  //   })
+    //   fork.send({
+    //     work: 'scores',
+    //     userIds: userIds,
+    //     movIds: movIds,
+    //     scores: scores,
+    //     weightedScores: weightedScores,
+    //     simUids: simUids,
+    //     simScores: simScores,
+    //   })
 
-  //   let result = await new Promise(async (res, rej) => {
-  //     fork.on('message', (msg) => {
-  //       if (msg.work === 'scores') {
-  //         // fork.kill()
-  //         // fork.disconnect()
-  //         // fork.kill()
-  //         res(msg.weightedScores)
-  //       }
-  //     })
-  //   })
+    //   let result = await new Promise(async (res, rej) => {
+    //     fork.on('message', (msg) => {
+    //       if (msg.work === 'scores') {
+    //         // fork.kill()
+    //         // fork.disconnect()
+    //         // fork.kill()
+    //         res(msg.weightedScores)
+    //       }
+    //     })
+    //   })
 
-  //   let wScores = await result
-  //   // console.log(wScores)
-  //   resolve(wScores)
-  // })
+    //   let wScores = await result
+    //   // console.log(wScores)
+    //   resolve(wScores)
+    // })
 
     let start = 0
     for (let s = 0, l = simUids.length; s < l; s++) {
