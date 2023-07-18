@@ -116,12 +116,13 @@ dataReader.getRatingsLineI = async () => {
 
       rl.on('close', () => {
         dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
-        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
+        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      // resolve({ u: dataHolder.ratingUserIds.buffer, m: dataHolder.ratingMovieIds.buffer, s: dataHolder.ratingScores.buffer })
     }
   })
 }

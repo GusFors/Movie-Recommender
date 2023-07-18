@@ -3,6 +3,8 @@
 const cluster = require('node:cluster')
 cluster.setupPrimary({ exec: './data-utils/arraybuffer-views/clusterW.js', serialization: 'advanced' })
 let fork = cluster.fork()
+const { Worker, threadId } = require('worker_threads')
+let worker = new Worker('./data-utils/arraybuffer-views/scoreWorker.js')
 const { arrayChunkPush, arrayChunkPop, arrayChunkShift } = require('../arrayChunk.js')
 
 const recommender = {}
@@ -96,10 +98,12 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 
   return simScores
 }
-
-recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj, similarityScores) => {
+//let weightedScores = {}
+recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
     //let ratingsDataObj = ratingsDataObjR
+    let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
+    console.log(ratingsDataObj)
     let ratingsLength = ratingsDataObj.u.length
 
     let moviesSeenByUser = new Set()
@@ -185,8 +189,8 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     // let simUids = new Uint32Array(similarityScores.userIds)
     // let simScores = new Float32Array(similarityScores.scores)
 
-    let simUids = new Uint32Array(similarityScores.userIds.buffer)
-    let simScores = new Float32Array(similarityScores.scores.buffer)
+    let simUids = new Uint32Array(similarityScores.userIds)
+    let simScores = new Float32Array(similarityScores.scores)
 
     // spawn worker?
 
@@ -206,10 +210,45 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     //   weightedScores[movIdKeys[i]] = []
     // }
 
-    // cluster.setupPrimary({ exec: './data-utils/arraybuffer-views/clusterW.js', serialization: 'advanced' })
-    // // cluster.on('online', (worker) => {
-    // //   console.log('score fork online')
-    // // })
+    // let weightedScores = {}
+
+    // for (let i = 0; i < movIds.length; i++) {
+    //   if (!weightedScores[movIds[i]]) {
+
+    //     weightedScores[movIds[i]] = new Float32Array(new SharedArrayBuffer())
+    //   }
+    // }
+
+    //   worker.postMessage(
+    //     {
+    //       work: 'scores',
+    //       userIds: userIds,
+    //       movIds: movIds,
+    //       scores: scores,
+
+    //       simUids: simUids,
+    //       simScores: simScores,
+    //     },
+    //     [userIds.buffer, movIds.buffer, scores.buffer, simUids.buffer, simScores.buffer]
+    //   )
+
+    //   resolve(
+    //     new Promise(async (res, rej) => {
+    //       worker.on('message', (msg) => {
+    //         if (msg.work === 'scores') {
+    //           // worker.terminate()
+    //           res(msg.weightedScores)
+    //         }
+    //       })
+    //     })
+    //   )
+
+    //   // console.log(wScores)
+    // })
+
+    // cluster.on('online', (worker) => {
+    //   console.log('score fork online')
+    // })
 
     // let fork = cluster.fork()
     //   fork.send({
@@ -263,7 +302,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
         })
       }
     }
-    resolve(weightedScores)
+    resolve(new Promise((res, err) => res(weightedScores)))
     //return weightedScores
   })
 }
@@ -271,7 +310,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
 recommender.getMovieRecommendationScores = async (weightedScores, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-
+    // let weightedScores =  structuredClone(weightedScoresA) //{...weightedScoresA}//JSON.parse(JSON.stringify(weightedScoresA))
     let m1 = performance.now()
 
     console.log('sort weightedScorest in:', performance.now() - m1)
