@@ -4,7 +4,8 @@
   "description": "A1 for the course 2dv515",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon --use-strict --max-semi-space-size=16384 --min-semi-space-size=192 --max-old-space-size=56512 --initial-old-space-size=2256 --harmony --allow-natives-syntax app.js",
+    "start": "nodemon --max-old-space-size=56512 app.js",
+    "startmem": "nodemon --use-strict --max-semi-space-size=16384 --min-semi-space-size=192 --max-old-space-size=56512 --initial-old-space-size=2256 --harmony --allow-natives-syntax app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "GusFors",

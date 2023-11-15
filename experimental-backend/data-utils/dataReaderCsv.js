@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').largeData
+const DATASET = require('./dataFormats').smallData
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
 const dataReader = {}
@@ -18,7 +18,7 @@ const dataHolder = {
   movieData: [],
   numRatings: [],
   ratingUserIds: new Uint32Array(),
-  ratingMovieIds: new Int32Array(),
+  ratingMovieIds: new Uint32Array(),
   ratingScores: new Float32Array(),
 }
 
@@ -175,7 +175,7 @@ dataReader.getMoviesCompleteLineI = async () => {
         let sort1 = performance.now()
         // let sortedByMovieId = rMovIds.sort((a, b) => a - b)
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
-        let sortedByMovieId = new Int32Array(rMovIds).sort()
+        let sortedByMovieId = new Uint32Array(rMovIds).sort()
         console.log('sort movies', performance.now() - sort1)
         // console.log(sortedByMovieId)
         // movIds = new Array(...movIds)

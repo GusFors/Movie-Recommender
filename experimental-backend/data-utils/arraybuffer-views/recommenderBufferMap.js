@@ -330,11 +330,13 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       for (let j = 0; j < moviesChunks[y].length; j++) {
         movieChunkIds[y].add(moviesChunks[y][j].movieId)
       }
-
+      // console.log('1...')
       wScoresChunks[y] = []
       wBuffers[y] = []
 
       let movIdsKeys = Object.keys(weightedScores)
+      // let movIdsKeys = Object.keys(weightedScores).map((e) => +e)
+      console.log(movIdsKeys)
 
       for (let w = 0; w < movIdsKeys.length; w++) {
         if (movieChunkIds[y].has(+movIdsKeys[w])) {
@@ -347,11 +349,12 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
             if (w === 0) {
             }
 
-            v.setInt32(m * 12, movIdsKeys[w], true)
+            v.setUint32(m * 12, movIdsKeys[w], true)
             v.setFloat32(m * 12 + 4, currMovIdArr[m].weightedRating, true)
             v.setFloat32(m * 12 + 8, currMovIdArr[m].simScore, true)
           }
           wScoresChunks[y].push(rBuffer)
+          // console.log(w)
         }
       }
     }
@@ -366,7 +369,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       let weightedScoreSum = 0
       let simScoreSum = 0
       let floatView = new Float32Array(wScoresChunks[0][i])
-      let int32View = new Int32Array(wScoresChunks[0][i])
+      let int32View = new Uint32Array(wScoresChunks[0][i])
       let id
       for (let j = 0; j < floatView.length; j += 3) {
         if (j === 0) {
@@ -378,7 +381,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
 
       if (weightedScoreSum > 0) {
         calcData.push({
-          movieId: new Int32Array(wScoresChunks[0][i])[0],
+          movieId: new Uint32Array(wScoresChunks[0][i])[0],
           recommendationScore: typeof (weightedScoreSum / simScoreSum) === 'number' ? weightedScoreSum / simScoreSum : 0,
         })
       }
