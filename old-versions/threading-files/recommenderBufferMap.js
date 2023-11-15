@@ -1,5 +1,10 @@
 'use strict'
 
+const cluster = require('node:cluster')
+cluster.setupPrimary({ exec: './data-utils/arraybuffer-views/clusterW.js', serialization: 'advanced' })
+let fork = cluster.fork()
+const { Worker, threadId } = require('worker_threads')
+let worker = new Worker('./data-utils/arraybuffer-views/scoreWorker.js')
 const { arrayChunkPush, arrayChunkPop, arrayChunkShift } = require('../arrayChunk.js')
 
 const recommender = {}
@@ -88,12 +93,15 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 
   simScores.userIds = new Uint32Array(simScores.userIds)
   simScores.scores = new Float32Array(simScores.scores)
+  // simScores.userIds = new Uint32Array(simScores.userIds).buffer
+  // simScores.scores = new Float32Array(simScores.scores).buffer
 
   return simScores
 }
-
+//let weightedScores = {}
 recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
+    //let ratingsDataObj = ratingsDataObjR
     let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
     console.log(ratingsDataObj)
     let ratingsLength = ratingsDataObj.u.length
@@ -109,6 +117,28 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     }
     console.log('found user ratings in', performance.now() - r1)
 
+    // let userIds = []
+    // let movIds = []
+    // let scores = []
+    // // console.log(ratingsDataObj)
+    // // let totalUnseenCnt = 0
+    // // let indexes = []
+    // let t1 = performance.now()
+
+    // for (let y = 0, l = ratingsLength; y < l; y++) {
+    //   if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
+    //     // ++totalUnseenCnt
+    //     // indexes.push(y)
+    //     userIds.push(ratingsDataObj.u[y])
+    //     movIds.push(ratingsDataObj.m[y])
+    //     scores.push(ratingsDataObj.s[y])
+    //   }
+    // }
+
+    // let userIds = []
+    // let movIds = []
+    // let scores = []
+    // console.log(ratingsDataObj)
     let totalUnseenCnt = 0
     let indexes = []
     let t1 = performance.now()
@@ -129,11 +159,40 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
       movIds[y] = ratingsDataObj.m[indexes[y]]
       scores[y] = ratingsDataObj.s[indexes[y]]
     }
+    // console.log(userIds)
+    // for (let y = 0, l = ratingsLength; y < l; y++) {
+    //   if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
+    //     ++totalUnseenCnt
+    //     userIds.push(ratingsDataObj.u[y])
+    //     movIds.push(ratingsDataObj.m[y])
+    //     scores.push(ratingsDataObj.s[y])
+    //   }
+    // }
 
+    // let simUids = similarityScores.userIds
+    // let simScores = similarityScores.scores
     console.log(similarityScores.userIds)
+    // let copy = structuredClone(similarityScores.userIds, {transfer: [similarityScores.userIds.buffer]})
+
+    // let simUids = structuredClone(similarityScores.userIds, { transfer: [similarityScores.userIds.buffer] })
+    // let simScores = structuredClone(similarityScores.scores, { transfer: [similarityScores.scores.buffer] })
+
+    // let clone = structuredClone(similarityScores, { transfer: [similarityScores.userIds.buffer, similarityScores.scores.buffer] })
+    // let simUids = clone.userIds
+    // let simScores = clone.scores
+
+    // let simUids = structuredClone(similarityScores.userIds, { transfer: [similarityScores.userIds.buffer] })
+    // let simScores = structuredClone(similarityScores.scores, { transfer: [similarityScores.scores.buffer] })
+
+    // console.log(simUids.buffer === similarityScores.userIds.buffer)
+
+    // let simUids = new Uint32Array(similarityScores.userIds)
+    // let simScores = new Float32Array(similarityScores.scores)
 
     let simUids = new Uint32Array(similarityScores.userIds)
     let simScores = new Float32Array(similarityScores.scores)
+
+    // spawn worker?
 
     console.log('reached', performance.now() - t1)
 
@@ -144,6 +203,79 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
         weightedScores[movIds[i]] = []
       }
     }
+
+    // let movIdKeys = [...new Set(movIds)]
+    // let weightedScores = {}
+    // for (let i = 0; i < movIdKeys.length; i++) {
+    //   weightedScores[movIdKeys[i]] = []
+    // }
+
+    // let weightedScores = {}
+
+    // for (let i = 0; i < movIds.length; i++) {
+    //   if (!weightedScores[movIds[i]]) {
+
+    //     weightedScores[movIds[i]] = new Float32Array(new SharedArrayBuffer())
+    //   }
+    // }
+
+    //   worker.postMessage(
+    //     {
+    //       work: 'scores',
+    //       userIds: userIds,
+    //       movIds: movIds,
+    //       scores: scores,
+
+    //       simUids: simUids,
+    //       simScores: simScores,
+    //     },
+    //     [userIds.buffer, movIds.buffer, scores.buffer, simUids.buffer, simScores.buffer]
+    //   )
+
+    //   resolve(
+    //     new Promise(async (res, rej) => {
+    //       worker.on('message', (msg) => {
+    //         if (msg.work === 'scores') {
+    //           // worker.terminate()
+    //           res(msg.weightedScores)
+    //         }
+    //       })
+    //     })
+    //   )
+
+    //   // console.log(wScores)
+    // })
+
+    // cluster.on('online', (worker) => {
+    //   console.log('score fork online')
+    // })
+
+    // let fork = cluster.fork()
+    //   fork.send({
+    //     work: 'scores',
+    //     userIds: userIds,
+    //     movIds: movIds,
+    //     scores: scores,
+    //     weightedScores: weightedScores,
+    //     simUids: simUids,
+    //     simScores: simScores,
+    //   })
+
+    //   let result = await new Promise(async (res, rej) => {
+    //     fork.on('message', (msg) => {
+    //       if (msg.work === 'scores') {
+    //         // fork.kill()
+    //         // fork.disconnect()
+    //         // fork.kill()
+    //         res(msg.weightedScores)
+    //       }
+    //     })
+    //   })
+
+    //   let wScores = await result
+    //   // console.log(wScores)
+    //   resolve(wScores)
+    // })
 
     let start = 0
     for (let s = 0, l = simUids.length; s < l; s++) {
@@ -171,13 +303,14 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
       }
     }
     resolve(new Promise((res, err) => res(weightedScores)))
+    //return weightedScores
   })
 }
 
 recommender.getMovieRecommendationScores = async (weightedScores, moviesData, threads, timer) => {
   return new Promise((resolve, reject) => {
     let movieRecommendations = []
-
+    // let weightedScores =  structuredClone(weightedScoresA) //{...weightedScoresA}//JSON.parse(JSON.stringify(weightedScoresA))
     let m1 = performance.now()
 
     console.log('sort weightedScorest in:', performance.now() - m1)
@@ -197,12 +330,12 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       for (let j = 0; j < moviesChunks[y].length; j++) {
         movieChunkIds[y].add(moviesChunks[y][j].movieId)
       }
-
+      // console.log('1...')
       wScoresChunks[y] = []
       wBuffers[y] = []
 
       let movIdsKeys = Object.keys(weightedScores)
-
+      // let movIdsKeys = Object.keys(weightedScores).map((e) => +e)
       console.log(movIdsKeys)
 
       for (let w = 0; w < movIdsKeys.length; w++) {
@@ -221,6 +354,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
             v.setFloat32(m * 12 + 8, currMovIdArr[m].simScore, true)
           }
           wScoresChunks[y].push(rBuffer)
+          // console.log(w)
         }
       }
     }
