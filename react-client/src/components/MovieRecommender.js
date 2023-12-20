@@ -119,7 +119,7 @@ function MovieRecommender() {
         setInfoContent(
           <span style={{ fontSize: '14px' }}>
             Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
-            {avgRuns > 1 ? `${((t1 - t0) / avgRuns).toFixed(4)} ms (avg of ${avgRuns} runs, ${t1 - t0}ms total)` : `${t1 - t0} milliseconds.`}
+            {avgRuns > 1 ? `${((t1 - t0) / avgRuns).toFixed(4)}ms (avg of ${avgRuns} runs, ${t1 - t0}ms total)` : `${t1 - t0} milliseconds.`}
           </span>
         )
         clearInterval(loadingUpdateInterval)

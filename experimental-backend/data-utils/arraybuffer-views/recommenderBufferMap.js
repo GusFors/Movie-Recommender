@@ -214,6 +214,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       wBuffers[y] = []
 
       let movIdsKeysS = Object.keys(weightedScores)
+      // console.log(movIdsKeysS)
       // let movIdsKeys = []
 
       // for (let i = 0; i < movIdsKeysS.length; i++) {
@@ -225,7 +226,9 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       let movIdsKeys = []
 
       for (let i = 0; i < movIdsKeysS.length; i++) {
-        movIdsKeys.push(+movIdsKeysS[i])
+        if (movieChunkIds[y].has(+movIdsKeysS[i])) {
+          movIdsKeys.push(+movIdsKeysS[i])
+        }
       }
 
       // console.log(weightedScores)
@@ -254,6 +257,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
           // console.log('done..', w)
         }
       }
+      // console.log(wScoresChunks[0])
     }
 
     console.log('chunk ws:', performance.now() - w1)
@@ -261,48 +265,56 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
 
     let t1 = performance.now()
     let calcData = []
+    let combinedMovIds = new Set()
+    for (let y = 0; y < wScoresChunks.length; y++) {
+      for (let i = 0; i < wScoresChunks[y].length; i++) {
+        let weightedScoreSum = 0
+        let simScoreSum = 0
+        let floatView = new Float32Array(wScoresChunks[y][i])
+        let int32View = new Uint32Array(wScoresChunks[y][i])
+        let id
 
-    for (let i = 0; i < wScoresChunks[0].length; i++) {
-      let weightedScoreSum = 0
-      let simScoreSum = 0
-      let floatView = new Float32Array(wScoresChunks[0][i])
-      let int32View = new Uint32Array(wScoresChunks[0][i])
-      let id
-      for (let j = 0; j < floatView.length; j += 3) {
-        if (j === 0) {
-          id = int32View[j]
+        for (let j = 0; j < floatView.length; j += 3) {
+          if (j === 0) {
+            id = int32View[j]
+          }
+          weightedScoreSum = weightedScoreSum + floatView[j + 1]
+          simScoreSum = simScoreSum + floatView[j + 2]
         }
-        weightedScoreSum = weightedScoreSum + floatView[j + 1]
-        simScoreSum = simScoreSum + floatView[j + 2]
+
+        if (weightedScoreSum > 0) {
+          calcData.push({
+            movieId: new Uint32Array(wScoresChunks[y][i])[0],
+            recommendationScore: typeof (weightedScoreSum / simScoreSum) === 'number' ? weightedScoreSum / simScoreSum : 0,
+          })
+        }
       }
 
-      if (weightedScoreSum > 0) {
-        calcData.push({
-          movieId: new Uint32Array(wScoresChunks[0][i])[0],
-          recommendationScore: typeof (weightedScoreSum / simScoreSum) === 'number' ? weightedScoreSum / simScoreSum : 0,
+      let f1 = performance.now()
+      let wsMovIds = new Set(
+        wScoresChunks[y].map((ws) => {
+          return new Int32Array(ws)[0]
         })
+      )
+
+      let currentMoviesData = moviesData.filter((m) => wsMovIds.has(m.movieId))
+      for (let m = 0; m < currentMoviesData.length; m++) {
+        combinedMovIds.add(currentMoviesData[m].movieId)
       }
+      // console.log(wsMovIds)
+      console.log('map/filter in', performance.now() - f1)
     }
 
-    let f1 = performance.now()
-    let wsMovIds = new Set(
-      wScoresChunks[0].map((ws) => {
-        return new Int32Array(ws)[0]
-      })
-    )
+    moviesData = moviesData.filter((m) => combinedMovIds.has(m.movieId))
 
-    moviesData = moviesData.filter((m) => wsMovIds.has(m.movieId))
-
-    console.log('map/filter in', performance.now() - f1)
-
-    for (let y = 0; y < calcData.length; y++) {
-      if (calcData[y].recommendationScore > 0) {
+    for (let w = 0; w < calcData.length; w++) {
+      if (calcData[w].recommendationScore > 0) {
         movieRecommendations.push({
-          movieId: calcData[y].movieId,
-          title: moviesData[y].title,
-          numRatings: moviesData[y].numRatings,
+          movieId: calcData[w].movieId,
+          title: moviesData[w].title,
+          numRatings: moviesData[w].numRatings,
 
-          recommendationScore: calcData[y].recommendationScore,
+          recommendationScore: calcData[w].recommendationScore,
         })
       }
     }
