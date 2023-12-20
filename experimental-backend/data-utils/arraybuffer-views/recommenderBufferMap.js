@@ -95,7 +95,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
     let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
-    console.log(ratingsDataObj)
+    // console.log(ratingsDataObj)
     let ratingsLength = ratingsDataObj.u.length
 
     let moviesSeenByUser = new Set()
@@ -130,7 +130,17 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
       scores[y] = ratingsDataObj.s[indexes[y]]
     }
 
-    console.log(similarityScores.userIds)
+    // console.log(indexes.length)
+    // for (let y = 0; y < indexes.length; y += 2) {
+    //   userIds[y] = ratingsDataObj.u[indexes[y]]
+    //   userIds[y + 1] = ratingsDataObj.u[indexes[y + 1]]
+    //   movIds[y] = ratingsDataObj.m[indexes[y]]
+    //   movIds[y + 1] = ratingsDataObj.m[indexes[y + 1]]
+    //   scores[y] = ratingsDataObj.s[indexes[y]]
+    //   scores[y + 1] = ratingsDataObj.s[indexes[y + 1]]
+    // }
+
+    // console.log(similarityScores.userIds)
 
     let simUids = new Uint32Array(similarityScores.userIds)
     let simScores = new Float32Array(similarityScores.scores)
@@ -184,6 +194,8 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
 
     let r1 = performance.now()
     let moviesChunks = arrayChunkPush(moviesData, threads)
+    // let moviesChunks = moviesData
+    // console.log(moviesChunks)
     console.log('chunk movies in:', performance.now() - r1)
 
     let w1 = performance.now()
@@ -201,26 +213,45 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       wScoresChunks[y] = []
       wBuffers[y] = []
 
-      let movIdsKeys = Object.keys(weightedScores)
+      let movIdsKeysS = Object.keys(weightedScores)
+      // let movIdsKeys = []
 
-      console.log(movIdsKeys)
+      // for (let i = 0; i < movIdsKeysS.length; i++) {
+      //   if (movieChunkIds[y].has(+movIdsKeysS[i])) {
+      //     movIdsKeys.push(+movIdsKeysS[i])
+      //   }
+      // }
 
+      let movIdsKeys = []
+
+      for (let i = 0; i < movIdsKeysS.length; i++) {
+        movIdsKeys.push(+movIdsKeysS[i])
+      }
+
+      // console.log(weightedScores)
+      console.log(movIdsKeys.length)
+
+      // for (let w = 0, v = movIdsKeys.length; w < v; w++) {
       for (let w = 0; w < movIdsKeys.length; w++) {
+        // console.log(w)
+        // if (movieChunkIds[y].has(movIdsKeys[w])) {
         if (movieChunkIds[y].has(+movIdsKeys[w])) {
+          // bottleneck +string convert? or change weighted scores data structure
           let currMovIdArr = weightedScores[movIdsKeys[w]]
           let end = currMovIdArr.length
           let rBuffer = new ArrayBuffer(end * 12)
           let v = new DataView(rBuffer)
-
+          // for (let m = 0, l = weightedScores[movIdsKeys[w]].length; m < l; m++) {
           for (let m = 0; m < weightedScores[movIdsKeys[w]].length; m++) {
             if (w === 0) {
             }
 
-            v.setUint32(m * 12, movIdsKeys[w], true)
+            v.setUint32(m * 12, movIdsKeys[w], true) // movidskeys is string?
             v.setFloat32(m * 12 + 4, currMovIdArr[m].weightedRating, true)
             v.setFloat32(m * 12 + 8, currMovIdArr[m].simScore, true)
           }
           wScoresChunks[y].push(rBuffer)
+          // console.log('done..', w)
         }
       }
     }

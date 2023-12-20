@@ -20,6 +20,7 @@ function MovieRecommender() {
   const [loadingContent, setLoadingContent] = useState('')
   const [minNumRatings, setMinNumRatings] = useState(1)
   const [numThreads, setNumThreads] = useState(4)
+  const [avgRuns, setAvgRuns] = useState(1)
   const [infoContent, setInfoContent] = useState('')
   const [disabledButton, setdisabledButton] = useState(false)
   const [rev, setRev] = useState(1)
@@ -48,6 +49,10 @@ function MovieRecommender() {
 
   const handleNumThreadsChange = (event) => {
     setNumThreads(event.target.value)
+  }
+
+  const handleAvgRunsChange = (event) => {
+    setAvgRuns(event.target.value)
   }
 
   const handleUsersButtonClick = async (event) => {
@@ -98,7 +103,7 @@ function MovieRecommender() {
 
     const t0 = performance.now()
     const result = await fetch(
-      `http://localhost:${port}/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}`,
+      `http://localhost:${port}/recommendations/movies/${user.id}?sim=${similarity}&results=${numResults}&minratings=${minNumRatings}&numthreads=${numThreads}&type=${type}&rev=${rev}&avgruns=${avgRuns}`,
       {}
     ).catch(() => {
       clearInterval(loadingUpdateInterval)
@@ -114,7 +119,7 @@ function MovieRecommender() {
         setInfoContent(
           <span style={{ fontSize: '14px' }}>
             Listing the {json.userMovieRecommendations.length} highest scores. In total calculated {json.totalRecommendations} recommendations in{' '}
-            {t1 - t0} milliseconds.
+            {avgRuns > 1 ? `${((t1 - t0) / avgRuns).toFixed(4)} ms (avg of ${avgRuns} runs, ${t1 - t0}ms total)` : `${t1 - t0} milliseconds.`}
           </span>
         )
         clearInterval(loadingUpdateInterval)
@@ -303,6 +308,20 @@ function MovieRecommender() {
           <Button onClick={handleUsersButtonClick} style={{ backgroundColor: '#42a5f5', color: 'white' }} variant='contained'>
             Find recommended users
           </Button>
+          <FormControl variant='standard' sx={{ maxWidth: 120 }}>
+            <TextField
+              id='standard-number-avg-runs'
+              label='Avg runs'
+              type='number'
+              style={{}}
+              defaultValue='1'
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={handleAvgRunsChange}
+              variant='standard'
+            />
+          </FormControl>
         </Stack>
         <Stack>
           {loadingContent}

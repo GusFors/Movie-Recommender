@@ -50,46 +50,51 @@ let isOptimized = false
 
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
   let userId = +req.params.id
+  let avgRuns = +req.query.avgruns
+  console.log('avg runs:', avgRuns)
 
-  let r1 = performance.now()
-  let ratingsData = await dataReaderCsv.getRatingsLineI()
-  console.log('load ratings in:', performance.now() - r1)
-  let m1 = performance.now()
-  let movieData = await dataReaderCsv.getMoviesCompleteLineI()
-  console.log('load movies in:', performance.now() - m1, '\n')
- 
   let filteredRecommendations
-  let amountOfResults = req.query.results ? req.query.results : '3'
-  let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
-  let minNumRatings = parseInt(req.query.minratings)
-  let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
-  let type = req.query.type
-
-  let t1 = performance.now()
-  const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
-  let t2 = performance.now()
-  console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
-
-  let t3 = performance.now()
-  let ratingsMoviesNotSeen = await recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores)
-  let t4 = performance.now()
-  console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
-
-  let t7 = performance.now()
   let rawRecommendations
+  for (let i = 0; i < avgRuns; i++) {
+    let r1 = performance.now()
+    let ratingsData = await dataReaderCsv.getRatingsLineI()
+    console.log('load ratings in:', performance.now() - r1)
+    let m1 = performance.now()
+    let movieData = await dataReaderCsv.getMoviesCompleteLineI()
+    console.log('load movies in:', performance.now() - m1, '\n')
 
-  let f1 = performance.now()
-  let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
-  movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId))
-  console.log('filter moviedata in:', performance.now() - f1)
+    let amountOfResults = req.query.results ? req.query.results : '3'
+    let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
+    let minNumRatings = parseInt(req.query.minratings)
+    let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
+    let type = req.query.type
 
-  rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
-  let t8 = performance.now()
-  console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
+    let t1 = performance.now()
+    const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
+    let t2 = performance.now()
+    console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
-  console.log(`Total time:`, t8 - t1, '\n')
+    let t3 = performance.now()
+    let ratingsMoviesNotSeen = await recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores) // check if > minNumRatings?
+    let t4 = performance.now()
+    console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
-  filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
+    let t7 = performance.now()
+    
+
+    let f1 = performance.now()
+    let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
+    movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId))
+    console.log('filter moviedata in:', performance.now() - f1)
+
+    rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, 1, t7)
+    let t8 = performance.now()
+    console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
+
+    console.log(`Total time:`, t8 - t1, '\n')
+
+    filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
+  }
 
   if (filteredRecommendations !== undefined) {
     res.status(200).json({
