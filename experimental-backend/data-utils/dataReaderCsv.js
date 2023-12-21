@@ -178,6 +178,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
         // let sortedByMovieId = rMovIds.sort((a, b) => a - b)
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
         let sortedByMovieId = new Uint32Array(rMovIds).sort()
+        // let sortedByMovieId = rMovIds.sort()
         console.log('sort movies', performance.now() - sort1)
         // console.log(sortedByMovieId)
         // movIds = new Array(...movIds)
@@ -188,12 +189,29 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
         // console.log(movIdChunks)
 
         for (let w = 0; w < threads; w++) {
-          let fork = cluster.fork()
+          // cluster.fork().send({ work: 'numratings', ratingsIds: new Uint32Array(sortedByMovieId), movIds: new Uint32Array(movIdChunks[w]) })
+          cluster.fork()
+
           setTimeout(() => {
-            fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+            cluster.workers[w + 1].send({
+              work: 'numratings',
+              ratingsIds: new Uint32Array(sortedByMovieId),
+              movIds: new Uint32Array(movIdChunks[w]),
+            })
           }, 0)
+
+          // cluster.workers[w + 1].send({
+          //   work: 'numratings',
+          //   ratingsIds: Uint32Array.from(sortedByMovieId),
+          //   movIds: Uint32Array.from(movIdChunks[w]),
+          // })
+          // cluster.workers[w +1].send({ work: 'numratings', ratingsIds: JSON.parse(JSON.stringify(Array.from(sortedByMovieId))), movIds: JSON.parse(JSON.stringify(Array.from(movIdChunks[w]))) })
+
+          // setTimeout(() => {
+          //   fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+          // }, 0)
           promises[w] = new Promise(async (resolve, reject) => {
-            fork.on('message', (msg) => {
+            cluster.workers[w + 1].on('message', (msg) => {
               // console.log(msg)
               if (msg.work === 'numratings') {
                 // console.log(msg)
@@ -201,6 +219,23 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
               }
             })
           })
+
+          // let fork = cluster.fork()
+
+          // fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+
+          // // setTimeout(() => {
+          // //   fork.send({ work: 'numratings', ratingsIds: sortedByMovieId, movIds: movIdChunks[w] })
+          // // }, 0)
+          // promises[w] = new Promise(async (resolve, reject) => {
+          //   fork.on('message', (msg) => {
+          //     // console.log(msg)
+          //     if (msg.work === 'numratings') {
+          //       console.log(msg)
+          //       resolve(msg.numRatingsArr)
+          //     }
+          //   })
+          // })
         }
 
         let numRatingsArr = new Array(movIds.length) // []
