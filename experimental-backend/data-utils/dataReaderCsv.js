@@ -19,7 +19,8 @@ const dataHolder = {
   numRatings: [],
   ratingUserIds: new Uint32Array(),
   ratingMovieIds: new Uint32Array(),
-  ratingScores: new Float32Array(),
+  ratingScores: new Float64Array(),
+  ratingNum: new Uint32Array(),
 }
 
 dataReader.getRatingsLineI = async () => {
@@ -117,7 +118,7 @@ dataReader.getRatingsLineI = async () => {
       rl.on('close', () => {
         dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
         dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
-        dataHolder.ratingScores = new Float32Array(ratingScores)
+        dataHolder.ratingScores = new Float64Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {
@@ -127,8 +128,10 @@ dataReader.getRatingsLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async () => {
+dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
   return new Promise(async (resolve, reject) => {
+    let movies = []
+    let movIds = []
     if (!dataHolder.movieData.length > 0) {
       if (!dataHolder.ratingScores.length > 0) {
         await dataReader.getRatingsLineI()
@@ -145,8 +148,7 @@ dataReader.getMoviesCompleteLineI = async () => {
 
       let total = DATASET.lineSkip
       let cats
-      let movies = []
-      let movIds = []
+
       let t1 = performance.now()
       rl.on('line', function (line) {
         if (total === DATASET.lineSkip) {
@@ -212,7 +214,7 @@ dataReader.getMoviesCompleteLineI = async () => {
           numRatingsArr[j] = combinedNumRatings[j]
           // numRatingsArr.push(values[j][i])
         }
-
+        dataHolder.ratingNum = numRatingsArr
         // let values = await Promise.all(promises)
         // let w1 = performance.now()
         // for (let j = 0; j < values.length; j++) {
@@ -252,11 +254,15 @@ dataReader.getMoviesCompleteLineI = async () => {
         // }
         // console.log()
         let m1 = performance.now()
+        let moviesWithRatings = []
         for (let y = 0; y < numRatingsArr.length; y++) {
           movies[y].numRatings = numRatingsArr[y]
+          if (numRatingsArr[y] >= minNumRatings) {
+            moviesWithRatings.push(movies[y])
+          }
         }
 
-        console.log('set numRatings', performance.now() - m1)
+        console.log(`set numRatings >=${minNumRatings}`, performance.now() - m1)
 
         // Promise.all()
 
@@ -272,12 +278,24 @@ dataReader.getMoviesCompleteLineI = async () => {
         //   dataHolder.numRatings.push(numRatings)
         // }
 
+        //dataHolder.movieData = moviesWithRatings
         dataHolder.movieData = movies
-        resolve(dataHolder.movieData)
+        // console.log(dataHolder.movieData.length, 'length')
+        // console.log(dataHolder.movieData)
+        // resolve(dataHolder.movieData)
+        resolve(moviesWithRatings)
       })
     } else {
+      let moviesWithRatings = []
       // console.log(dataHolder.movieData)
-      resolve(dataHolder.movieData)
+      for (let y = 0; y < dataHolder.ratingNum.length; y++) {
+        if (dataHolder.ratingNum[y] >= minNumRatings) {
+          moviesWithRatings.push(dataHolder.movieData[y])
+        }
+      }
+      // resolve(dataHolder.movieData)
+      // console.log(moviesWithRatings)
+      resolve(moviesWithRatings)
     }
   })
 }
