@@ -11,7 +11,7 @@ const cluster = require('node:cluster')
 // if (cluster.isWorker) {
 //   console.log(`worker ${cluster.worker.id}`)
 // }
-30231
+
 process.on('message', (msg) => {
   // process.send('back at ya')
   if (msg.work === 'numratings') {

@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').smallData
+const DATASET = require('./dataFormats').fullData
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
 const dataReader = {}
@@ -19,7 +19,7 @@ const dataHolder = {
   numRatings: [],
   ratingUserIds: new Uint32Array(),
   ratingMovieIds: new Uint32Array(),
-  ratingScores: new Float64Array(),
+  ratingScores: new Float32Array(),
   ratingNum: new Uint32Array(),
 }
 
@@ -118,7 +118,7 @@ dataReader.getRatingsLineI = async () => {
       rl.on('close', () => {
         dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
         dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
-        dataHolder.ratingScores = new Float64Array(ratingScores)
+        dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {
@@ -182,7 +182,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
         console.log('sort movies', performance.now() - sort1)
         // console.log(sortedByMovieId)
         // movIds = new Array(...movIds)
-        let threads = 1
+        let threads = 2
         let movIdChunks = arrayChunkPush(movIds, threads)
         let promises = []
         // console.log(movIds)
@@ -195,8 +195,8 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
           setTimeout(() => {
             cluster.workers[w + 1].send({
               work: 'numratings',
-              ratingsIds: new Uint32Array(sortedByMovieId),
-              movIds: new Uint32Array(movIdChunks[w]),
+              ratingsIds: (sortedByMovieId),
+              movIds: (movIdChunks[w]),
             })
           }, 0)
 

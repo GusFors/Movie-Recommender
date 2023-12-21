@@ -87,14 +87,14 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
   console.log('second section took', performance.now() - t2)
 
   simScores.userIds = new Uint32Array(simScores.userIds)
-  simScores.scores = new Float64Array(simScores.scores)
+  simScores.scores = new Float32Array(simScores.scores)
 
   return simScores
 }
 
 recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
-    let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float64Array(ratingsDataObjA.s) }
+    let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
     // console.log(ratingsDataObj)
     let ratingsLength = ratingsDataObj.u.length
 
@@ -122,7 +122,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
 
     let userIds = new Uint32Array(totalUnseenCnt)
     let movIds = new Uint32Array(totalUnseenCnt)
-    let scores = new Float64Array(totalUnseenCnt)
+    let scores = new Float32Array(totalUnseenCnt)
 
     for (let y = 0, l = indexes.length; y < l; y++) {
       userIds[y] = ratingsDataObj.u[indexes[y]]
@@ -143,7 +143,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     // console.log(similarityScores.userIds)
 
     let simUids = new Uint32Array(similarityScores.userIds)
-    let simScores = new Float64Array(similarityScores.scores)
+    let simScores = new Float32Array(similarityScores.scores)
 
     console.log('reached', performance.now() - t1)
 
@@ -240,7 +240,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
           let end = currMovIdArr.length
 
           // let rBuffer = new ArrayBuffer(end * 12)
-          let rBuffer = new ArrayBuffer(end * 16) // slows down here on very large data, hitting max size of arraybuffer? 2GB?
+          let rBuffer = new ArrayBuffer(end * 8) // slows down here on very large data, hitting max size of arraybuffer? 2GB?
           // console.log(rBuffer.byteLength, 'rbuff bytelength')
           let v = new DataView(rBuffer)
           // for (let m = 0, l = weightedScores[movIdsKeys[w]].length; m < l; m++) {
@@ -248,8 +248,8 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
             if (w === 0) {
             }
 
-            v.setFloat64(m * 16, currMovIdArr[m].weightedRating, true)
-            v.setFloat64(m * 16 + 8, currMovIdArr[m].simScore, true)
+            v.setFloat32(m * 8, currMovIdArr[m].weightedRating, true)
+            v.setFloat32(m * 8 + 4, currMovIdArr[m].simScore, true)
 
             // v.setUint32(m * 12, movIdsKeys[w], true)
             // v.setFloat32(m * 12 + 4, currMovIdArr[m].weightedRating, true)
@@ -273,7 +273,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       for (let i = 0; i < wScoresChunks[y].length; i++) {
         let weightedScoreSum = 0
         let simScoreSum = 0
-        let floatView = new Float64Array(wScoresChunks[y][i])
+        let floatView = new Float32Array(wScoresChunks[y][i])
         // let int32View = new Uint32Array(wScoresChunks[y][i])
         // let id
 
