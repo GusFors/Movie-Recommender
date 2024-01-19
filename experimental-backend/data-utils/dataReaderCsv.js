@@ -5,6 +5,7 @@ const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
 const DATASET = require('./dataFormats').fullData
+const addon = require('../build/Release/addonCsvReader.node')
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
 const dataReader = {}
@@ -103,15 +104,11 @@ dataReader.getRatingsLineI = async () => {
           }
         }
 
-        // if(total > 7000000) {
-        //  return
-        // }
         ratingUserIds.push(+ratingUserId)
         ratingMovieIds.push(+ratingMovieId)
         ratingScores.push(+ratingScore)
 
         // let ratingValues = line.split(split) // slowest part // parse line buffer?
-
         total++
       })
 
@@ -195,8 +192,8 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
           setTimeout(() => {
             cluster.workers[w + 1].send({
               work: 'numratings',
-              ratingsIds: (sortedByMovieId),
-              movIds: (movIdChunks[w]),
+              ratingsIds: sortedByMovieId,
+              movIds: movIdChunks[w],
             })
           }, 0)
 
@@ -331,6 +328,22 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
       // resolve(dataHolder.movieData)
       // console.log(moviesWithRatings)
       resolve(moviesWithRatings)
+    }
+  })
+}
+
+dataReader.getRatingsAddon = async () => {
+  return new Promise((resolve, reject) => {
+    if (!dataHolder.ratingScores.length > 0) {
+      let data = addon.getRatings()
+
+      dataHolder.ratingUserIds = new Uint32Array(data['0'])
+      dataHolder.ratingMovieIds = new Uint32Array(data['1'])
+      dataHolder.ratingScores = new Float32Array(data['2'])
+      resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+    } else {
+      resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      // resolve({ u: dataHolder.ratingUserIds.buffer, m: dataHolder.ratingMovieIds.buffer, s: dataHolder.ratingScores.buffer })
     }
   })
 }
