@@ -39,7 +39,7 @@ NAN_METHOD(getRatings) {
   int assigned_items = 0;
   int line_count = 0;
 
-  fscanf(rating_file, "%*[^\n]");
+  fscanf(rating_file, "%*[^\n]"); // skip first line
 
   // while (!feof(file)) {
   //   read = fscanf(file, "%d;%d;%f\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
@@ -56,7 +56,7 @@ NAN_METHOD(getRatings) {
   }
 
   fclose(rating_file);
-  printf("\n%d lines.\n", line_count);
+  printf("\n%d lines\n", line_count);
 
   // for (int i = 0; i < line_count; i++) {
   //   printf("%d,%d,%.1f\n", ratingsp[i].user_id, ratingsp[i].movie_id,
