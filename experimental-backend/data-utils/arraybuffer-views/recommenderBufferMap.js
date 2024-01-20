@@ -95,7 +95,6 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
     let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
-    // console.log(ratingsDataObj)
     let ratingsLength = ratingsDataObj.u.length
 
     let moviesSeenByUser = new Set()
@@ -114,8 +113,6 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     let t1 = performance.now()
 
     for (let y = 0, l = ratingsLength; y < l; y++) {
-      // if (!moviesSeenByUser.has(ratingsDataObj.m[y] && movieData.filter((m) => m.movieId === ratingsDataObj.m[y] && ratingsDataObj.m[y]).numRatings > 1)) {
-      // if (!moviesSeenByUser.has(ratingsDataObj.m[y])) {
       ++totalUnseenCnt
       indexes.push(y)
     }
@@ -140,8 +137,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     //   scores[y + 1] = ratingsDataObj.s[indexes[y + 1]]
     // }
 
-    // console.log(similarityScores.userIds)
-
+    
     let simUids = new Uint32Array(similarityScores.userIds)
     let simScores = new Float32Array(similarityScores.scores)
 
@@ -190,12 +186,10 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
 
     let m1 = performance.now()
 
-    console.log('sort weightedScorest in:', performance.now() - m1)
+    // console.log('sort weightedScorest in:', performance.now() - m1)
 
     let r1 = performance.now()
     let moviesChunks = arrayChunkPush(moviesData, threads)
-    // let moviesChunks = moviesData
-    // console.log(moviesChunks)
     console.log('chunk movies in:', performance.now() - r1)
 
     let w1 = performance.now()
@@ -207,46 +201,29 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       if (!movieChunkIds[y]) {
         movieChunkIds[y] = new Set()
       }
+
       for (let j = 0; j < moviesChunks[y].length; j++) {
         movieChunkIds[y].add(moviesChunks[y][j].movieId)
       }
-      // console.log(movieChunkIds)
+
       wScoresChunks[y] = []
       wBuffers[y] = []
       arrBuffMovIds[y] = []
 
-      // let movIdsKeysS = Object.keys(weightedScores)
-
-      // let movIdsKeys = []
-
-      // for (let i = 0; i < movIdsKeysS.length; i++) {
-      //   if (movieChunkIds[y].has(+movIdsKeysS[i])) {
-      //     movIdsKeys.push(+movIdsKeysS[i])
-      //   }
-      // }
-
       let movIdsKeys = Array.from(movieChunkIds[y])
 
-      // for (let i = 0; i < movIdsKeysS.length; i++) {
-      //   if (movieChunkIds[y].has(+movIdsKeysS[i])) {
-      //     movIdsKeys.push(+movIdsKeysS[i])
-      //   }
-      // }
-
-      // for (let w = 0, v = movIdsKeys.length; w < v; w++) {
-      for (let w = 0; w < movIdsKeys.length; w++) {
+      for (let w = 0, v = movIdsKeys.length; w < v; w++) {
+        // for (let w = 0; w < movIdsKeys.length; w++) {
         if (movieChunkIds[y].has(+movIdsKeys[w])) {
           let currMovIdArr = weightedScores[movIdsKeys[w]]
           let end = currMovIdArr.length
 
           // let rBuffer = new ArrayBuffer(end * 12)
-          let rBuffer = new ArrayBuffer(end * 8) // slows down here on very large data, hitting max size of arraybuffer? 2GB?
-          // console.log(rBuffer.byteLength, 'rbuff bytelength')
+          let rBuffer = new ArrayBuffer(end * 8)
+
           let v = new DataView(rBuffer)
-          // for (let m = 0, l = weightedScores[movIdsKeys[w]].length; m < l; m++) {
-          for (let m = 0; m < weightedScores[movIdsKeys[w]].length; m++) {
-            if (w === 0) {
-            }
+          for (let m = 0, l = weightedScores[movIdsKeys[w]].length; m < l; m++) {
+            // for (let m = 0; m < weightedScores[movIdsKeys[w]].length; m++) {
 
             v.setFloat32(m * 8, currMovIdArr[m].weightedRating, true)
             v.setFloat32(m * 8 + 4, currMovIdArr[m].simScore, true)
@@ -257,10 +234,8 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
           }
           wScoresChunks[y].push(rBuffer)
           arrBuffMovIds[y].push(movIdsKeys[w])
-          // console.log('done..', w)
         }
       }
-      // console.log(wScoresChunks[0].length)
     }
 
     console.log('chunk ws:', performance.now() - w1)
@@ -269,18 +244,13 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
     let t1 = performance.now()
     let calcData = []
     let combinedMovIds = new Set()
-    for (let y = 0; y < wScoresChunks.length; y++) {
-      for (let i = 0; i < wScoresChunks[y].length; i++) {
+    for (let y = 0, v = wScoresChunks.length; y < v; y++) {
+      for (let i = 0, l = wScoresChunks[y].length; i < l; i++) {
         let weightedScoreSum = 0
         let simScoreSum = 0
         let floatView = new Float32Array(wScoresChunks[y][i])
-        // let int32View = new Uint32Array(wScoresChunks[y][i])
-        // let id
 
         for (let j = 0; j < floatView.length; j += 2) {
-          // if (j === 0) {
-          //   id = int32View[j]
-          // }
           weightedScoreSum = weightedScoreSum + floatView[j]
           simScoreSum = simScoreSum + floatView[j + 1]
         }
@@ -294,23 +264,16 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
         // }
       }
       console.log('viewR', performance.now() - t1)
-      //console.log(calcData.length)
+
       let f1 = performance.now()
-      // let wsMovIds = new Set(
-      //   wScoresChunks[y].map((ws) => {
-      //     return new Int32Array(ws)[0]
-      //   })
-      // )
 
       let wsMovIds = new Set(arrBuffMovIds[y])
 
-      // let currentMoviesData = moviesData.filter((m) => wsMovIds.has(m.movieId))
       for (let m = 0; m < moviesData.length; m++) {
         if (wsMovIds.has(moviesData[m].movieId)) {
           combinedMovIds.add(moviesData[m].movieId)
         }
       }
-      // console.log(wsMovIds)
       console.log('map/filter in', performance.now() - f1)
     }
 
@@ -326,36 +289,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
       }
     }
 
-    // safer
-    // for (let w = 0; w < calcData.length; w++) {
-    //   if (calcData[w].recommendationScore > 0) {
-    //     let matchMov
-    //     for (let i = 0; i < moviesData.length; i++) {
-    //       if (moviesData[i].movieId === calcData[w].movieId) {
-    //         // slow workaround, remove when correct ids
-    //         movieRecommendations.push({
-    //           movieId: calcData[w].movieId,
-    //           title: moviesData[i].title,
-    //           numRatings: moviesData[i].numRatings,
-
-    //           recommendationScore: calcData[w].recommendationScore,
-    //         })
-    //       }
-    //     }
-    //   }
-    // }
     console.log('movieRec', performance.now() - mrec)
-    // for (let w = 0; w < calcData.length; w++) {
-    //   if (calcData[w].recommendationScore > 0) {
-    //     movieRecommendations.push({
-    //       movieId: calcData[w].movieId,
-    //       title: moviesData[w].title,
-    //       numRatings: moviesData[w].numRatings,
-
-    //       recommendationScore: calcData[w].recommendationScore,
-    //     })
-    //   }
-    // }
 
     let t2 = performance.now()
     console.log('put together recommendations in', t2 - t1, 'from spawn:', t2 - t1)

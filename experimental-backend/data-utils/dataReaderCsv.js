@@ -44,20 +44,46 @@ dataReader.getRatingsLineI = async () => {
           return
         }
 
-        // let ratingUserId = line[0]
         let valueCnt = 0
         let ratingUserId = ''
         let ratingMovieId = ''
         let ratingScore = ''
 
         for (let i = 0; i < line.length; i++) {
-          // if (valueCnt > 2) {
+          if (valueCnt > 2) {
+            break
+          }
+
+          // if (!(valueCnt <= 2)) {
           //   break
           // }
 
-          // if (line[i] === DATASET.separator[0]) {
-          //   valueCnt += 1 / DATASET.separator.length
-          //   continue
+          if (line[i] === DATASET.separator[0]) {
+            valueCnt += 1 / DATASET.separator.length
+            continue
+          }
+
+          if (!valueCnt) {
+            ratingUserId += line[i]
+          } else if (valueCnt === 1) {
+            ratingMovieId += line[i]
+          } else if (valueCnt === 2) {
+            ratingScore += line[i]
+            ratingScore += line[i + 1]
+            ratingScore += line[i + 2]
+            break
+          }
+
+          // switch (valueCnt) {
+          //   case 0:
+          //     ratingUserId += line[i]
+          //     break
+          //   case 1:
+          //     ratingMovieId += line[i]
+          //     break
+          //   case 2:
+          //     ratingScore += line[i]
+          //     break
           // }
 
           // if (valueCnt === 0) {
@@ -71,37 +97,6 @@ dataReader.getRatingsLineI = async () => {
           // if (valueCnt === 2) {
           //   ratingScore += line[i]
           // }
-
-          if (valueCnt > 2) {
-            break
-          }
-
-          if (line[i] === DATASET.separator[0]) {
-            valueCnt += 1 / DATASET.separator.length
-            continue
-          }
-
-          // switch (valueCnt) {
-          //   case 0:
-          //     ratingUserId += line[i]
-          //   case 1:
-          //     ratingMovieId += line[i]
-          //   case 2:
-          //     ratingScore += line[i]
-
-          // }
-
-          if (valueCnt === 0) {
-            ratingUserId += line[i]
-          }
-
-          if (valueCnt === 1) {
-            ratingMovieId += line[i]
-          }
-
-          if (valueCnt === 2) {
-            ratingScore += line[i]
-          }
         }
 
         ratingUserIds.push(+ratingUserId)
