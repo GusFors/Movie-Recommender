@@ -238,7 +238,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
 dataReader.getRatingsAddon = async () => {
   return new Promise((resolve, reject) => {
     if (!dataHolder.ratingScores.length > 0) {
-      let data = addon.getRatings(DATASET.size, DATASET.lineSkip)
+      let data = addon.getRatings(DATASET.size, DATASET.lineSkip, `./data/csv-data/${DATASET.path}/ratings.csv`)
 
       dataHolder.ratingUserIds = new Uint32Array(data['0'])
       dataHolder.ratingMovieIds = new Uint32Array(data['1'])

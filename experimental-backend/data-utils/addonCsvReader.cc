@@ -14,23 +14,24 @@ struct rating {
 };
 
 NAN_METHOD(getRatings) {
-  // char *file_path = (*Nan::Utf8String(info[0]));
-
   int file_size = Nan::To<int>(info[0]).FromJust();
   int line_skip = Nan::To<int>(info[1]).FromJust();
-  printf("%d size arg, %d lineskip\n", file_size, line_skip);
+  char *file_path = (*Nan::Utf8String(info[2]));
+
+  printf("%d size arg, %d lineskip, path %s\n", file_size, line_skip, file_path);
 
   FILE *rating_file;
+  rating_file = fopen(file_path, "r");
 
-  if (file_size == 27753444) {
-    rating_file = fopen("./data/csv-data/full/ratings.csv", "r");
-  } else if (file_size == 1000209) {
-    rating_file = fopen("./data/csv-data/dat/ratings.csv", "r");
-  } else if (file_size == 100836) {
-    rating_file = fopen("./data/csv-data/small/ratings.csv", "r");
-  } else if (file_size == 120) {
-    rating_file = fopen("./data/csv-data/original/ratings.csv", "r");
-  }
+  // if (file_size == 27753444) {
+  //   rating_file = fopen("./data/csv-data/full/ratings.csv", "r");
+  // } else if (file_size == 1000209) {
+  //   rating_file = fopen("./data/csv-data/dat/ratings.csv", "r");
+  // } else if (file_size == 100836) {
+  //   rating_file = fopen("./data/csv-data/small/ratings.csv", "r");
+  // } else if (file_size == 120) {
+  //   rating_file = fopen("./data/csv-data/original/ratings.csv", "r");
+  // }
 
   if (rating_file == NULL) {
     printf("error reading file");
