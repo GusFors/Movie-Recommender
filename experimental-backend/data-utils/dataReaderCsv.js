@@ -33,16 +33,20 @@ dataReader.getRatingsLineI = async () => {
       })
 
       let total = DATASET.lineSkip
-
       let ratingUserIds = []
       let ratingMovieIds = []
       let ratingScores = []
 
       rl.on('line', function (line) {
-        if (total === DATASET.lineSkip) {
+        if (total === -1) {
           total++
           return
         }
+
+        // if (total === DATASET.lineSkip) {
+        //   total++
+        //   return
+        // }
 
         let valueCnt = 0
         let ratingUserId = ''
@@ -63,28 +67,29 @@ dataReader.getRatingsLineI = async () => {
             continue
           }
 
-          if (!valueCnt) {
+          // broken with ::
+          // if (!valueCnt) {
+          //   ratingUserId += line[i]
+          // } else if (valueCnt === 1) {
+          //   ratingMovieId += line[i]
+          // } else if (valueCnt === 2) {
+          //   ratingScore += line[i]
+          //   ratingScore += line[i + 1]
+          //   ratingScore += line[i + 2]
+          //   break
+          // }
+
+          if (valueCnt === 0) {
             ratingUserId += line[i]
-          } else if (valueCnt === 1) {
-            ratingMovieId += line[i]
-          } else if (valueCnt === 2) {
-            ratingScore += line[i]
-            ratingScore += line[i + 1]
-            ratingScore += line[i + 2]
-            break
           }
 
-          // if (valueCnt === 0) {
-          //   ratingUserId += line[i]
-          // }
+          if (valueCnt === 1) {
+            ratingMovieId += line[i]
+          }
 
-          // if (valueCnt === 1) {
-          //   ratingMovieId += line[i]
-          // }
-
-          // if (valueCnt === 2) {
-          //   ratingScore += line[i]
-          // }
+          if (valueCnt === 2) {
+            ratingScore += line[i]
+          }
         }
 
         ratingUserIds.push(+ratingUserId)
@@ -130,7 +135,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
 
       let t1 = performance.now()
       rl.on('line', function (line) {
-        if (total === DATASET.lineSkip) {
+        if (total === -1) {
           cats = line.split(DATASET.separator)
           total++
           return
@@ -233,7 +238,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
 dataReader.getRatingsAddon = async () => {
   return new Promise((resolve, reject) => {
     if (!dataHolder.ratingScores.length > 0) {
-      let data = addon.getRatings()
+      let data = addon.getRatings(DATASET.size, DATASET.lineSkip)
 
       dataHolder.ratingUserIds = new Uint32Array(data['0'])
       dataHolder.ratingMovieIds = new Uint32Array(data['1'])

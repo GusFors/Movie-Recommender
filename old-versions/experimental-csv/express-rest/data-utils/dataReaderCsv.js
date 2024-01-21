@@ -37,7 +37,7 @@ dataReader.getMoviesIdLineI = async () => {
       let movieIds = []
 
       rl.on('line', function (line) {
-        if (total === startCount) {
+        if (total === -1) {
           cats = line.split(split)
           total++
           return
@@ -70,7 +70,7 @@ dataReader.getMoviesTitleLineI = async () => {
       let movieTitles = []
 
       rl.on('line', function (line) {
-        if (total === startCount) {
+        if (total === -1) {
           cats = line.split(split)
           total++
           return
@@ -106,7 +106,7 @@ dataReader.getMoviesCompleteLineI = async () => {
       let movies = []
 
       rl.on('line', function (line) {
-        if (total === startCount) {
+        if (total === -1) {
           cats = line.split(split)
           total++
           return
@@ -169,7 +169,7 @@ dataReader.getUserIdLineI = async () => {
       let userIdSet = new Set() // set only stores unique values
 
       rl.on('line', function (line) {
-        if (total === startCount) {
+        if (total === -1) {
           cats = line.split(split)
           total++
           return
@@ -201,7 +201,7 @@ dataReader.getUserIdLineObj = async () => {
     let userIdSet = new Set() // set only stores unique values
 
     rl.on('line', function (line) {
-      if (total === startCount) {
+      if (total === -1) {
         cats = line.split(split)
         total++
         return
@@ -234,7 +234,7 @@ dataReader.getRatingsLineI = async () => {
       let ratings = []
 
       rl.on('line', function (line) {
-        if (total === startCount) {
+        if (total === -1) {
           cats = line.split(split)
           total++
           return
@@ -273,7 +273,7 @@ dataReader.getRatingsLineObj = async () => {
     let ratings = []
 
     rl.on('line', function (line) {
-      if (total === startCount) {
+      if (total === -1) {
         cats = line.split(split)
         total++
         return
