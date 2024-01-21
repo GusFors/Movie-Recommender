@@ -57,20 +57,8 @@ NAN_METHOD(getRatings) {
   int assigned_items = 0;
   int line_count = 0;
 
-  if (line_skip == 0) {
-    printf("lineskip 0\n");
-
-    while (!feof(rating_file)) {
-      assigned_items = fscanf(rating_file, "%d::%d::%f::%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
-      if (assigned_items == 3) {
-        line_count++;
-        // if (line_count == 1) {
-        //   printf("%d,%d,%.1f\n", user_ids[0], movie_ids[0], ratings[0]);
-        // }
-      }
-    }
-  } else {
-    printf("lineskip -1\n");
+  if (line_skip == 1) {
+    printf("lineskip 1\n");
     fscanf(rating_file, "%*[^\n]"); // skip first line
 
     if (file_size != 120) {
@@ -86,6 +74,19 @@ NAN_METHOD(getRatings) {
         assigned_items = fscanf(rating_file, "%d;%d;%f\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
         if (assigned_items == 3) {
           line_count++;
+        }
+      }
+    }
+
+  } else {
+    printf("lineskip 0\n");
+
+    while (!feof(rating_file)) {
+      assigned_items = fscanf(rating_file, "%d::%d::%f::%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
+      if (assigned_items == 3) {
+        line_count++;
+        if (line_count == 1) {
+          printf("%d,%d,%.1f\n", user_ids[0], movie_ids[0], ratings[0]);
         }
       }
     }

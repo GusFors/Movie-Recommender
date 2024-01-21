@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').fullData
+const DATASET = require('./dataFormats').smallData
 const addon = require('../build/Release/addonCsvReader.node')
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
@@ -32,21 +32,16 @@ dataReader.getRatingsLineI = async () => {
         crlfDelay: Infinity,
       })
 
-      let total = DATASET.lineSkip
       let ratingUserIds = []
       let ratingMovieIds = []
       let ratingScores = []
+      let isFirstLineCheck = DATASET.lineSkip
 
       rl.on('line', function (line) {
-        if (total === -1) {
-          total++
+        if (isFirstLineCheck) {
+          isFirstLineCheck = false
           return
         }
-
-        // if (total === DATASET.lineSkip) {
-        //   total++
-        //   return
-        // }
 
         let valueCnt = 0
         let ratingUserId = ''
@@ -67,18 +62,6 @@ dataReader.getRatingsLineI = async () => {
             continue
           }
 
-          // broken with ::
-          // if (!valueCnt) {
-          //   ratingUserId += line[i]
-          // } else if (valueCnt === 1) {
-          //   ratingMovieId += line[i]
-          // } else if (valueCnt === 2) {
-          //   ratingScore += line[i]
-          //   ratingScore += line[i + 1]
-          //   ratingScore += line[i + 2]
-          //   break
-          // }
-
           if (valueCnt === 0) {
             ratingUserId += line[i]
           }
@@ -90,13 +73,23 @@ dataReader.getRatingsLineI = async () => {
           if (valueCnt === 2) {
             ratingScore += line[i]
           }
+
+          // if (!valueCnt) {
+          //   ratingUserId += line[i]
+          // } else if (valueCnt === 1) {
+          //   ratingMovieId += line[i]
+          // } else if (valueCnt === 2) {
+          //   ratingScore += line[i]
+          //   ratingScore += line[i + 1]
+          //   ratingScore += line[i + 2]
+          //   break
+          // }
         }
 
         ratingUserIds.push(+ratingUserId)
         ratingMovieIds.push(+ratingMovieId)
         ratingScores.push(+ratingScore)
-
-        total++
+        // total++
       })
 
       rl.on('close', () => {
@@ -116,6 +109,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
   return new Promise(async (resolve, reject) => {
     let movies = []
     let movIds = []
+
     if (!dataHolder.movieData.length > 0) {
       if (!dataHolder.ratingScores.length > 0) {
         await dataReader.getRatingsLineI()
@@ -125,30 +119,30 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
         input: fs.createReadStream(`./data/csv-data/${DATASET.path}/movies.csv`),
         crlfDelay: Infinity,
       })
+
       cluster.setupPrimary({ exec: './data-utils/dataWorker.js', serialization: 'advanced' })
       cluster.on('online', (worker) => {
         console.log('fork online')
       })
 
-      let total = DATASET.lineSkip
-      let cats
-
+      let isFirstLineCheck = DATASET.lineSkip
       let t1 = performance.now()
+
       rl.on('line', function (line) {
-        if (total === -1) {
-          cats = line.split(DATASET.separator)
-          total++
+        if (isFirstLineCheck) {
+          isFirstLineCheck = false
           return
         }
 
         let values = line.split(DATASET.separator)
         let title = values[1]
+
         if (values.length > 3) {
           title = RegExp(/"([^|]+)"/).exec(line)[1]
         }
+
         movies.push({ movieId: +values[0], title: title, numRatings: 0 })
         movIds.push(+values[0])
-        total++
       })
 
       rl.on('close', async () => {
