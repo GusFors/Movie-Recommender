@@ -34,7 +34,6 @@ process.on('message', (msg) => {
 
     console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
     process.send({ work: 'numratings', numRatingsArr: numRatingsArr })
-    process.exit()
   } else if (msg.work === 'addon') {
     let t1 = performance.now()
     // let addonCalc = addon.getNumRatings(msg.ratingsIds, msg.movIds)
@@ -44,6 +43,6 @@ process.on('message', (msg) => {
     console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
 
     process.send({ work: 'numratings', numRatingsArr: r })
-    process.exit()
   }
+  process.exit()
 })

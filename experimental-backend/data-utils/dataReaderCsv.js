@@ -108,7 +108,7 @@ dataReader.getRatingsLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster') => {
+dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', addon = true) => {
   return new Promise(async (resolve, reject) => {
     let movies = []
     let movIds = []
@@ -164,25 +164,9 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
         if (threading === 'cluster') {
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
-              work: 'numratings',
+              work: addon ? 'addon' : 'numratings',
               ratingsIds: Uint32Array.from(sortedByMovieId),
               movIds: Uint32Array.from(movIdChunks[w]),
-            })
-
-            promises[w] = new Promise(async (resolve, reject) => {
-              cluster.workers[w + 1].on('message', (msg) => {
-                if (msg.work === 'numratings') {
-                  resolve(msg.numRatingsArr)
-                }
-              })
-            })
-          }
-        } else if (threading === 'clusteraddon') {
-          for (let w = 0; w < threads; w++) {
-            cluster.workers[w + 1].send({
-              work: 'addon',
-              ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
-              movIds: Uint32Array.from(movIdChunks[w]).buffer,
             })
 
             promises[w] = new Promise(async (resolve, reject) => {
@@ -205,65 +189,17 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
           }
 
           for (let w = 0; w < threads; w++) {
-            // let worker = new Worker('./data-utils/workerThread.js', {})
-            workers[w].postMessage({ work: 'numratings', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]) })
-            promises[w] = new Promise(async (resolve, reject) => {
-              workers[w].on('message', (msg) => {
-                if (msg.work === 'numratings') {
-                  resolve(msg.numRatingsArr)
-                }
-              })
-            })
-          }
-        } else if (threading === 'workeraddon') {
-          // let transferBuffer = new SharedArrayBuffer(sortedByMovieId.length * Uint32Array.BYTES_PER_ELEMENT)
-          // console.log(sortedByMovieId.byteLength, transferBuffer.byteLength)
-
-          let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
-          let sharedArray = new Uint32Array(sharedBuffer)
-          console.log(sharedArray.byteLength)
-
-          for (let i = 0; i < sortedByMovieId.length; i++) {
-            // sharedArray[i] = sortedByMovieId[i]
-            sharedArray[i] = sortedByMovieId[i]
-          }
-
-          for (let w = 0; w < threads; w++) {
-            // let worker = new Worker('./data-utils/workerThread.js', {})
-            let at = Uint32Array.from(sortedByMovieId)
-
-             workers[w].postMessage({ work: 'addon', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]).buffer })
             // workers[w].postMessage({ work: 'addon', ratingsIds: at, movIds: Uint32Array.from(movIdChunks[w]).buffer }, [at.buffer])
-
+            workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]) })
             promises[w] = new Promise(async (resolve, reject) => {
               workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
-                  // workers[w].terminate()
+                  // worker.terminate()
                   resolve(msg.numRatingsArr)
                 }
               })
             })
-
-            // workers[w].postMessage(
-            //   {
-            //     work: 'addon',
-            //     // ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
-            //     // ratingsIds: sharedBuffer,
-            //     ratingsIds: sortedByMovieId,
-            //     movIds: Uint32Array.from(movIdChunks[w]).buffer,
-            //   },
-            //   [sortedByMovieId.buffer]
-            // )
-            // promises[w] = new Promise(async (resolve, reject) => {
-            //   workers[w].on('message', (msg) => {
-            //     if (msg.work === 'numratings') {
-            //       // workers[w].terminate()
-            //       resolve(msg.numRatingsArr)
-            //     }
-            //   })
-            // })
           }
-          // worker.terminate()
         }
 
         let numRatingsArr = new Array(movIds.length)
