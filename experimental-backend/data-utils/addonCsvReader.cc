@@ -1,6 +1,4 @@
 #include "../node_modules/nan/nan.h"
-#include "v8-isolate.h"
-#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>

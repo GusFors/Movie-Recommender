@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').smallData
+const DATASET = require('./dataFormats').fullData
 const addon = require('../build/Release/addonCsvReader.node')
 const { Worker } = require('worker_threads')
 
@@ -25,9 +25,11 @@ const dataHolder = {
 }
 
 cluster.setupPrimary({ exec: './data-utils/clusterThread.js', serialization: 'advanced' })
-const threads = 2
+const threads = 4
+const workers = []
 for (let w = 0; w < threads; w++) {
   cluster.fork()
+  workers[w] = new Worker('./data-utils/workerThread.js', {})
 }
 
 dataReader.getRatingsLineI = async () => {
@@ -191,10 +193,10 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
           }
         } else if (threading === 'worker') {
           for (let w = 0; w < threads; w++) {
-            let worker = new Worker('./data-utils/workerThread.js', {})
-            worker.postMessage({ work: 'numratings', ratingsIds: Uint32Array.from(sortedByMovieId), movIds: Uint32Array.from(movIdChunks[w]) })
+            // let worker = new Worker('./data-utils/workerThread.js', {})
+            workers[w].postMessage({ work: 'numratings', ratingsIds: Uint32Array.from(sortedByMovieId), movIds: Uint32Array.from(movIdChunks[w]) })
             promises[w] = new Promise(async (resolve, reject) => {
-              worker.on('message', (msg) => {
+              workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
                   resolve(msg.numRatingsArr)
                 }
@@ -203,15 +205,16 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
           }
         } else if (threading === 'workeraddon') {
           for (let w = 0; w < threads; w++) {
-            let worker = new Worker('./data-utils/workerThread.js', {})
-            worker.postMessage({
+            // let worker = new Worker('./data-utils/workerThread.js', {})
+            workers[w].postMessage({
               work: 'addon',
               ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
               movIds: Uint32Array.from(movIdChunks[w]).buffer,
             })
             promises[w] = new Promise(async (resolve, reject) => {
-              worker.on('message', (msg) => {
+              workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
+                  // workers[w].terminate()
                   resolve(msg.numRatingsArr)
                 }
               })
