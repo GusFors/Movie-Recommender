@@ -13,6 +13,49 @@ struct rating {
   double rating;
 };
 
+NAN_METHOD(getNumRatings) {
+  v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
+  Nan::TypedArrayContents<uint32_t> rating_id_array_typed(rating_id_array);
+  uint32_t *r_id = *rating_id_array_typed;
+
+  v8::Local<v8::Array> mov_id_array = v8::Local<v8::Array>::Cast(info[1]);
+  Nan::TypedArrayContents<uint32_t> mov_id_array_typed(mov_id_array);
+  uint32_t *m_id = *mov_id_array_typed;
+
+  v8::Local<v8::ArrayBuffer> num_ratings_buffer = v8::ArrayBuffer::New(info.GetIsolate(), mov_id_array_typed.length() * sizeof(int));
+  v8::Local<v8::Uint32Array> num_ratings_array = v8::Uint32Array::New(num_ratings_buffer, 0, mov_id_array_typed.length());
+  Nan::TypedArrayContents<uint32_t> num_ratings_arr_typed(num_ratings_array);
+  uint32_t *num_data = *num_ratings_arr_typed;
+  printf("addon calc num ratings\n");
+  // int num_ratings_arr[mov_id_array_typed.length()];
+
+  int m_len = mov_id_array_typed.length();
+  int r_len = rating_id_array_typed.length();
+  printf("%d mlen, %d rlen", m_len, r_len);
+
+  bool is_curr_mov_id = false;
+  int already_checked_indexes = 0;
+
+  for (int i = 0; i < m_len; i++) {
+    int num_ratings = 0;
+    for (int y = already_checked_indexes; y < r_len; y++) {
+      if (r_id[y] == m_id[i]) {
+        if (!is_curr_mov_id) {
+          is_curr_mov_id = true;
+          already_checked_indexes++;
+        }
+        num_ratings++;
+      } else if (is_curr_mov_id && r_id[y] != m_id[i]) {
+        is_curr_mov_id = false;
+        break;
+      }
+    }
+    num_data[i] = num_ratings;
+  }
+
+  info.GetReturnValue().Set(num_ratings_array);
+}
+
 NAN_METHOD(getRatings) {
   int file_size = Nan::To<int>(info[0]).FromJust();
   int line_skip = Nan::To<int>(info[1]).FromJust();
@@ -155,6 +198,9 @@ NAN_METHOD(getRatings) {
   info.GetReturnValue().Set(return_data);
 }
 
-NAN_MODULE_INIT(init) { Nan::SetMethod(target, "getRatings", getRatings); }
+NAN_MODULE_INIT(init) {
+  Nan::SetMethod(target, "getRatings", getRatings);
+  Nan::SetMethod(target, "getNumRatings", getNumRatings);
+}
 
 NODE_MODULE(addonCsvReader, init);

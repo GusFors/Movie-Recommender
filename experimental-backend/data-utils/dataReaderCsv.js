@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').smallData
+const DATASET = require('./dataFormats').fullData
 const addon = require('../build/Release/addonCsvReader.node')
 // const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
@@ -53,10 +53,6 @@ dataReader.getRatingsLineI = async () => {
             break
           }
 
-          // if (!(valueCnt <= 2)) {
-          //   break
-          // }
-
           if (line[i] === DATASET.separator[0]) {
             valueCnt += 1 / DATASET.separator.length
             continue
@@ -89,7 +85,6 @@ dataReader.getRatingsLineI = async () => {
         ratingUserIds.push(+ratingUserId)
         ratingMovieIds.push(+ratingMovieId)
         ratingScores.push(+ratingScore)
-        // total++
       })
 
       rl.on('close', () => {
@@ -193,6 +188,10 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
 
         let w1 = performance.now()
         let combinedNumRatings = values.flat()
+        // console.log(combinedNumRatings)
+
+        // let combinedNumRatings = addon.getNumRatings(Uint32Array.from(sortedByMovieId), Uint32Array.from(movIds))
+        // console.log(combinedNumRatings)
 
         for (let j = 0; j < combinedNumRatings.length; j++) {
           numRatingsArr[j] = combinedNumRatings[j]
