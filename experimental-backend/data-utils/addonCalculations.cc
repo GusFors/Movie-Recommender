@@ -84,6 +84,11 @@ NAN_METHOD(calcNumRatingsCopy) {
   int *rating_id_array_copy = (int *)malloc(r_len * sizeof(int));
   int *mov_id_array_copy = (int *)malloc(m_len * sizeof(int));
 
+  if (rating_id_array_copy == NULL || mov_id_array_copy == NULL) {
+    printf("malloc error\n");
+    exit(1);
+  }
+
   for (int i = 0; i < r_len; i++) {
     rating_id_array_copy[i] = r_id[i];
   }
@@ -129,25 +134,3 @@ void init(Nan ::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
   Nan::SetMethod(target, "calcNumRatingsCopy", calcNumRatingsCopy);
 }
 NAN_MODULE_WORKER_ENABLED(addonCalculations, init)
-
-// NODE_MODULE(addonCsvReader, init);
-
-// NAN_MODULE_INIT(init) {
-//   v8::Isolate *isolate = isolate;
-//   AddEnvironmentCleanupHook(Nan::GetCurrentContext()->GetIsolate(),);
-//   Nan::SetMethod(target, "getRatings", getRatings);
-//   Nan::SetMethod(target, "getNumRatings", getNumRatings);
-// }
-
-// int64_t count = 0;
-//   for (int i = 0; i < 29049; i++) {
-//     int count2 = 0;
-//     for (int y = 0; y < 27753444; y++) {
-//       count++;
-//     }
-//     count2 = count;
-//     m_id[i] = count;
-//   }
-//   // Nan::Maybe<int64_t> cov = Nan::To<int64_t>(count).FromJust()
-//   printf("c loop done\n");
-//   info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), count));

@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').fullData
+const DATASET = require('./dataFormats').smallData
 const addon = require('../build/Release/addonCsvReader.node')
 const { Worker } = require('worker_threads')
 
@@ -170,7 +170,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
             promises[w] = new Promise(async (resolve, reject) => {
               cluster.workers[w + 1].on('message', (msg) => {
                 if (msg.work === 'numratings') {
-                  resolve(msg.numRatingsArr)
+                  resolve(Array.from(msg.numRatingsArr))
                 }
               })
             })
@@ -194,7 +194,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
               workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
                   // worker.terminate()
-                  resolve(msg.numRatingsArr)
+                  resolve(Array.from(msg.numRatingsArr))
                 }
               })
             })

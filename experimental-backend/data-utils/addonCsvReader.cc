@@ -165,6 +165,11 @@ NAN_METHOD(getNumRatings) {
   int *rating_id_array_copy = (int *)malloc(r_len * sizeof(int));
   int *mov_id_array_copy = (int *)malloc(m_len * sizeof(int));
 
+  if (rating_id_array_copy == NULL || mov_id_array_copy == NULL) {
+    printf("malloc error\n");
+    exit(1);
+  }
+
   for (int i = 0; i < r_len; i++) {
     rating_id_array_copy[i] = r_id[i];
   }

@@ -1,7 +1,5 @@
 'use strict'
 
-// const fs = require('fs')
-// const readline = require('node:readline')
 const cluster = require('node:cluster')
 const addon = require('../build/Release/addonCalculations.node')
 
@@ -31,18 +29,13 @@ process.on('message', (msg) => {
       }
       numRatingsArr.push(numRatings)
     }
-
-    console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
+    // console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
     process.send({ work: 'numratings', numRatingsArr: numRatingsArr })
   } else if (msg.work === 'addon') {
     let t1 = performance.now()
-    // let addonCalc = addon.getNumRatings(msg.ratingsIds, msg.movIds)
-    // let r = Array.from(addonCalc)
-    // console.log(msg.ratingsIds)
-    let r = Array.from(addon.calcNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds)))
-    console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
-
-    process.send({ work: 'numratings', numRatingsArr: r })
+    let numRatings = addon.calcNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds))
+    // console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
+    process.send({ work: 'numratings', numRatingsArr: numRatings })
   }
   process.exit()
 })
