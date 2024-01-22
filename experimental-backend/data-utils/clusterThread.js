@@ -16,7 +16,7 @@ process.on('message', (msg) => {
 
     for (let j = 0; j < movIds.length; j++) {
       let numRatings = 0
-      // console.log(cluster.worker.id)
+
       for (let i = alreadyCheckedRatingsIndexes; i < sortedByMovieId.length; i++) {
         if (sortedByMovieId[i] === movIds[j]) {
           if (!isCurrMovId) {
@@ -24,8 +24,6 @@ process.on('message', (msg) => {
             alreadyCheckedRatingsIndexes = i
           }
           numRatings++
-          // alreadyCheckedRatingsIndexes++
-          // continue
         } else if (isCurrMovId && sortedByMovieId[i] !== movIds[j]) {
           isCurrMovId = false
           break
@@ -39,7 +37,10 @@ process.on('message', (msg) => {
     process.exit()
   } else if (msg.work === 'addon') {
     let t1 = performance.now()
-    let r = Array.from(addon.getNumRatings(Uint32Array.from(msg.ratingsIds), Uint32Array.from(msg.movIds)))
+    // let addonCalc = addon.getNumRatings(msg.ratingsIds, msg.movIds)
+    // let r = Array.from(addonCalc)
+    // console.log(msg.ratingsIds)
+    let r = Array.from(addon.getNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds)))
     console.log(`fork id${cluster.worker.id} done`, performance.now() - t1)
 
     process.send({ work: 'numratings', numRatingsArr: r })

@@ -4,8 +4,9 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').fullData
+const DATASET = require('./dataFormats').smallData
 const addon = require('../build/Release/addonCsvReader.node')
+const { Worker } = require('worker_threads')
 
 const dataReader = {}
 
@@ -23,7 +24,7 @@ const dataHolder = {
   ratingNum: new Uint32Array(),
 }
 
-cluster.setupPrimary({ exec: './data-utils/dataWorker.js', serialization: 'advanced' })
+cluster.setupPrimary({ exec: './data-utils/clusterThread.js', serialization: 'advanced' })
 const threads = 2
 for (let w = 0; w < threads; w++) {
   cluster.fork()
@@ -105,7 +106,7 @@ dataReader.getRatingsLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async (minNumRatings, addonCalc = false) => {
+dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster') => {
   return new Promise(async (resolve, reject) => {
     let movies = []
     let movIds = []
@@ -156,7 +157,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, addonCalc = false) => 
 
         let movIdChunks = arrayChunkPush(movIds, threads)
 
-        if (!addonCalc) {
+        if (threading === 'cluster') {
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
               work: 'numratings',
@@ -172,12 +173,12 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, addonCalc = false) => 
               })
             })
           }
-        } else {
+        } else if (threading === 'clusteraddon') {
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
               work: 'addon',
-              ratingsIds: Uint32Array.from(sortedByMovieId),
-              movIds: Uint32Array.from(movIdChunks[w]),
+              ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
+              movIds: Uint32Array.from(movIdChunks[w]).buffer,
             })
 
             promises[w] = new Promise(async (resolve, reject) => {
@@ -188,6 +189,35 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, addonCalc = false) => 
               })
             })
           }
+        } else if (threading === 'worker') {
+          for (let w = 0; w < threads; w++) {
+            let worker = new Worker('./data-utils/workerThread.js', {})
+            worker.postMessage({ work: 'numratings', ratingsIds: Uint32Array.from(sortedByMovieId), movIds: Uint32Array.from(movIdChunks[w]) })
+            promises[w] = new Promise(async (resolve, reject) => {
+              worker.on('message', (msg) => {
+                if (msg.work === 'numratings') {
+                  resolve(msg.numRatingsArr)
+                }
+              })
+            })
+          }
+        } else if (threading === 'workeraddon') {
+          for (let w = 0; w < threads; w++) {
+            let worker = new Worker('./data-utils/workerThread.js', {})
+            worker.postMessage({
+              work: 'addon',
+              ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
+              movIds: Uint32Array.from(movIdChunks[w]).buffer,
+            })
+            promises[w] = new Promise(async (resolve, reject) => {
+              worker.on('message', (msg) => {
+                if (msg.work === 'numratings') {
+                  resolve(msg.numRatingsArr)
+                }
+              })
+            })
+          }
+          // worker.terminate()
         }
 
         let numRatingsArr = new Array(movIds.length)

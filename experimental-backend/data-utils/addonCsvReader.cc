@@ -1,4 +1,6 @@
 #include "../node_modules/nan/nan.h"
+#include "v8-isolate.h"
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -7,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 struct rating {
   int user_id;
@@ -15,6 +18,8 @@ struct rating {
 };
 
 NAN_METHOD(getNumRatings) {
+  clock_t t1;
+  t1 = clock();
   v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
   Nan::TypedArrayContents<uint32_t> rating_id_array_typed(rating_id_array);
   uint32_t *r_id = *rating_id_array_typed;
@@ -34,16 +39,18 @@ NAN_METHOD(getNumRatings) {
 
   // int rating_id_array_copy[r_len];
   // int mov_id_array_copy[m_len];
+  int *rating_id_array_copy = (int *)malloc(r_len * sizeof(int));
+  int *mov_id_array_copy = (int *)malloc(m_len * sizeof(int));
 
   // int num_ratings_arr[mov_id_array_typed.length()];
 
-  // for (int i = 0; i < r_len; i++) {
-  //   rating_id_array_copy[i] = r_id[i];
-  // }
+  for (int i = 0; i < r_len; i++) {
+    rating_id_array_copy[i] = r_id[i];
+  }
 
-  // for (int i = 0; i < m_len; i++) {
-  //   mov_id_array_copy[i] = m_id[i];
-  // }
+  for (int i = 0; i < m_len; i++) {
+    mov_id_array_copy[i] = m_id[i];
+  }
 
   printf("%d mlen, %d rlen\n", m_len, r_len);
 
@@ -54,13 +61,13 @@ NAN_METHOD(getNumRatings) {
   for (int i = 0; i < m_len; i++) {
     int num_ratings = 0;
     for (int y = already_checked_indexes; y < r_len; y++) {
-      if (r_id[y] == m_id[i]) {
+      if (rating_id_array_copy[y] == mov_id_array_copy[i]) {
         if (is_curr_mov_id == 0) {
           is_curr_mov_id = 1;
           already_checked_indexes = y;
         }
         num_ratings++;
-      } else if (is_curr_mov_id && r_id[y] != m_id[i]) {
+      } else if (is_curr_mov_id && rating_id_array_copy[y] != mov_id_array_copy[i]) {
         is_curr_mov_id = 0;
         break;
       }
@@ -68,6 +75,28 @@ NAN_METHOD(getNumRatings) {
     }
     num_data[i] = num_ratings;
   }
+
+  clock_t t2 = clock() - t1;
+  double time_taken = ((double)t2) / CLOCKS_PER_SEC;
+  printf("addon getNumRatings done in %f seconds\n", time_taken);
+
+  // for (int i = 0; i < m_len; i++) {
+  //   int num_ratings = 0;
+  //   for (int y = already_checked_indexes; y < r_len; y++) {
+  //     if (r_id[y] == m_id[i]) {
+  //       if (is_curr_mov_id == 0) {
+  //         is_curr_mov_id = 1;
+  //         already_checked_indexes = y;
+  //       }
+  //       num_ratings++;
+  //     } else if (is_curr_mov_id && r_id[y] != m_id[i]) {
+  //       is_curr_mov_id = 0;
+  //       break;
+  //     }
+  //     // total++;
+  //   }
+  //   num_data[i] = num_ratings;
+  // }
   // printf("%lu c total", total);
 
   printf("done\n");
@@ -216,12 +245,20 @@ NAN_METHOD(getRatings) {
   info.GetReturnValue().Set(return_data);
 }
 
-NAN_MODULE_INIT(init) {
+void init(Nan ::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
   Nan::SetMethod(target, "getRatings", getRatings);
   Nan::SetMethod(target, "getNumRatings", getNumRatings);
 }
+NAN_MODULE_WORKER_ENABLED(addonCsvReader, init)
 
-NODE_MODULE(addonCsvReader, init);
+// NODE_MODULE(addonCsvReader, init);
+
+// NAN_MODULE_INIT(init) {
+//   v8::Isolate *isolate = isolate;
+//   AddEnvironmentCleanupHook(Nan::GetCurrentContext()->GetIsolate(),);
+//   Nan::SetMethod(target, "getRatings", getRatings);
+//   Nan::SetMethod(target, "getNumRatings", getNumRatings);
+// }
 
 // int64_t count = 0;
 //   for (int i = 0; i < 29049; i++) {
