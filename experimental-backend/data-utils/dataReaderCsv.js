@@ -6,7 +6,6 @@ const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
 const DATASET = require('./dataFormats').fullData
 const addon = require('../build/Release/addonCsvReader.node')
-// const { fullData, largeData, smallData, debugData } = require('./dataFormats')
 
 const dataReader = {}
 
@@ -22,6 +21,12 @@ const dataHolder = {
   ratingMovieIds: new Uint32Array(),
   ratingScores: new Float32Array(),
   ratingNum: new Uint32Array(),
+}
+
+cluster.setupPrimary({ exec: './data-utils/dataWorker.js', serialization: 'advanced' })
+const threads = 2
+for (let w = 0; w < threads; w++) {
+  cluster.fork()
 }
 
 dataReader.getRatingsLineI = async () => {
@@ -100,10 +105,11 @@ dataReader.getRatingsLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
+dataReader.getMoviesCompleteLineI = async (minNumRatings, addonCalc = false) => {
   return new Promise(async (resolve, reject) => {
     let movies = []
     let movIds = []
+    let promises = []
 
     if (!dataHolder.movieData.length > 0) {
       if (!dataHolder.ratingScores.length > 0) {
@@ -113,11 +119,6 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATASET.path}/movies.csv`),
         crlfDelay: Infinity,
-      })
-
-      cluster.setupPrimary({ exec: './data-utils/dataWorker.js', serialization: 'advanced' })
-      cluster.on('online', (worker) => {
-        console.log('fork online')
       })
 
       let isFirstLineCheck = DATASET.lineSkip
@@ -153,34 +154,40 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
         let sortedByMovieId = new Uint32Array(rMovIds).sort()
         console.log('sort movies', performance.now() - sort1)
 
-        let threads = 2
         let movIdChunks = arrayChunkPush(movIds, threads)
-        let promises = []
 
-        for (let w = 0; w < threads; w++) {
-          cluster.fork()
-
-          cluster.workers[w + 1].send({
-            work: 'numratings',
-            ratingsIds: Uint32Array.from(sortedByMovieId),
-            movIds: Uint32Array.from(movIdChunks[w]),
-          })
-
-          // setTimeout(() => {
-          //   cluster.workers[w + 1].send({
-          //     work: 'numratings',
-          //     ratingsIds: sortedByMovieId,
-          //     movIds: movIdChunks[w],
-          //   })
-          // }, 30)
-
-          promises[w] = new Promise(async (resolve, reject) => {
-            cluster.workers[w + 1].on('message', (msg) => {
-              if (msg.work === 'numratings') {
-                resolve(msg.numRatingsArr)
-              }
+        if (!addonCalc) {
+          for (let w = 0; w < threads; w++) {
+            cluster.workers[w + 1].send({
+              work: 'numratings',
+              ratingsIds: Uint32Array.from(sortedByMovieId),
+              movIds: Uint32Array.from(movIdChunks[w]),
             })
-          })
+
+            promises[w] = new Promise(async (resolve, reject) => {
+              cluster.workers[w + 1].on('message', (msg) => {
+                if (msg.work === 'numratings') {
+                  resolve(msg.numRatingsArr)
+                }
+              })
+            })
+          }
+        } else {
+          for (let w = 0; w < threads; w++) {
+            cluster.workers[w + 1].send({
+              work: 'addon',
+              ratingsIds: Uint32Array.from(sortedByMovieId),
+              movIds: Uint32Array.from(movIdChunks[w]),
+            })
+
+            promises[w] = new Promise(async (resolve, reject) => {
+              cluster.workers[w + 1].on('message', (msg) => {
+                if (msg.work === 'numratings') {
+                  resolve(msg.numRatingsArr)
+                }
+              })
+            })
+          }
         }
 
         let numRatingsArr = new Array(movIds.length)
@@ -188,10 +195,6 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings) => {
 
         let w1 = performance.now()
         let combinedNumRatings = values.flat()
-        // console.log(combinedNumRatings)
-
-        // let combinedNumRatings = addon.getNumRatings(Uint32Array.from(sortedByMovieId), Uint32Array.from(movIds))
-        // console.log(combinedNumRatings)
 
         for (let j = 0; j < combinedNumRatings.length; j++) {
           numRatingsArr[j] = combinedNumRatings[j]

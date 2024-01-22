@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,32 +28,49 @@ NAN_METHOD(getNumRatings) {
   Nan::TypedArrayContents<uint32_t> num_ratings_arr_typed(num_ratings_array);
   uint32_t *num_data = *num_ratings_arr_typed;
   printf("addon calc num ratings\n");
+
+  int r_len = rating_id_array_typed.length();
+  int m_len = mov_id_array_typed.length();
+
+  // int rating_id_array_copy[r_len];
+  // int mov_id_array_copy[m_len];
+
   // int num_ratings_arr[mov_id_array_typed.length()];
 
-  int m_len = mov_id_array_typed.length();
-  int r_len = rating_id_array_typed.length();
-  printf("%d mlen, %d rlen", m_len, r_len);
+  // for (int i = 0; i < r_len; i++) {
+  //   rating_id_array_copy[i] = r_id[i];
+  // }
 
-  bool is_curr_mov_id = false;
+  // for (int i = 0; i < m_len; i++) {
+  //   mov_id_array_copy[i] = m_id[i];
+  // }
+
+  printf("%d mlen, %d rlen\n", m_len, r_len);
+
+  int is_curr_mov_id = 0;
   int already_checked_indexes = 0;
+  int total = 0;
 
   for (int i = 0; i < m_len; i++) {
     int num_ratings = 0;
     for (int y = already_checked_indexes; y < r_len; y++) {
       if (r_id[y] == m_id[i]) {
-        if (!is_curr_mov_id) {
-          is_curr_mov_id = true;
-          already_checked_indexes++;
+        if (is_curr_mov_id == 0) {
+          is_curr_mov_id = 1;
+          already_checked_indexes = y;
         }
         num_ratings++;
       } else if (is_curr_mov_id && r_id[y] != m_id[i]) {
-        is_curr_mov_id = false;
+        is_curr_mov_id = 0;
         break;
       }
+      // total++;
     }
     num_data[i] = num_ratings;
   }
+  // printf("%lu c total", total);
 
+  printf("done\n");
   info.GetReturnValue().Set(num_ratings_array);
 }
 
@@ -204,3 +222,16 @@ NAN_MODULE_INIT(init) {
 }
 
 NODE_MODULE(addonCsvReader, init);
+
+// int64_t count = 0;
+//   for (int i = 0; i < 29049; i++) {
+//     int count2 = 0;
+//     for (int y = 0; y < 27753444; y++) {
+//       count++;
+//     }
+//     count2 = count;
+//     m_id[i] = count;
+//   }
+//   // Nan::Maybe<int64_t> cov = Nan::To<int64_t>(count).FromJust()
+//   printf("c loop done\n");
+//   info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), count));
