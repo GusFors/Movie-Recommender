@@ -1,7 +1,7 @@
 'use strict'
 
 const { parentPort, threadId } = require('worker_threads')
-const addon = require('../build/Release/addonCsvReader.node')
+const addon = require('../build/Release/addonCalculations.node')
 
 parentPort.on('message', (msg) => {
   if (msg.work === 'numratings') {
@@ -35,7 +35,7 @@ parentPort.on('message', (msg) => {
     let t1 = performance.now()
     // let addonCalc = addon.getNumRatings(msg.ratingsIds, msg.movIds)
     // console.log(msg.ratingsIds)
-    let addonCalc = addon.getNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds))
+    let addonCalc = addon.calcNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds))
     let r = Array.from(addonCalc)
 
     // let r = Array.from(addon.getNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds)))
