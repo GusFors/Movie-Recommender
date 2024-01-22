@@ -56,14 +56,12 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let minNumRatings = parseInt(req.query.minratings)
   let threads = parseInt(req.query.numthreads) > 0 ? parseInt(req.query.numthreads) : 1
   let type = req.query.type
-  // console.log('avg runs:', avgRuns)
 
   let filteredRecommendations
   let rawRecommendations
   for (let i = 0; i < avgRuns; i++) {
     let r1 = performance.now()
     //  let ratingsData = await dataReaderCsv.getRatingsLineI()
-    // console.log(ratingsData.u[0], ratingsData.m[0], ratingsData.s[0])
     let ratingsData = await dataReaderCsv.getRatingsAddon()
 
     console.log('load ratings in:', performance.now() - r1)

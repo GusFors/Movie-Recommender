@@ -151,13 +151,11 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
           rMovIds.push(dataHolder.ratingMovieIds[i])
         }
         console.log('movies close', performance.now() - t1)
+
         let sort1 = performance.now()
-        // let sortedByMovieId = rMovIds.sort((a, b) => a - b)
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
         let sortedByMovieId = new Uint32Array(rMovIds).sort()
         console.log('sort movies', performance.now() - sort1)
-
-        // console.log(sharedArray)
 
         let movIdChunks = arrayChunkPush(movIds, threads)
 
@@ -179,8 +177,6 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
           }
         } else if (threading === 'worker') {
           // let transferBuffer = new SharedArrayBuffer(rMovIds.length * Uint32Array.BYTES_PER_ELEMENT)
-          // console.log(sortedByMovieId.byteLength, transferBuffer.byteLength)
-
           let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
           let sharedArray = new Uint32Array(sharedBuffer)
 
@@ -189,8 +185,11 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
           }
 
           for (let w = 0; w < threads; w++) {
-            // workers[w].postMessage({ work: 'addon', ratingsIds: at, movIds: Uint32Array.from(movIdChunks[w]).buffer }, [at.buffer])
-            workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]) })
+            let movIdBufferTransfer = Uint32Array.from(movIdChunks[w])
+            workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedArray, movIds: movIdBufferTransfer }, [
+              movIdBufferTransfer.buffer,
+            ])
+
             promises[w] = new Promise(async (resolve, reject) => {
               workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
@@ -210,7 +209,6 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
 
         for (let j = 0; j < combinedNumRatings.length; j++) {
           numRatingsArr[j] = combinedNumRatings[j]
-          // numRatingsArr.push(values[j][i])
         }
 
         dataHolder.ratingNum = numRatingsArr
