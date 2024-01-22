@@ -157,6 +157,8 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
         let sortedByMovieId = new Uint32Array(rMovIds).sort()
         console.log('sort movies', performance.now() - sort1)
 
+        // console.log(sharedArray)
+
         let movIdChunks = arrayChunkPush(movIds, threads)
 
         if (threading === 'cluster') {
@@ -192,9 +194,19 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
             })
           }
         } else if (threading === 'worker') {
+          // let transferBuffer = new SharedArrayBuffer(rMovIds.length * Uint32Array.BYTES_PER_ELEMENT)
+          // console.log(sortedByMovieId.byteLength, transferBuffer.byteLength)
+
+          let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
+          let sharedArray = new Uint32Array(sharedBuffer)
+
+          for (let i = 0; i < sortedByMovieId.length; i++) {
+            sharedArray[i] = sortedByMovieId[i]
+          }
+
           for (let w = 0; w < threads; w++) {
             // let worker = new Worker('./data-utils/workerThread.js', {})
-            workers[w].postMessage({ work: 'numratings', ratingsIds: Uint32Array.from(sortedByMovieId), movIds: Uint32Array.from(movIdChunks[w]) })
+            workers[w].postMessage({ work: 'numratings', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]) })
             promises[w] = new Promise(async (resolve, reject) => {
               workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
@@ -204,13 +216,25 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
             })
           }
         } else if (threading === 'workeraddon') {
+          // let transferBuffer = new SharedArrayBuffer(sortedByMovieId.length * Uint32Array.BYTES_PER_ELEMENT)
+          // console.log(sortedByMovieId.byteLength, transferBuffer.byteLength)
+
+          let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
+          let sharedArray = new Uint32Array(sharedBuffer)
+          console.log(sharedArray.byteLength)
+
+          for (let i = 0; i < sortedByMovieId.length; i++) {
+            // sharedArray[i] = sortedByMovieId[i]
+            sharedArray[i] = sortedByMovieId[i]
+          }
+
           for (let w = 0; w < threads; w++) {
             // let worker = new Worker('./data-utils/workerThread.js', {})
-            workers[w].postMessage({
-              work: 'addon',
-              ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
-              movIds: Uint32Array.from(movIdChunks[w]).buffer,
-            })
+            let at = Uint32Array.from(sortedByMovieId)
+
+             workers[w].postMessage({ work: 'addon', ratingsIds: sharedArray, movIds: Uint32Array.from(movIdChunks[w]).buffer })
+            // workers[w].postMessage({ work: 'addon', ratingsIds: at, movIds: Uint32Array.from(movIdChunks[w]).buffer }, [at.buffer])
+
             promises[w] = new Promise(async (resolve, reject) => {
               workers[w].on('message', (msg) => {
                 if (msg.work === 'numratings') {
@@ -219,6 +243,25 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'cluster')
                 }
               })
             })
+
+            // workers[w].postMessage(
+            //   {
+            //     work: 'addon',
+            //     // ratingsIds: Uint32Array.from(sortedByMovieId).buffer,
+            //     // ratingsIds: sharedBuffer,
+            //     ratingsIds: sortedByMovieId,
+            //     movIds: Uint32Array.from(movIdChunks[w]).buffer,
+            //   },
+            //   [sortedByMovieId.buffer]
+            // )
+            // promises[w] = new Promise(async (resolve, reject) => {
+            //   workers[w].on('message', (msg) => {
+            //     if (msg.work === 'numratings') {
+            //       // workers[w].terminate()
+            //       resolve(msg.numRatingsArr)
+            //     }
+            //   })
+            // })
           }
           // worker.terminate()
         }

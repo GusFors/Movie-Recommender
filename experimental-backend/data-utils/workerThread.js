@@ -30,7 +30,7 @@ parentPort.on('message', (msg) => {
       numRatingsArr.push(numRatings)
     }
 
-    console.log(`worker id${threadId} done`, performance.now() - t1)
+    // console.log(`worker id${threadId} done`, performance.now() - t1)
     parentPort.postMessage({ work: 'numratings', numRatingsArr: numRatingsArr })
     // process.exit()
   } else if (msg.work === 'addon') {
@@ -42,7 +42,7 @@ parentPort.on('message', (msg) => {
     // console.log(msg.ratingsIds)
 
     // let r = Array.from(addon.getNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds)))
-    console.log(`worker id${threadId} done`, performance.now() - t1)
+    // console.log(`worker id${threadId} done`, performance.now() - t1)
 
     parentPort.postMessage({ work: 'numratings', numRatingsArr: r })
     // process.exit()

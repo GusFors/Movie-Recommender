@@ -1,4 +1,5 @@
 #include "../node_modules/nan/nan.h"
+#include "v8-typed-array.h"
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -18,6 +19,7 @@ struct rating {
 NAN_METHOD(getNumRatings) {
   clock_t t1;
   t1 = clock();
+
   v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
   Nan::TypedArrayContents<uint32_t> rating_id_array_typed(rating_id_array);
   uint32_t *r_id = *rating_id_array_typed;
@@ -54,7 +56,6 @@ NAN_METHOD(getNumRatings) {
 
   int is_curr_mov_id = 0;
   int already_checked_indexes = 0;
-  int total = 0;
 
   for (int i = 0; i < m_len; i++) {
     int num_ratings = 0;
@@ -75,8 +76,8 @@ NAN_METHOD(getNumRatings) {
   }
 
   clock_t t2 = clock() - t1;
-  double time_taken = ((double)t2) / CLOCKS_PER_SEC;
-  printf("addon getNumRatings done in %f seconds\n", time_taken);
+  double total = ((double)t2) / CLOCKS_PER_SEC;
+  printf("addon getNumRatings done in %f seconds\n", total);
 
   // for (int i = 0; i < m_len; i++) {
   //   int num_ratings = 0;
