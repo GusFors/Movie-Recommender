@@ -92,18 +92,18 @@ NAN_METHOD(getRatings) {
   // }
 
   v8::Local<v8::ArrayBuffer> user_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
-  v8::Local<v8::Uint32Array> user_ids_array = v8::Uint32Array::New(user_ids_buffer, 0, file_size);
-  Nan::TypedArrayContents<uint32_t> utyped(user_ids_array);
-  uint32_t *udata = *utyped;
+  v8::Local<v8::Int32Array> user_ids_array = v8::Int32Array::New(user_ids_buffer, 0, file_size);
+  Nan::TypedArrayContents<int> utyped(user_ids_array);
+  int *udata = *utyped;
 
   for (int i = 0; i < line_count; i++) {
     udata[i] = user_ids[i];
   }
 
   v8::Local<v8::ArrayBuffer> movie_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
-  v8::Local<v8::Uint32Array> movie_ids_array = v8::Uint32Array::New(movie_ids_buffer, 0, file_size);
-  Nan::TypedArrayContents<uint32_t> mtyped(movie_ids_array);
-  uint32_t *mdata = *mtyped;
+  v8::Local<v8::Int32Array> movie_ids_array = v8::Int32Array::New(movie_ids_buffer, 0, file_size);
+  Nan::TypedArrayContents<int> mtyped(movie_ids_array);
+  int *mdata = *mtyped;
 
   for (int i = 0; i < line_count; i++) {
     mdata[i] = movie_ids[i];
@@ -146,17 +146,17 @@ NAN_METHOD(getNumRatings) {
   t1 = clock();
 
   v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
-  Nan::TypedArrayContents<uint32_t> rating_id_array_typed(rating_id_array);
-  uint32_t *r_id = *rating_id_array_typed;
+  Nan::TypedArrayContents<int> rating_id_array_typed(rating_id_array);
+  int *r_id = *rating_id_array_typed;
 
   v8::Local<v8::Array> mov_id_array = v8::Local<v8::Array>::Cast(info[1]);
-  Nan::TypedArrayContents<uint32_t> mov_id_array_typed(mov_id_array);
-  uint32_t *m_id = *mov_id_array_typed;
+  Nan::TypedArrayContents<int> mov_id_array_typed(mov_id_array);
+  int *m_id = *mov_id_array_typed;
 
   v8::Local<v8::ArrayBuffer> num_ratings_buffer = v8::ArrayBuffer::New(info.GetIsolate(), mov_id_array_typed.length() * sizeof(int));
-  v8::Local<v8::Uint32Array> num_ratings_array = v8::Uint32Array::New(num_ratings_buffer, 0, mov_id_array_typed.length());
-  Nan::TypedArrayContents<uint32_t> num_ratings_arr_typed(num_ratings_array);
-  uint32_t *num_data = *num_ratings_arr_typed;
+  v8::Local<v8::Int32Array> num_ratings_array = v8::Int32Array::New(num_ratings_buffer, 0, mov_id_array_typed.length());
+  Nan::TypedArrayContents<int> num_ratings_arr_typed(num_ratings_array);
+  int *num_data = *num_ratings_arr_typed;
   printf("addon calc num ratings\n");
 
   int r_len = rating_id_array_typed.length();

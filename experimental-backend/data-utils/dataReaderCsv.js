@@ -4,7 +4,7 @@ const fs = require('fs')
 const readline = require('node:readline')
 const cluster = require('node:cluster')
 const { arrayChunkPush } = require('./arrayChunk')
-const DATASET = require('./dataFormats').smallData
+const DATASET = require('./dataFormats').fullData
 const addon = require('../build/Release/addonCsvReader.node')
 const { Worker } = require('worker_threads')
 
@@ -18,10 +18,10 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: new Uint32Array(),
-  ratingMovieIds: new Uint32Array(),
+  ratingUserIds: new Int32Array(),
+  ratingMovieIds: new Int32Array(),
   ratingScores: new Float32Array(),
-  ratingNum: new Uint32Array(),
+  ratingNum: new Int32Array(),
 }
 
 cluster.setupPrimary({ exec: './data-utils/clusterThread.js', serialization: 'advanced' })
@@ -96,8 +96,8 @@ dataReader.getRatingsLineI = async () => {
       })
 
       rl.on('close', () => {
-        dataHolder.ratingUserIds = new Uint32Array(ratingUserIds)
-        dataHolder.ratingMovieIds = new Uint32Array(ratingMovieIds)
+        dataHolder.ratingUserIds = new Int32Array(ratingUserIds)
+        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
         dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
@@ -154,7 +154,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
 
         let sort1 = performance.now()
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
-        let sortedByMovieId = new Uint32Array(rMovIds).sort()
+        let sortedByMovieId = new Int32Array(rMovIds).sort()
         console.log('sort movies', performance.now() - sort1)
 
         let movIdChunks = arrayChunkPush(movIds, threads)
@@ -163,8 +163,8 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
               work: addon ? 'addon' : 'numratings',
-              ratingsIds: Uint32Array.from(sortedByMovieId),
-              movIds: Uint32Array.from(movIdChunks[w]),
+              ratingsIds: Int32Array.from(sortedByMovieId),
+              movIds: Int32Array.from(movIdChunks[w]),
             })
 
             promises[w] = new Promise(async (resolve, reject) => {
@@ -176,16 +176,16 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
             })
           }
         } else if (threading === 'worker') {
-          // let transferBuffer = new SharedArrayBuffer(rMovIds.length * Uint32Array.BYTES_PER_ELEMENT)
+          // let transferBuffer = new SharedArrayBuffer(rMovIds.length * Int32Array.BYTES_PER_ELEMENT)
           let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
-          let sharedArray = new Uint32Array(sharedBuffer)
+          let sharedArray = new Int32Array(sharedBuffer)
 
           for (let i = 0; i < sortedByMovieId.length; i++) {
             sharedArray[i] = sortedByMovieId[i]
           }
 
           for (let w = 0; w < threads; w++) {
-            let movIdBufferTransfer = Uint32Array.from(movIdChunks[w])
+            let movIdBufferTransfer = Int32Array.from(movIdChunks[w])
             workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedArray, movIds: movIdBufferTransfer }, [
               movIdBufferTransfer.buffer,
             ])
@@ -246,8 +246,8 @@ dataReader.getRatingsAddon = async () => {
     if (!dataHolder.ratingScores.length > 0) {
       let data = addon.getRatings(DATASET.size, DATASET.lineSkip, `./data/csv-data/${DATASET.path}/ratings.csv`)
 
-      dataHolder.ratingUserIds = new Uint32Array(data['0'])
-      dataHolder.ratingMovieIds = new Uint32Array(data['1'])
+      dataHolder.ratingUserIds = new Int32Array(data['0'])
+      dataHolder.ratingMovieIds = new Int32Array(data['1'])
       dataHolder.ratingScores = new Float32Array(data['2'])
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
     } else {

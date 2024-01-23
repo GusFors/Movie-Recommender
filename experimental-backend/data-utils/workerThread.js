@@ -33,7 +33,7 @@ parentPort.on('message', (msg) => {
     parentPort.postMessage({ work: 'numratings', numRatingsArr: numRatingsArr })
   } else if (msg.work === 'addon') {
     let t1 = performance.now()
-    let numRatings = addon.calcNumRatings(new Uint32Array(msg.ratingsIds), new Uint32Array(msg.movIds))
+    let numRatings = addon.getNumRatings(new Int32Array(msg.ratingsIds), new Int32Array(msg.movIds))
     // console.log(`worker id${threadId} done`, performance.now() - t1)
     parentPort.postMessage({ work: 'numratings', numRatingsArr: numRatings }, [numRatings.buffer])
   }

@@ -86,7 +86,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
   }
   console.log('second section took', performance.now() - t2)
 
-  simScores.userIds = new Uint32Array(simScores.userIds)
+  simScores.userIds = new Int32Array(simScores.userIds)
   simScores.scores = new Float32Array(simScores.scores)
 
   return simScores
@@ -94,7 +94,7 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 
 recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObjA, similarityScores) => {
   return new Promise(async (resolve, reject) => {
-    let ratingsDataObj = { u: new Uint32Array(ratingsDataObjA.u), m: new Uint32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
+    let ratingsDataObj = { u: new Int32Array(ratingsDataObjA.u), m: new Int32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
     let ratingsLength = ratingsDataObj.u.length
 
     let moviesSeenByUser = new Set()
@@ -117,8 +117,8 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
       indexes.push(y)
     }
 
-    let userIds = new Uint32Array(totalUnseenCnt)
-    let movIds = new Uint32Array(totalUnseenCnt)
+    let userIds = new Int32Array(totalUnseenCnt)
+    let movIds = new Int32Array(totalUnseenCnt)
     let scores = new Float32Array(totalUnseenCnt)
 
     for (let y = 0, l = indexes.length; y < l; y++) {
@@ -137,8 +137,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
     //   scores[y + 1] = ratingsDataObj.s[indexes[y + 1]]
     // }
 
-    
-    let simUids = new Uint32Array(similarityScores.userIds)
+    let simUids = new Int32Array(similarityScores.userIds)
     let simScores = new Float32Array(similarityScores.scores)
 
     console.log('reached', performance.now() - t1)
@@ -258,7 +257,7 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
         // if (weightedScoreSum > 0) {
         calcData.push({
           movieId: arrBuffMovIds[y][i],
-          // movieId: new Uint32Array(wScoresChunks[y][i])[0],
+          // movieId: new Int32Array(wScoresChunks[y][i])[0],
           recommendationScore: typeof (weightedScoreSum / simScoreSum) === 'number' ? weightedScoreSum / simScoreSum : 0,
         })
         // }
