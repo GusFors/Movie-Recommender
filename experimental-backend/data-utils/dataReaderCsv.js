@@ -40,11 +40,14 @@ dataReader.getRatingsLineI = async () => {
         crlfDelay: Infinity,
       })
 
-      let ratingUserIds = []
-      let ratingMovieIds = []
-      let ratingScores = []
+      // let ratingUserIds = []
+      // let ratingMovieIds = []
+      // let ratingScores = []
+      let ratingUserIds = new Int32Array(DATASET.size)
+      let ratingMovieIds = new Int32Array(DATASET.size)
+      let ratingScores = new Float32Array(DATASET.size)
       let isFirstLineCheck = DATASET.lineSkip
-
+      let total = 0
       rl.on('line', function (line) {
         if (isFirstLineCheck) {
           isFirstLineCheck = false
@@ -89,16 +92,22 @@ dataReader.getRatingsLineI = async () => {
           //   break
           // }
         }
-
-        ratingUserIds.push(+ratingUserId)
-        ratingMovieIds.push(+ratingMovieId)
-        ratingScores.push(+ratingScore)
+        // ratingUserIds.push(+ratingUserId)
+        // ratingMovieIds.push(+ratingMovieId)
+        // ratingScores.push(+ratingScore)
+        ratingUserIds[total] = +ratingUserId
+        ratingMovieIds[total] = +ratingMovieId
+        ratingScores[total] = +ratingScore
+        total++
       })
 
       rl.on('close', () => {
-        dataHolder.ratingUserIds = new Int32Array(ratingUserIds)
-        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
-        dataHolder.ratingScores = new Float32Array(ratingScores)
+        dataHolder.ratingUserIds = new Int32Array(ratingUserIds.buffer.transferToFixedLength())
+        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds.buffer.transferToFixedLength())
+        dataHolder.ratingScores = new Float32Array(ratingScores.buffer.transferToFixedLength())
+        // dataHolder.ratingUserIds = new Int32Array(ratingUserIds)
+        // dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
+        // dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       })
     } else {
