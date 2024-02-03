@@ -154,16 +154,16 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
       })
 
       rl.on('close', async () => {
-        let rMovIds = []
-
-        for (let i = 0, l = dataHolder.ratingScores.length; i < l; i++) {
-          rMovIds.push(dataHolder.ratingMovieIds[i])
-        }
         console.log('movies close', performance.now() - t1)
+        // let rMovIds = []
+        // for (let i = 0, l = dataHolder.ratingScores.length; i < l; i++) {
+        //   rMovIds.push(dataHolder.ratingMovieIds[i])
+        // }
 
         let sort1 = performance.now()
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
-        let sortedByMovieId = new Int32Array(rMovIds).sort()
+        // let sortedByMovieId = new Int32Array(rMovIds).sort()
+        let sortedByMovieId = new Int32Array(dataHolder.ratingMovieIds).sort()
         console.log('sort movies', performance.now() - sort1)
 
         let movIdChunks = arrayChunkPush(movIds, threads)
