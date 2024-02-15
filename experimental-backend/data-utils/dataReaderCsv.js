@@ -18,9 +18,12 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: new Int32Array(),
-  ratingMovieIds: new Int32Array(),
-  ratingScores: new Float32Array(),
+  ratingUserIds: [],
+  ratingMovieIds: [],
+  ratingScores: [],
+  // ratingUserIds: new Int32Array(),
+  // ratingMovieIds: new Int32Array(),
+  // ratingScores: new Float32Array(),
   ratingNum: new Int32Array(),
 }
 
@@ -34,7 +37,7 @@ for (let w = 0; w < threads; w++) {
 
 dataReader.getRatingsLineI = async () => {
   return new Promise((resolve, reject) => {
-    if (!dataHolder.ratingScores.length > 0) {
+    if (!dataHolder.ratingScores?.length > 0) {
       const rl = readline.createInterface({
         input: fs.createReadStream(`./data/csv-data/${DATASET.path}/ratings.csv`, {}),
         crlfDelay: Infinity,
@@ -102,15 +105,26 @@ dataReader.getRatingsLineI = async () => {
       })
 
       rl.on('close', () => {
-        dataHolder.ratingUserIds = new Int32Array(ratingUserIds.buffer.transferToFixedLength())
-        dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds.buffer.transferToFixedLength())
-        dataHolder.ratingScores = new Float32Array(ratingScores.buffer.transferToFixedLength())
+        // dataHolder.ratingUserIds = new Int32Array(ratingUserIds.buffer.transferToFixedLength())
+        // dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds.buffer.transferToFixedLength())
+        // dataHolder.ratingScores = new Float32Array(ratingScores.buffer.transferToFixedLength())
+
+        // dataHolder.ratingUserIds = JSON.parse(JSON.stringify(Array.from(new Int32Array(ratingUserIds.buffer.transferToFixedLength()))))
+        // dataHolder.ratingMovieIds = JSON.parse(JSON.stringify(Array.from(new Int32Array(ratingMovieIds.buffer.transferToFixedLength()))))
+        // dataHolder.ratingScores = JSON.parse(JSON.stringify(Array.from(new Float32Array(ratingScores.buffer.transferToFixedLength()))))
+
+        dataHolder.ratingUserIds = Array.from(new Int32Array(ratingUserIds.buffer.transferToFixedLength()))
+        dataHolder.ratingMovieIds = Array.from(new Int32Array(ratingMovieIds.buffer.transferToFixedLength()))
+        dataHolder.ratingScores = Array.from(new Float32Array(ratingScores.buffer.transferToFixedLength()))
+
         // dataHolder.ratingUserIds = new Int32Array(ratingUserIds)
         // dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
         // dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+        // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
       })
     } else {
+      // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
       // resolve({ u: dataHolder.ratingUserIds.buffer, m: dataHolder.ratingMovieIds.buffer, s: dataHolder.ratingScores.buffer })
     }

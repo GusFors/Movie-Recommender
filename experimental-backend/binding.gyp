@@ -8,8 +8,10 @@
                 'libraries': []
             },
             'cflags': [
+                '-funroll-loops'
             ],  
             'cflags_cc': [
+                '-funroll-loops'
             ],
         },
         {
@@ -20,8 +22,10 @@
                 'libraries': []
             },
             'cflags': [
+                '-funroll-loops'
             ],  
             'cflags_cc': [
+                '-funroll-loops'
             ],
         }
     ]

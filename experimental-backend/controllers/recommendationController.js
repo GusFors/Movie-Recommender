@@ -61,8 +61,8 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let rawRecommendations
   for (let i = 0; i < avgRuns; i++) {
     let r1 = performance.now()
-    // let ratingsData = await dataReaderCsv.getRatingsLineI()
-    let ratingsData = await dataReaderCsv.getRatingsAddon()
+    let ratingsData = await dataReaderCsv.getRatingsLineI()
+    // let ratingsData = await dataReaderCsv.getRatingsAddon()
 
     console.log('load ratings in:', performance.now() - r1)
     let m1 = performance.now()
@@ -82,14 +82,14 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 
     let t3 = performance.now()
+    // faster with normal ratingsData arrays, convert?
     let ratingsMoviesNotSeen = await recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores) // check if > minNumRatings?
     let t4 = performance.now()
     console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
 
     let t7 = performance.now()
-
+    // faster with typed ratingsData arrays?
     rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, threads, t7)
-
     let t8 = performance.now()
     console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
 
