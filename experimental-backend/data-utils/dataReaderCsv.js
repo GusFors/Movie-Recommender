@@ -131,7 +131,7 @@ dataReader.getRatingsLineI = async () => {
   })
 }
 
-dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', addon = true) => {
+dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', addon = true) => {
   return new Promise(async (resolve, reject) => {
     let movies = []
     let movIds = []
@@ -182,7 +182,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
 
         let movIdChunks = arrayChunkPush(movIds, threads)
 
-        if (threading === 'cluster') {
+        if (threading === 'Fork') {
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
               work: addon ? 'addon' : 'numratings',
@@ -198,7 +198,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'worker', 
               })
             })
           }
-        } else if (threading === 'worker') {
+        } else if (threading === 'Worker') {
           // let transferBuffer = new SharedArrayBuffer(rMovIds.length * Int32Array.BYTES_PER_ELEMENT)
           let sharedBuffer = new SharedArrayBuffer(sortedByMovieId.byteLength)
           let sharedArray = new Int32Array(sharedBuffer)
