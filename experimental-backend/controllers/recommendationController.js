@@ -36,10 +36,7 @@ let isOptimized = false
   if (!isOptimized) {
     const runs = 0
     for (let i = 0; i < runs; i++) {
-      // let userData = await dataReaderCsv.getUserIdLineI()
       let ratingsData = await dataReaderCsv.getRatingsLineI()
-      // userData = JSON.parse(JSON.stringify(await userData))
-      // ratingsData = JSON.parse(JSON.stringify(await ratingsData))
       const movieData = await dataReaderCsv.getMoviesCompleteLineI()
       recommender.warmupOpt(1, await ratingsData)
     }
@@ -71,13 +68,11 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
     let f1 = performance.now()
     let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
-    // movieData = movieData.filter((m) => m.numRatings >= minNumRatings && !movSeen.has(m.movieId))
     movieData = movieData.filter((m) => !movSeen.has(m.movieId))
     console.log('filter moviedata in:', performance.now() - f1)
 
     let t1 = performance.now()
     const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
-
     let t2 = performance.now()
     console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
 

@@ -29,10 +29,6 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
 
   let userAMovIdsM = new Map()
 
-  // let relevantScoresUserIds = []
-  // let relevantScoresMovIds = []
-  // let relevantScoresRatings = []
-
   let p1 = performance.now()
   let lengthCnt = 0
   for (let r = 0, l = ratingsLength; r < l; r++) {
@@ -48,43 +44,36 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
   let relevantScoresRatings = new Float32Array(lengthCnt)
 
   for (let r = 0, l = ratingsLength; r < l; r++) {
-    if (ratingsDataObj.u[r] === userId) {
-      // userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-    } else {
+    if (ratingsDataObj.u[r] !== userId) {
       relevantScoresUserIds[r] = ratingsDataObj.u[r]
       relevantScoresMovIds[r] = ratingsDataObj.m[r]
       relevantScoresRatings[r] = ratingsDataObj.s[r]
     }
   }
 
-  // for (let r = 0, l = ratingsLength; r < l; r++) {
-  //   if (ratingsDataObj.u[r] === userId) {
-  //     userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-  //   } else {
-  //     relevantScoresUserIds.push(ratingsDataObj.u[r])
-  //     relevantScoresMovIds.push(ratingsDataObj.m[r])
-  //     relevantScoresRatings.push(ratingsDataObj.s[r])
-  //   }
-  // }
   console.log('push took', performance.now() - p1)
 
-  let i1 = performance.now()
-  let matchesIndexes = []
-  let othersRatingUserIds = []
-  let otherScores = []
-  let otherMovIds = []
-
-  // relevantScoresUserIds = new Int32Array(relevantScoresUserIds)
-  // relevantScoresMovIds = new Int32Array(relevantScoresMovIds)
-  // relevantScoresRatings = new Float32Array(relevantScoresRatings)
-
+  let count = 0
+  let matchingIndex = []
   for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
     if (userAMovIdsM.has(relevantScoresMovIds[r])) {
-      othersRatingUserIds.push(relevantScoresUserIds[r])
-      otherScores.push(relevantScoresRatings[r])
-      otherMovIds.push(relevantScoresMovIds[r])
+      matchingIndex.push(r)
+      count++
     }
   }
+
+  let othersRatingUserIds = new Int32Array(count)
+  let otherMovIds = new Int32Array(count)
+  let otherScores = new Float32Array(count)
+
+  for (let r = 0, match = matchingIndex[r], l = count; r < l; ) {
+    othersRatingUserIds[r] = relevantScoresUserIds[match]
+    otherMovIds[r] = relevantScoresMovIds[match]
+    otherScores[r] = relevantScoresRatings[match]
+    match = matchingIndex[r++]
+  }
+  // for (let r = 0, l = count, match = matchingIndex[r]; r < l;  match = matchingIndex[++r]) {
+  // for (let r = 0, l = count; r < l; r++) {
 
   let t2 = performance.now()
   let uniqueOtherIds = [...new Set(othersRatingUserIds)]
@@ -97,20 +86,10 @@ recommender.getEuclidianSimScoresForUserR = (userId, ratingsDataObjR) => {
     for (let r = alreadyCheckedRatingsIndexes, l = othersRatingUserIds.length; r < l; r++) {
       if (othersRatingUserIds[r] !== uniqueOtherIds[i]) {
         break
-      } else {
-        userBScores.push(otherScores[r])
-        userAScoresFromMatchingIndexes.push(userAMovIdsM.get(otherMovIds[r]))
-
-        alreadyCheckedRatingsIndexes++
-      }
-      // if (othersRatingUserIds[r] === uniqueOtherIds[i]) {
-      //   userBScores.push(otherScores[r])
-      //   userAScoresFromMatchingIndexes.push(userAMovIdsM.get(otherMovIds[r]))
-
-      //   alreadyCheckedRatingsIndexes++
-      // } else {
-      //   break
-      // }
+      } // else
+      userBScores.push(otherScores[r])
+      userAScoresFromMatchingIndexes.push(userAMovIdsM.get(otherMovIds[r]))
+      alreadyCheckedRatingsIndexes++
     }
 
     let simScore = recommender.calcEuclideanScoreA(userAScoresFromMatchingIndexes, userBScores)
@@ -131,71 +110,17 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
   return new Promise(async (resolve, reject) => {
     // let ratingsDataObj = { u: new Int32Array(ratingsDataObjA.u), m: new Int32Array(ratingsDataObjA.m), s: new Float32Array(ratingsDataObjA.s) }
     // let ratingsDataObj = { u: new Int32Array(ratingsDataObjA.u.buffer), m: new Int32Array(ratingsDataObjA.m.buffer), s: new Float32Array(ratingsDataObjA.s.buffer) }
-    // let ratingsDataObj = { u: new Int32Array(ratingsDataObjA.u.buffer), m: new Int32Array(ratingsDataObjA.m.buffer), s: new Float32Array(ratingsDataObjA.s.buffer) }
-    // let ratingsLength = ratingsDataObj.u.length
 
-    // let moviesSeenByUser = new Set()
-
-    // let r1 = performance.now()
-
-    // for (let i = 0, l = ratingsLength; i < l; i++) {
-    //   if (ratingsDataObj.u[i] === userId) {
-    //     moviesSeenByUser.add(ratingsDataObj.m[i])
-    //   }
-    // }
-    // console.log('found user ratings in', performance.now() - r1)
-
-    // let totalUnseenCnt = 0
-    // let indexes = []
     let t1 = performance.now()
-
-    // for (let y = 0, l = ratingsLength; y < l; y++) {
-    //   ++totalUnseenCnt
-    //   indexes.push(y)
-    // }
-    // console.log(indexes)
-    // let userIds = new Int32Array(totalUnseenCnt)
-    // let movIds = new Int32Array(totalUnseenCnt)
-    // let scores = new Float32Array(totalUnseenCnt)
-
-    // let userIds = new Array(ratingsLength)// .set(ratingsDataObj.u)
-    // let movIds = new Array(ratingsLength)
-    // let scores = new Array(ratingsLength)
-
-    // let userIds = new Int32Array(ratingsLength)// .set(ratingsDataObj.u)
-    // let movIds = new Int32Array(ratingsLength)
-    // let scores = new Float32Array(ratingsLength)
-
-    // for (let y = 0, l = ratingsLength; y < l; y++) {
-    //   userIds[y] = ratingsDataObj.u[y]
-    //   movIds[y] = ratingsDataObj.m[y]
-    //   scores[y] = ratingsDataObj.s[y]
-    // }
-
-    // for (let y = 0, l = indexes.length; y < l; y++) {
-    //   userIds[y] = ratingsDataObj.u[indexes[y]]
-    //   movIds[y] = ratingsDataObj.m[indexes[y]]
-    //   scores[y] = ratingsDataObj.s[indexes[y]]
-    // }
-
-    // console.log(indexes.length)
-    // for (let y = 0; y < indexes.length; y += 2) {
-    //   userIds[y] = ratingsDataObj.u[indexes[y]]
-    //   userIds[y + 1] = ratingsDataObj.u[indexes[y + 1]]
-    //   movIds[y] = ratingsDataObj.m[indexes[y]]
-    //   movIds[y + 1] = ratingsDataObj.m[indexes[y + 1]]
-    //   scores[y] = ratingsDataObj.s[indexes[y]]
-    //   scores[y + 1] = ratingsDataObj.s[indexes[y + 1]]
-    // }
 
     // let simUids = new Int32Array(similarityScores.userIds)
     // let simScores = new Float32Array(similarityScores.scores)
 
-    // let simUids = new Int32Array(similarityScores.userIds.buffer.transfer())
-    // let simScores = new Float32Array(similarityScores.scores.buffer.transfer())
+    let simUids = new Int32Array(similarityScores.userIds.buffer.transfer())
+    let simScores = new Float32Array(similarityScores.scores.buffer.transfer())
 
-    let simUids = Array.from(new Int32Array(similarityScores.userIds.buffer.transfer()))
-    let simScores = Array.from(new Float32Array(similarityScores.scores.buffer.transfer()))
+    // let simUids = Array.from(new Int32Array(similarityScores.userIds.buffer.transfer()))
+    // let simScores = Array.from(new Float32Array(similarityScores.scores.buffer.transfer()))
 
     let weightedScores = {}
 
@@ -231,6 +156,40 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
         })
       }
     }
+
+    // let userIds = new Int32Array(totalUnseenCnt)
+    // let movIds = new Int32Array(totalUnseenCnt)
+    // let scores = new Float32Array(totalUnseenCnt)
+
+    // let userIds = new Array(ratingsLength)// .set(ratingsDataObj.u)
+    // let movIds = new Array(ratingsLength)
+    // let scores = new Array(ratingsLength)
+
+    // let userIds = new Int32Array(ratingsLength)// .set(ratingsDataObj.u)
+    // let movIds = new Int32Array(ratingsLength)
+    // let scores = new Float32Array(ratingsLength)
+
+    // for (let y = 0, l = ratingsLength; y < l; y++) {
+    //   userIds[y] = ratingsDataObj.u[y]
+    //   movIds[y] = ratingsDataObj.m[y]
+    //   scores[y] = ratingsDataObj.s[y]
+    // }
+
+    // for (let y = 0, l = indexes.length; y < l; y++) {
+    //   userIds[y] = ratingsDataObj.u[indexes[y]]
+    //   movIds[y] = ratingsDataObj.m[indexes[y]]
+    //   scores[y] = ratingsDataObj.s[indexes[y]]
+    // }
+
+    // console.log(indexes.length)
+    // for (let y = 0; y < indexes.length; y += 2) {
+    //   userIds[y] = ratingsDataObj.u[indexes[y]]
+    //   userIds[y + 1] = ratingsDataObj.u[indexes[y + 1]]
+    //   movIds[y] = ratingsDataObj.m[indexes[y]]
+    //   movIds[y + 1] = ratingsDataObj.m[indexes[y + 1]]
+    //   scores[y] = ratingsDataObj.s[indexes[y]]
+    //   scores[y + 1] = ratingsDataObj.s[indexes[y + 1]]
+    // }
 
     // for (let i = 0; i < movIds.length; i++) {
     //   if (!weightedScores[movIds[i]]) {

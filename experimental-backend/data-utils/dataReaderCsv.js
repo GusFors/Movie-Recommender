@@ -18,12 +18,9 @@ const dataHolder = {
   movieIdData: [],
   movieData: [],
   numRatings: [],
-  ratingUserIds: [],
-  ratingMovieIds: [],
-  ratingScores: [],
-  // ratingUserIds: new Int32Array(),
-  // ratingMovieIds: new Int32Array(),
-  // ratingScores: new Float32Array(),
+  ratingUserIds: new Int32Array(),
+  ratingMovieIds: new Int32Array(),
+  ratingScores: new Float32Array(),
   ratingNum: new Int32Array(),
 }
 
@@ -43,14 +40,12 @@ dataReader.getRatingsLineI = async () => {
         crlfDelay: Infinity,
       })
 
-      // let ratingUserIds = []
-      // let ratingMovieIds = []
-      // let ratingScores = []
       let ratingUserIds = new Int32Array(DATASET.size)
       let ratingMovieIds = new Int32Array(DATASET.size)
       let ratingScores = new Float32Array(DATASET.size)
       let isFirstLineCheck = DATASET.lineSkip
       let total = 0
+
       rl.on('line', function (line) {
         if (isFirstLineCheck) {
           isFirstLineCheck = false
@@ -95,9 +90,7 @@ dataReader.getRatingsLineI = async () => {
           //   break
           // }
         }
-        // ratingUserIds.push(+ratingUserId)
-        // ratingMovieIds.push(+ratingMovieId)
-        // ratingScores.push(+ratingScore)
+
         ratingUserIds[total] = +ratingUserId
         ratingMovieIds[total] = +ratingMovieId
         ratingScores[total] = +ratingScore
@@ -109,23 +102,15 @@ dataReader.getRatingsLineI = async () => {
         // dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds.buffer.transferToFixedLength())
         // dataHolder.ratingScores = new Float32Array(ratingScores.buffer.transferToFixedLength())
 
-        // dataHolder.ratingUserIds = JSON.parse(JSON.stringify(Array.from(new Int32Array(ratingUserIds.buffer.transferToFixedLength()))))
-        // dataHolder.ratingMovieIds = JSON.parse(JSON.stringify(Array.from(new Int32Array(ratingMovieIds.buffer.transferToFixedLength()))))
-        // dataHolder.ratingScores = JSON.parse(JSON.stringify(Array.from(new Float32Array(ratingScores.buffer.transferToFixedLength()))))
-
         dataHolder.ratingUserIds = Array.from(new Int32Array(ratingUserIds.buffer.transferToFixedLength()))
         dataHolder.ratingMovieIds = Array.from(new Int32Array(ratingMovieIds.buffer.transferToFixedLength()))
         dataHolder.ratingScores = Array.from(new Float32Array(ratingScores.buffer.transferToFixedLength()))
 
-        // dataHolder.ratingUserIds = new Int32Array(ratingUserIds)
-        // dataHolder.ratingMovieIds = new Int32Array(ratingMovieIds)
-        // dataHolder.ratingScores = new Float32Array(ratingScores)
         resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-        // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
       })
     } else {
-      // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
+      // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
       // resolve({ u: dataHolder.ratingUserIds.buffer, m: dataHolder.ratingMovieIds.buffer, s: dataHolder.ratingScores.buffer })
     }
   })
@@ -266,7 +251,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', 
 
 dataReader.getRatingsAddon = async () => {
   return new Promise((resolve, reject) => {
-    if (!dataHolder.ratingScores.length > 0) {
+    if (!dataHolder.ratingScores?.length > 0) {
       let data = addon.getRatings(DATASET.size, DATASET.lineSkip, `./data/csv-data/${DATASET.path}/ratings.csv`)
 
       dataHolder.ratingUserIds = new Int32Array(data['0'])
