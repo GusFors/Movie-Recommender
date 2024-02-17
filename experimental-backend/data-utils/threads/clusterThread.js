@@ -1,7 +1,7 @@
 'use strict'
 
 const cluster = require('node:cluster')
-const addon = require('../build/Release/addonCalculations.node')
+const addon = require('../../build/Release/addonCalculations.node')
 
 process.on('message', (msg) => {
   if (msg.work === 'numratings') {

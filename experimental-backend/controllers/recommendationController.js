@@ -1,35 +1,10 @@
+'use strict'
+
 const dataFilterer = require('../data-utils/dataFilterer')
 const dataReaderCsv = require('../data-utils/dataReaderCsv')
-const recommender = require('../data-utils/arraybuffer-views/recommenderBufferMap')
+const recommender = require('../data-utils/recommenderBufferMap')
 
 const recommendationController = {}
-
-recommendationController.getSimilarUsersById = async (req, res, next) => {
-  let userId = req.params.id
-  userId = parseInt(userId)
-
-  // let filteredRecommendations
-  // let amountOfResults = req.query.results ? req.query.results : '3'
-  // let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
-
-  // let userData = await dataReaderCsv.getUserIdLineI()
-  // let ratingsData = await dataReaderCsv.getRatingsLineI()
-
-  // if (chosenSim === 'Euclidian') {
-  //   let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await ratingsData)
-  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
-  // }
-
-  // if (chosenSim === 'Pearson') {
-  //   let rawUserRecommendations = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
-  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
-  // }
-
-  res.status(200).json({
-    message: `Similar user recommendations for user with id: ${userId}`,
-    similarUsers: [],
-  })
-}
 
 let isOptimized = false
 ;(async () => {
@@ -67,7 +42,7 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     console.log('load movies in:', performance.now() - m1, '\n')
 
     let f1 = performance.now()
-    let movSeen = recommender.getMoviesSeenByUser(userId, await ratingsData)
+    let movSeen = dataFilterer.getMoviesSeenByUser(userId, await ratingsData)
     movieData = movieData.filter((m) => !movSeen.has(m.movieId))
     console.log('filter moviedata in:', performance.now() - f1)
 
@@ -107,5 +82,32 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   }
   // prettier-ignore
   // %CollectGarbage(1);
+}
+
+recommendationController.getSimilarUsersById = async (req, res, next) => {
+  let userId = req.params.id
+  userId = parseInt(userId)
+
+  // let filteredRecommendations
+  // let amountOfResults = req.query.results ? req.query.results : '3'
+  // let chosenSim = req.query.sim ? req.query.sim : 'Euclidian'
+
+  // let userData = await dataReaderCsv.getUserIdLineI()
+  // let ratingsData = await dataReaderCsv.getRatingsLineI()
+
+  // if (chosenSim === 'Euclidian') {
+  //   let rawUserRecommendations = recommender.getEuclidianSimScoresForUser(userId, await ratingsData)
+  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
+  // }
+
+  // if (chosenSim === 'Pearson') {
+  //   let rawUserRecommendations = recommender.getPearsonSimScoresForUser(userId, await userData, await ratingsData)
+  //   filteredRecommendations = dataFilterer.getFilteredRecommendedUserData(rawUserRecommendations, amountOfResults, await dataReaderRev.getAllUsers())
+  // }
+
+  res.status(200).json({
+    message: `Similar user recommendations for user with id: ${userId}`,
+    similarUsers: [],
+  })
 }
 module.exports = recommendationController

@@ -1,4 +1,75 @@
+'use strict'
+
 const dataFilterer = {}
+
+dataFilterer.getMoviesSeenByUser = (userId, ratingsDataObj) => {
+  let moviesSeenByUser = new Set()
+
+  for (let i = 0, l = ratingsDataObj.u.length; i < l; i++) {
+    if (ratingsDataObj.u[i] === userId) {
+      moviesSeenByUser.add(ratingsDataObj.m[i])
+    }
+  }
+
+  return moviesSeenByUser
+}
+
+dataFilterer.getIgnoredMovieIds = (userId, ratingsDataObjR) => {
+  let ratingsDataObj = ratingsDataObjR
+  let ratingsLength = ratingsDataObj.u.length
+
+  let userAMovIdsM = new Map()
+
+  let relevantScoresUserIds = []
+  let relevantScoresMovIds = []
+  let relevantScoresRatings = []
+
+  for (let r = 0, l = ratingsLength; r < l; r++) {
+    if (ratingsDataObj.u[r] === userId) {
+      userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
+    } else {
+      relevantScoresUserIds.push(ratingsDataObj.u[r])
+      relevantScoresMovIds.push(ratingsDataObj.m[r])
+      relevantScoresRatings.push(ratingsDataObj.s[r])
+    }
+  }
+
+  let othersRatingUserIds = []
+  let otherMovIds = []
+  let ignoredMovIds = []
+  let ignoredUserIds = []
+
+  for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
+    if (userAMovIdsM.has(relevantScoresMovIds[r])) {
+      othersRatingUserIds.push(relevantScoresUserIds[r])
+      otherMovIds.push(relevantScoresMovIds[r])
+    } else {
+      ignoredMovIds.push(relevantScoresMovIds[r])
+      ignoredUserIds.push(relevantScoresUserIds[r])
+    }
+  }
+
+  let othersRatingUserIdsSet = new Set(othersRatingUserIds)
+  let movIdsToIgnore = []
+
+  for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
+    if (!othersRatingUserIdsSet.has(relevantScoresUserIds[r])) {
+      movIdsToIgnore.push(relevantScoresMovIds[r])
+    }
+  }
+
+  return new Set(movIdsToIgnore)
+}
+
+dataFilterer.getMovieIdsAboveMinNumRatings = (minNumRatings, moviesData) => {
+  let movieIdsAboveMin = []
+  for (let i = 0; i < moviesData.length; i++) {
+    if (moviesData[i].numRatings >= minNumRatings) {
+      movieIdsAboveMin.push(moviesData[i].movieId)
+    }
+  }
+  return movieIdsAboveMin
+}
 
 dataFilterer.getFilteredRecommendedUserData = (rawUserRecommendationData, numberOfResults, userNamesAndIds) => {
   let sortedData = rawUserRecommendationData.sort((a, b) => b[1] - a[1]) // [0]: user id, [1]: similarity score
@@ -36,7 +107,6 @@ dataFilterer.getFilteredRecommendedMovieData = (rawMovieRecommendationData, numb
 
   let sortedScores = rawMovieRecommendationData.sort((a, b) => {
     if (b.numRatings === a.numRatings && b.recommendationScore === a.recommendationScore) {
-      // console.log('b.movieId')
       return a.movieId - b.movieId
     }
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const { arrayChunkPush, arrayChunkPop, arrayChunkShift } = require('../arrayChunk.js')
+const { arrayChunkPush, arrayChunkPop, arrayChunkShift } = require('./arrayChunk.js')
 
 const recommender = {}
 
@@ -344,75 +344,6 @@ recommender.getMovieRecommendationScores = async (weightedScores, moviesData, th
   })
 }
 
-recommender.getMoviesSeenByUser = (userId, ratingsDataObj) => {
-  let moviesSeenByUser = new Set()
 
-  for (let i = 0, l = ratingsDataObj.u.length; i < l; i++) {
-    if (ratingsDataObj.u[i] === userId) {
-      moviesSeenByUser.add(ratingsDataObj.m[i])
-    }
-  }
-
-  return moviesSeenByUser
-}
-
-recommender.getIgnoredMovieIds = (userId, ratingsDataObjR) => {
-  let ratingsDataObj = ratingsDataObjR
-  let ratingsLength = ratingsDataObj.u.length
-
-  let userAMovIdsM = new Map()
-
-  let relevantScoresUserIds = []
-  let relevantScoresMovIds = []
-  let relevantScoresRatings = []
-
-  for (let r = 0, l = ratingsLength; r < l; r++) {
-    if (ratingsDataObj.u[r] === userId) {
-      userAMovIdsM.set(ratingsDataObj.m[r], ratingsDataObj.s[r])
-    } else {
-      relevantScoresUserIds.push(ratingsDataObj.u[r])
-      relevantScoresMovIds.push(ratingsDataObj.m[r])
-      relevantScoresRatings.push(ratingsDataObj.s[r])
-    }
-  }
-
-  let othersRatingUserIds = []
-
-  let otherMovIds = []
-  let ignoredMovIds = []
-  let ignoredUserIds = []
-
-  for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
-    if (userAMovIdsM.has(relevantScoresMovIds[r])) {
-      othersRatingUserIds.push(relevantScoresUserIds[r])
-      otherMovIds.push(relevantScoresMovIds[r])
-    } else {
-      ignoredMovIds.push(relevantScoresMovIds[r])
-      ignoredUserIds.push(relevantScoresUserIds[r])
-    }
-  }
-
-  let othersRatingUserIdsSet = new Set(othersRatingUserIds)
-
-  let movIdsToIgnore = []
-
-  for (let r = 0, l = relevantScoresMovIds.length; r < l; r++) {
-    if (!othersRatingUserIdsSet.has(relevantScoresUserIds[r])) {
-      movIdsToIgnore.push(relevantScoresMovIds[r])
-    }
-  }
-
-  return new Set(movIdsToIgnore)
-}
-
-recommender.getMovieIdsAboveMinNumRatings = (minNumRatings, moviesData) => {
-  let movieIdsAboveMin = []
-  for (let i = 0; i < moviesData.length; i++) {
-    if (moviesData[i].numRatings >= minNumRatings) {
-      movieIdsAboveMin.push(moviesData[i].movieId)
-    }
-  }
-  return movieIdsAboveMin
-}
 
 module.exports = recommender

@@ -24,12 +24,12 @@ const dataHolder = {
   ratingNum: new Int32Array(),
 }
 
-cluster.setupPrimary({ exec: './data-utils/clusterThread.js', serialization: 'advanced' })
+cluster.setupPrimary({ exec: './data-utils/threads/clusterThread.js', serialization: 'advanced' })
 const threads = 4
 const workers = []
 for (let w = 0; w < threads; w++) {
   cluster.fork()
-  workers[w] = new Worker('./data-utils/workerThread.js', {})
+  workers[w] = new Worker('./data-utils/threads/workerThread.js', {})
 }
 
 dataReader.getRatingsLineI = async () => {

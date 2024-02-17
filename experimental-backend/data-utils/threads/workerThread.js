@@ -1,7 +1,7 @@
 'use strict'
 
 const { parentPort, threadId } = require('worker_threads')
-const addon = require('../build/Release/addonCalculations.node')
+const addon = require('../../build/Release/addonCalculations.node')
 
 parentPort.on('message', (msg) => {
   if (msg.work === 'numratings') {
