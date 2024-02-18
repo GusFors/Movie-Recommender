@@ -7,7 +7,7 @@ parentPort.on('message', (msg) => {
   if (msg.work === 'numratings') {
     let t1 = performance.now()
     let numRatingsArr = []
-    let sortedByMovieId = msg.ratingsIds
+    let sortedByMovieId = new Int32Array(msg.ratingsIds)
     let movIds = msg.movIds
     let alreadyCheckedRatingsIndexes = 0
     let isCurrMovId = false
@@ -32,6 +32,7 @@ parentPort.on('message', (msg) => {
     // console.log(`worker id${threadId} done`, performance.now() - t1)
     parentPort.postMessage({ work: 'numratings', numRatingsArr: numRatingsArr })
   } else if (msg.work === 'addon') {
+    // console.log(msg.ratingsIds, msg.movIds)
     let t1 = performance.now()
     let numRatings = addon.getNumRatings(new Int32Array(msg.ratingsIds), new Int32Array(msg.movIds))
     // console.log(`worker id${threadId} done`, performance.now() - t1)

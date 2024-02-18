@@ -33,8 +33,8 @@ void calc_num_ratings(int *mov_id_arr, int *rating_id_arr, size_t mov_len, size_
 }
 
 NAN_METHOD(getNumRatings) {
-  v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
-  Nan::TypedArrayContents<int> rating_id_array_typed(rating_id_array);
+  // v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
+  Nan::TypedArrayContents<int> rating_id_array_typed(info[0]);
   int *r_id = *rating_id_array_typed;
 
   v8::Local<v8::Array> mov_id_array = v8::Local<v8::Array>::Cast(info[1]);
@@ -45,12 +45,12 @@ NAN_METHOD(getNumRatings) {
   v8::Local<v8::Int32Array> num_ratings_array = v8::Int32Array::New(num_ratings_buffer, 0, mov_id_array_typed.length());
   Nan::TypedArrayContents<int> num_ratings_arr_typed(num_ratings_array);
   int *num_data = *num_ratings_arr_typed;
-  printf("addon calc num ratings\n");
+  // printf("addon calc num ratings\n");
 
   size_t r_len = rating_id_array_typed.length();
   size_t m_len = mov_id_array_typed.length();
 
-  printf("%zu mlen, %zu rlen\n", m_len, r_len);
+  // printf("%zu mlen, %zu rlen\n", m_len, r_len);
   clock_t t1;
   t1 = clock();
   calc_num_ratings(m_id, r_id, m_len, r_len, num_data);
@@ -63,12 +63,10 @@ NAN_METHOD(getNumRatings) {
 }
 
 NAN_METHOD(getNumRatingsCopy) {
-  v8::Local<v8::Array> rating_id_array = v8::Local<v8::Array>::Cast(info[0]);
-  Nan::TypedArrayContents<int> rating_id_array_typed(rating_id_array);
+  Nan::TypedArrayContents<int> rating_id_array_typed(info[0]);
   int *r_id = *rating_id_array_typed;
 
-  v8::Local<v8::Array> mov_id_array = v8::Local<v8::Array>::Cast(info[1]);
-  Nan::TypedArrayContents<int> mov_id_array_typed(mov_id_array);
+  Nan::TypedArrayContents<int> mov_id_array_typed(info[1]);
   int *m_id = *mov_id_array_typed;
 
   v8::Local<v8::ArrayBuffer> num_ratings_buffer = v8::ArrayBuffer::New(info.GetIsolate(), mov_id_array_typed.length() * sizeof(int));
@@ -101,26 +99,6 @@ NAN_METHOD(getNumRatingsCopy) {
   t1 = clock();
 
   calc_num_ratings((int *)mov_id_array_copy, (int *)rating_id_array_copy, m_len, r_len, num_data);
-
-  // int is_curr_mov_id = 0;
-  // int already_checked_indexes = 0;
-
-  // for (int i = 0; i < m_len; i++) {
-  //   int num_ratings = 0;
-  //   for (int y = already_checked_indexes; y < r_len; y++) {
-  //     if (rating_id_array_copy[y] == mov_id_array_copy[i]) {
-  //       if (is_curr_mov_id == 0) {
-  //         is_curr_mov_id = 1;
-  //         already_checked_indexes = y;
-  //       }
-  //       num_ratings++;
-  //     } else if (is_curr_mov_id && rating_id_array_copy[y] != mov_id_array_copy[i]) {
-  //       is_curr_mov_id = 0;
-  //       break;
-  //     }
-  //   }
-  //   num_data[i] = num_ratings;
-  // }
 
   clock_t t2 = clock() - t1;
   double total = ((double)t2) / CLOCKS_PER_SEC;

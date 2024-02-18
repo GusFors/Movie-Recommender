@@ -171,7 +171,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', 
           for (let w = 0; w < threads; w++) {
             cluster.workers[w + 1].send({
               work: addon ? 'addon' : 'numratings',
-              ratingsIds: Int32Array.from(sortedByMovieId),
+              ratingsIds: sortedByMovieId,
               movIds: Int32Array.from(movIdChunks[w]),
             })
 
@@ -194,7 +194,7 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', 
 
           for (let w = 0; w < threads; w++) {
             let movIdBufferTransfer = Int32Array.from(movIdChunks[w])
-            workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedArray, movIds: movIdBufferTransfer }, [
+            workers[w].postMessage({ work: addon ? 'addon' : 'numratings', ratingsIds: sharedBuffer, movIds: movIdBufferTransfer }, [
               movIdBufferTransfer.buffer,
             ])
 
@@ -249,14 +249,19 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', 
   })
 }
 
-dataReader.getRatingsAddon = async () => {
+dataReader.getRatingsAddon = async (isTypedArray = false) => {
   return new Promise((resolve, reject) => {
     if (!dataHolder.ratingScores?.length > 0) {
-      let data = addon.getRatings(DATASET.size, DATASET.lineSkip, `./data/csv-data/${DATASET.path}/ratings.csv`)
-
-      dataHolder.ratingUserIds = new Int32Array(data['0'])
-      dataHolder.ratingMovieIds = new Int32Array(data['1'])
-      dataHolder.ratingScores = new Float32Array(data['2'])
+      let data = addon.getRatingsTyped(DATASET.size, DATASET.lineSkip, `./data/csv-data/${DATASET.path}/ratings.csv`)
+      if (isTypedArray) {
+        dataHolder.ratingUserIds = new Int32Array(data['0'])
+        dataHolder.ratingMovieIds = new Int32Array(data['1'])
+        dataHolder.ratingScores = new Float32Array(data['2'])
+      } else {
+        dataHolder.ratingUserIds = Array.from(data['0'])
+        dataHolder.ratingMovieIds = Array.from(data['1'])
+        dataHolder.ratingScores = Array.from(data['2'])
+      }
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
     } else {
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })

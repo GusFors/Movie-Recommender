@@ -33,12 +33,12 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
   let rawRecommendations
   for (let i = 0; i < avgRuns; i++) {
     let r1 = performance.now()
-    let ratingsData = await dataReaderCsv.getRatingsLineI()
-    // let ratingsData = await dataReaderCsv.getRatingsAddon()
+    // let ratingsData = await dataReaderCsv.getRatingsLineI()
+    let ratingsData = await dataReaderCsv.getRatingsAddon(true)
 
     console.log('load ratings in:', performance.now() - r1)
     let m1 = performance.now()
-    let movieData = await dataReaderCsv.getMoviesCompleteLineI(minNumRatings, 'Worker', true)
+    let movieData = await dataReaderCsv.getMoviesCompleteLineI(minNumRatings, type, true)
     console.log('load movies in:', performance.now() - m1, '\n')
 
     let f1 = performance.now()

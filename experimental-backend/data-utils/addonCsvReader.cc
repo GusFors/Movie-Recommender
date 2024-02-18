@@ -10,6 +10,112 @@
 #include <string.h>
 #include <time.h>
 
+NAN_METHOD(getRatingsTyped) {
+  int file_size = Nan::To<int>(info[0]).FromJust();
+  int line_skip = Nan::To<int>(info[1]).FromJust();
+  char *file_path = (*Nan::Utf8String(info[2]));
+  // int convert_array_return_type = Nan::To<int>(info[3]).FromJust();
+
+  printf("%d size arg, %d lineskip, path %s\n", file_size, line_skip, file_path);
+
+  FILE *rating_file;
+  rating_file = fopen(file_path, "r");
+
+  if (rating_file == NULL) {
+    printf("error reading file");
+    exit(1);
+  }
+
+  int *user_ids = (int *)malloc(file_size * sizeof(int));
+  int *movie_ids = (int *)malloc(file_size * sizeof(int));
+  float *ratings = (float *)malloc(file_size * sizeof(float));
+
+  if (user_ids == NULL || movie_ids == NULL || ratings == NULL) {
+    printf("malloc error\n");
+    exit(1);
+  }
+
+  int assigned_items = 0;
+  int line_count = 0;
+
+  if (line_skip == 1) {
+    printf("lineskip 1\n");
+    fscanf(rating_file, "%*[^\n]"); // skip first line
+
+    if (file_size != 120) {
+      while (!feof(rating_file)) {
+        assigned_items = fscanf(rating_file, "%d,%d,%f,%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
+        if (assigned_items == 3) {
+          line_count++;
+        }
+      }
+    } else {
+      printf("debug data\n");
+      while (!feof(rating_file)) {
+        assigned_items = fscanf(rating_file, "%d;%d;%f\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
+        if (assigned_items == 3) {
+          line_count++;
+        }
+      }
+    }
+
+  } else {
+    printf("lineskip 0\n");
+
+    while (!feof(rating_file)) {
+      assigned_items = fscanf(rating_file, "%d::%d::%f::%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
+      if (assigned_items == 3) {
+        line_count++;
+        if (line_count == 1) {
+          printf("%d,%d,%.1f\n", user_ids[0], movie_ids[0], ratings[0]);
+        }
+      }
+    }
+  }
+
+  fclose(rating_file);
+  printf("\n%d lines\n", line_count);
+
+  v8::Local<v8::ArrayBuffer> user_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
+  v8::Local<v8::Int32Array> user_ids_array = v8::Int32Array::New(user_ids_buffer, 0, file_size);
+  Nan::TypedArrayContents<int> utyped(user_ids_array);
+  int *udata = *utyped;
+
+  for (int i = 0; i < line_count; i++) {
+    udata[i] = user_ids[i];
+  }
+
+  v8::Local<v8::ArrayBuffer> movie_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
+  v8::Local<v8::Int32Array> movie_ids_array = v8::Int32Array::New(movie_ids_buffer, 0, file_size);
+  Nan::TypedArrayContents<int> mtyped(movie_ids_array);
+  int *mdata = *mtyped;
+
+  for (int i = 0; i < line_count; i++) {
+    mdata[i] = movie_ids[i];
+  }
+
+  v8::Local<v8::ArrayBuffer> ratings_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(float));
+  v8::Local<v8::Float32Array> ratings_array = v8::Float32Array::New(ratings_buffer, 0, file_size);
+  Nan::TypedArrayContents<float> rtyped(ratings_array);
+  float *rdata = *rtyped;
+
+  for (int i = 0; i < line_count; i++) {
+    rdata[i] = ratings[i];
+  }
+
+  v8::Local<v8::Object> return_data = v8::Object::New(info.GetIsolate());
+
+  Nan::Set(return_data, 0, user_ids_array);
+  Nan::Set(return_data, 1, movie_ids_array);
+  Nan::Set(return_data, 2, ratings_array);
+
+  free(user_ids);
+  free(movie_ids);
+  free(ratings);
+
+  info.GetReturnValue().Set(return_data);
+}
+
 NAN_METHOD(getRatings) {
   int file_size = Nan::To<int>(info[0]).FromJust();
   int line_skip = Nan::To<int>(info[1]).FromJust();
@@ -82,51 +188,29 @@ NAN_METHOD(getRatings) {
   fclose(rating_file);
   printf("\n%d lines\n", line_count);
 
-  // for (int i = 0; i < line_count; i++) {
-  //   printf("%d,%d,%.1f\n", ratingsp[i].user_id, ratingsp[i].movie_id,
-  //          ratingsp[i].rating);
-  // }
-
-  // for (int i = 0; i < line_count; i++) {
-  //   printf("%d,%d,%.1f\n", user_ids[i], movie_ids[i], ratings[i]);
-  // }
-
-  v8::Local<v8::ArrayBuffer> user_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
-  v8::Local<v8::Int32Array> user_ids_array = v8::Int32Array::New(user_ids_buffer, 0, file_size);
-  Nan::TypedArrayContents<int> utyped(user_ids_array);
-  int *udata = *utyped;
-
+  // v8::Local<v8::Array> user_ids_arr = Nan::New<v8::Array>(file_size);
+  v8::Local<v8::Array> user_ids_arr = v8::Array::New(info.GetIsolate(), file_size);
   for (int i = 0; i < line_count; i++) {
-    udata[i] = user_ids[i];
+    // Nan::Set(user_ids_arr, (uint32_t)i, Nan::New(user_ids[i]));
+    Nan::Set(user_ids_arr, i, Nan::New<v8::Number>(user_ids[i]));
   }
 
-  v8::Local<v8::ArrayBuffer> movie_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
-  v8::Local<v8::Int32Array> movie_ids_array = v8::Int32Array::New(movie_ids_buffer, 0, file_size);
-  Nan::TypedArrayContents<int> mtyped(movie_ids_array);
-  int *mdata = *mtyped;
-
+  v8::Local<v8::Array> movie_ids_arr = v8::Array::New(info.GetIsolate(), file_size);
   for (int i = 0; i < line_count; i++) {
-    mdata[i] = movie_ids[i];
+    Nan::Set(movie_ids_arr, i, Nan::New<v8::Number>(movie_ids[i]));
   }
 
-  v8::Local<v8::ArrayBuffer> ratings_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(float));
-  v8::Local<v8::Float32Array> ratings_array = v8::Float32Array::New(ratings_buffer, 0, file_size);
-  Nan::TypedArrayContents<float> rtyped(ratings_array);
-  float *rdata = *rtyped;
-
+  v8::Local<v8::Array> ratings_arr = v8::Array::New(info.GetIsolate(), file_size);
   for (int i = 0; i < line_count; i++) {
-    rdata[i] = ratings[i];
+    Nan::Set(ratings_arr, i, Nan::New<v8::Number>(ratings[i]));
   }
 
   // v8::MaybeLocal<v8::String> uid = v8::String::NewFromUtf8(info.GetIsolate(), "userIds");
-  // v8::MaybeLocal<v8::String> mids = v8::String::NewFromUtf8(info.GetIsolate(), "movieIds");
-  // v8::MaybeLocal<v8::String> r = v8::String::NewFromUtf8(info.GetIsolate(), "ratings");
-
+  // Nan::Set(return_data, 0, user_ids_array);
   v8::Local<v8::Object> return_data = v8::Object::New(info.GetIsolate());
-
-  Nan::Set(return_data, 0, user_ids_array);
-  Nan::Set(return_data, 1, movie_ids_array);
-  Nan::Set(return_data, 2, ratings_array);
+  Nan::Set(return_data, 0, user_ids_arr);
+  Nan::Set(return_data, 1, movie_ids_arr);
+  Nan::Set(return_data, 2, ratings_arr);
 
   free(user_ids);
   free(movie_ids);
@@ -213,6 +297,7 @@ NAN_METHOD(getNumRatings) {
 
 void init(Nan ::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
   Nan::SetMethod(target, "getRatings", getRatings);
+  Nan::SetMethod(target, "getRatingsTyped", getRatingsTyped);
   Nan::SetMethod(target, "getNumRatings", getNumRatings);
 }
 NAN_MODULE_WORKER_ENABLED(addonCsvReader, init)
@@ -222,19 +307,4 @@ NAN_MODULE_WORKER_ENABLED(addonCsvReader, init)
 // NAN_MODULE_INIT(init) {
 //   v8::Isolate *isolate = isolate;
 //   AddEnvironmentCleanupHook(Nan::GetCurrentContext()->GetIsolate(),);
-//   Nan::SetMethod(target, "getRatings", getRatings);
-//   Nan::SetMethod(target, "getNumRatings", getNumRatings);
-// }
-
-// int64_t count = 0;
-//   for (int i = 0; i < 29049; i++) {
-//     int count2 = 0;
-//     for (int y = 0; y < 27753444; y++) {
-//       count++;
-//     }
-//     count2 = count;
-//     m_id[i] = count;
-//   }
-//   // Nan::Maybe<int64_t> cov = Nan::To<int64_t>(count).FromJust()
-//   printf("c loop done\n");
 //   info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), count));
