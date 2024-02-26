@@ -16,6 +16,9 @@ NAN_METHOD(getRatingsTyped) {
   char *file_path = (*Nan::Utf8String(info[2]));
   // int convert_array_return_type = Nan::To<int>(info[3]).FromJust();
 
+  clock_t t1;
+  t1 = clock();
+
   printf("%d size arg, %d lineskip, path %s\n", file_size, line_skip, file_path);
 
   FILE *rating_file;
@@ -43,12 +46,23 @@ NAN_METHOD(getRatingsTyped) {
     fscanf(rating_file, "%*[^\n]"); // skip first line
 
     if (file_size != 120) {
-      while (!feof(rating_file)) {
+      // while (assigned_items != EOF) {
+      // while (!feof(rating_file)) {
+      //   assigned_items = fscanf(rating_file, "%d,%d,%f,%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
+      //   if (assigned_items == 3) {
+      //     line_count++;
+      //   }
+      // }
+
+      for (;;) {
         assigned_items = fscanf(rating_file, "%d,%d,%f,%*d\n", &user_ids[line_count], &movie_ids[line_count], &ratings[line_count]);
         if (assigned_items == 3) {
           line_count++;
+        } else if (assigned_items == EOF) {
+          break;
         }
       }
+
     } else {
       printf("debug data\n");
       while (!feof(rating_file)) {
@@ -76,6 +90,10 @@ NAN_METHOD(getRatingsTyped) {
   fclose(rating_file);
   printf("\n%d lines\n", line_count);
 
+  clock_t t2 = clock() - t1;
+  double total = ((double)t2) / CLOCKS_PER_SEC;
+  printf("addon fscanf ratings done in %f seconds\n", total);
+
   v8::Local<v8::ArrayBuffer> user_ids_buffer = v8::ArrayBuffer::New(info.GetIsolate(), file_size * sizeof(int));
   v8::Local<v8::Int32Array> user_ids_array = v8::Int32Array::New(user_ids_buffer, 0, file_size);
   Nan::TypedArrayContents<int> utyped(user_ids_array);
@@ -102,6 +120,12 @@ NAN_METHOD(getRatingsTyped) {
   for (int i = 0; i < line_count; i++) {
     rdata[i] = ratings[i];
   }
+
+  // for (int i = 0; i < line_count; i++) {
+  //   udata[i] = user_ids[i];
+  //   mdata[i] = movie_ids[i];
+  //   rdata[i] = ratings[i];
+  // }
 
   v8::Local<v8::Object> return_data = v8::Object::New(info.GetIsolate());
 
