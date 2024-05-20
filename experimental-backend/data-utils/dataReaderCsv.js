@@ -110,8 +110,6 @@ dataReader.getRatingsLineI = async () => {
       })
     } else {
       resolve({ u: dataHolder.ratingUserIds, m: dataHolder.ratingMovieIds, s: dataHolder.ratingScores })
-      // resolve({ u: dataHolder.ratingUserIds.slice(), m: dataHolder.ratingMovieIds.slice(), s: dataHolder.ratingScores.slice() })
-      // resolve({ u: dataHolder.ratingUserIds.buffer, m: dataHolder.ratingMovieIds.buffer, s: dataHolder.ratingScores.buffer })
     }
   })
 }
@@ -161,7 +159,6 @@ dataReader.getMoviesCompleteLineI = async (minNumRatings, threading = 'Worker', 
 
         let sort1 = performance.now()
         // let sortedByMovieId = %TypedArraySortFast(new Int32Array(rMovIds));
-        // let sortedByMovieId = new Int32Array(rMovIds).sort()
         let sortedByMovieId = new Int32Array(dataHolder.ratingMovieIds).sort()
         console.log('sort movies', performance.now() - sort1)
 

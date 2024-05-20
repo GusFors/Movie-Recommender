@@ -8,10 +8,12 @@
                 'libraries': []
             },
             'cflags': [
-                '-funroll-loops'
+                '-funroll-loops',
+                '-O2'
             ],  
             'cflags_cc': [
-                '-funroll-loops'
+                '-funroll-loops',
+                '-O2'
             ],
         },
         {
@@ -22,10 +24,12 @@
                 'libraries': []
             },
             'cflags': [
-                '-funroll-loops'
+                '-funroll-loops',
+                '-O2'
             ],  
             'cflags_cc': [
-                '-funroll-loops'
+                '-funroll-loops',
+                '-O2'
             ],
         }
     ]

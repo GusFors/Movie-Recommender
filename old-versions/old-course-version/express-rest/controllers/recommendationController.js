@@ -29,6 +29,7 @@ recommendationController.getSimilarUsersById = async (req, res, next) => {
 }
 
 recommendationController.getMovieRecommendationById = async (req, res, next) => {
+  const t1 = performance.now()
   const userData = await dataReader.getAllUsers()
   const ratingsData = await dataReader.getRatings()
   const movieData = await dataReader.getMovies()
@@ -56,6 +57,8 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     let rawRecommendations = await recommender.getMovieRecommendationScores(weightedScores, await movieData, minNumRatings, forks)
     filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
   }
+  const t2 = performance.now()
+  console.log(`recs in:`, t2 - t1, `ms`)
 
   if (filteredRecommendations.length > 0) {
     res.status(200).json({
@@ -64,10 +67,28 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     })
   } else {
     res.status(200).json({
-      message: `Sucessful, but could not recommend any movies for user with id: ${req.params.id}, possibly because of the user has already watched all current ones`,
+      message: `Sucessful, but could not recommend any movies for user with id: ${req.params.id}, possibly because the user has already watched all current ones`,
       userMovieRecommendations: filteredRecommendations,
     })
   }
 }
 
 module.exports = recommendationController
+
+// ;(async () => {
+//   const userData = await dataReader.getAllUsers()
+//   const ratingsData = await dataReader.getRatings()
+//   const movieData = await dataReader.getMovies()
+//   const userid = '3'
+//   let filteredRecommendations
+//   let euclidianSimScores = recommender.getEuclidianSimScoresForUser(userid, await userData, await ratingsData)
+//   console.log(euclidianSimScores)
+//   let ratingsMoviesNotSeen = recommender.getRatingsMoviesNotSeenByUser(userid, ratingsData)
+//   console.log(ratingsMoviesNotSeen)
+//   let weightedScores = recommender.getWeightedScores(euclidianSimScores, ratingsMoviesNotSeen)
+//   console.log(weightedScores)
+//   let rawRecommendations = await recommender.getMovieRecommendationScores(weightedScores, await movieData, '0', 4)
+//   console.log(rawRecommendations)
+//   filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, '3')
+//   console.log(filteredRecommendations)
+// })()

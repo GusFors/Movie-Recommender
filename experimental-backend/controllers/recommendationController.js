@@ -49,19 +49,17 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     let t1 = performance.now()
     const userSimScores = recommender.getEuclidianSimScoresForUserR(userId, await ratingsData)
     let t2 = performance.now()
-    console.log(`get${chosenSim}SimScoresForUser`, t2 - t1, 'ms')
+    console.log(`get${chosenSim}SimScoresForUser`, `\x1b[31m${t2 - t1}\x1b[0m`, 'ms')
 
     let t3 = performance.now()
-    // faster with normal ratingsData arrays, convert?
-    let ratingsMoviesNotSeen = await recommender.getWeightedScoresMoviesNotSeenByUser(userId, await ratingsData, userSimScores) // check if > minNumRatings?
+    let ratingsMoviesNotSeen = await recommender.getWeightedScoresMoviesNotSeenByUserArr(userId, await ratingsData, userSimScores, await movieData)
     let t4 = performance.now()
-    console.log('getRatingsMoviesNotSeenByUser', t4 - t3, 'ms')
+    console.log('getRatingsMoviesNotSeenByUser', `\x1b[31m${t4 - t3}\x1b[0m`, 'ms')
 
     let t7 = performance.now()
-    // faster with typed ratingsData arrays?
-    rawRecommendations = await recommender.getMovieRecommendationScores(ratingsMoviesNotSeen, await movieData, threads, t7)
+    rawRecommendations = await recommender.getMovieRecommendationScoresArr(ratingsMoviesNotSeen, await movieData, threads, t7)
     let t8 = performance.now()
-    console.log('getMovieRecommendationScores', t8 - t7, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
+    console.log('getMovieRecommendationScores', `\x1b[31m${t8 - t7}\x1b[0m`, `ms, ${type !== 'Slow' ? `${type}s: ${threads}` : ''}`)
 
     console.log(`Total time:`, t8 - t1, '\n')
 
