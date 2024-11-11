@@ -137,8 +137,7 @@ function MovieRecommender() {
 
   useEffect(() => {
     ;(async () => {
-      let result = await fetch('http://localhost:4000/users', {}).catch(async (r) => {
-        // console.log(result)
+      let result = await fetch('http://localhost:6060/users', {}).catch(async (r) => {
         return await fetch('http://localhost:5000/users')
       })
 

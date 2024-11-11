@@ -120,6 +120,10 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
 
   filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
 
+   for (let i = 0; i < filteredRecommendations.length; i++) {
+      console.log(`${filteredRecommendations[i].movieId},`)
+    }
+
   if (filteredRecommendations.length > 0) {
     res.status(200).json({
       message: `Movie recommendations for user with id: ${userId}`,

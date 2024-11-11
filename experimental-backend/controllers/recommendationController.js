@@ -64,6 +64,10 @@ recommendationController.getMovieRecommendationById = async (req, res, next) => 
     console.log(`Total time:`, t8 - t1, '\n')
 
     filteredRecommendations = dataFilterer.getFilteredRecommendedMovieData(await rawRecommendations, amountOfResults)
+
+    // for (let i = 0; i < filteredRecommendations.length; i++) {
+    //   console.log(filteredRecommendations[i].movieId)
+    // }
   }
 
   if (filteredRecommendations !== undefined) {
