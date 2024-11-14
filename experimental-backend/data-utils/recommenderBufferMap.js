@@ -123,7 +123,7 @@ recommender.getWeightedScoresMoviesNotSeenByUserArr = async (userId, ratingsData
         weightedScores[ratingsDataObj.m[i]] = []
       }
     }
-
+    // console.log(ratingsDataObj)
     console.log('reached', performance.now() - t1)
 
     let start = 0
@@ -150,7 +150,7 @@ recommender.getWeightedScoresMoviesNotSeenByUserArr = async (userId, ratingsData
       }
     }
 
-    resolve(new Promise((res, err) => res(weightedScores)))
+    resolve(weightedScores)
   })
 }
 
@@ -305,7 +305,7 @@ recommender.getWeightedScoresMoviesNotSeenByUser = async (userId, ratingsDataObj
       }
     }
 
-    resolve(new Promise((res, err) => res(weightedScores)))
+    resolve(weightedScores)
   })
 }
 
